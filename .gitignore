@@ -1,0 +1,74 @@
+# ==========================================================================
+# BakiBondhu — repository ignore rules
+# Patterns are path-agnostic (match at any depth), so they cover
+# Android_App/, Web_App/, and Backend/ alike.
+# NOTE: .gitkeep files are intentionally NOT ignored — they preserve the
+# scaffolded (currently empty) folder structure.
+# ==========================================================================
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+.idea/
+.vscode/
+*.suo
+*.user
+
+# ---- Secrets / local config (never commit) ----
+.env
+.env.*
+*.local
+secrets.json
+appsettings.*.local.json
+key.properties
+*.keystore
+*.jks
+*.p12
+*.pem
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================================================
+# Web (React + TypeScript / Node)  — Web_App/
+# ==========================================================================
+node_modules/
+dist/
+.vite/
+.cache/
+coverage/
+.eslintcache
+*.tsbuildinfo
+
+# ==========================================================================
+# Backend (.NET / ASP.NET Core)  — Backend/
+# ==========================================================================
+bin/
+obj/
+.vs/
+TestResults/
+[Bb]uild[Ll]og.*
+project.lock.json
+*.nupkg
+
+# ==========================================================================
+# Android (Flutter / Dart / Gradle)  — Android_App/
+# ==========================================================================
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.gradle/
+captures/
+local.properties
+*.iml
