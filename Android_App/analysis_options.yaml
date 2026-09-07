@@ -1,0 +1,9 @@
+include: package:flutter_lints/flutter.yaml
+
+# Project-wide analysis for BakiBondhu. Keep the build warning-free (Coding
+# Standards §3 — treat analyzer warnings as errors on protected branches).
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_final_locals: true
+    avoid_print: true
