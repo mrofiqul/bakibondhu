@@ -128,7 +128,7 @@ All changes validated: 41/41 DDL statements parse under the PostgreSQL dialect.
 
 - Two app-spec versions live in the folder. **v1.1 is canonical** (the DB and API target it);
   move `BakiBondhu_Android_Web_Application_Specification.docx` (v1.0) to `archive/`.
-- The earlier local-first MVP spec in [docs/](README.md) and this full-platform spec describe
+- The earlier local-first MVP spec in [phase1-mvp/](phase1-mvp/README.md) and this full-platform spec describe
   **different scopes on purpose** (see app-spec `§42`). A one-line pointer from the docs README
   to `§42` will save a future reader the confusion.
 

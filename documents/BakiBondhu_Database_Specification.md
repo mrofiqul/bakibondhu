@@ -11,7 +11,7 @@ This is the complete, runnable PostgreSQL schema: enum types, all tables with fi
 
 **Design principles (from the app spec):** multi-tenant isolation by `business_id` (§5); append-only financial ledger with reversal/adjustment (§15); balances are COMPUTED, never stored (§15); offline sync fields on synced entities (§17); money is `NUMERIC(14,2)`; timestamps `timestamptz` (UTC), displayed Asia/Dhaka; UUID primary keys so the Android app can generate ids offline (§19).
 
-**Rev 2026-09-07 (specification review):** added `payment_allocations` and reworked `customer_aging` to age *unpaid* credit in the business timezone; RLS `FORCE` + non-owner app-role guidance; `business_users` moved to a user-scoped membership policy (plain tenant isolation broke multi-business login); `promise_to_pay` gained offline sync fields. See `docs/spec-review.md`.
+**Rev 2026-09-07 (specification review):** added `payment_allocations` and reworked `customer_aging` to age *unpaid* credit in the business timezone; RLS `FORCE` + non-owner app-role guidance; `business_users` moved to a user-scoped membership policy (plain tenant isolation broke multi-business login); `promise_to_pay` gained offline sync fields. See `spec-review.md`.
 
 ## 2. Complete schema (runnable)
 

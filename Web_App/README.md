@@ -8,11 +8,11 @@ Android app through it (app-spec §29).
 
 | Concern | Document |
 |---|---|
-| Screens, tables, filters, role-gating | `../BakiBondhu_Web_UIUX_Specification` |
-| Product/functional requirements | `../BakiBondhu_Android_Web_Application_Specification_v1.1` |
-| API contract | `../BakiBondhu_REST_API_Specification` |
-| Data model & reports source | `../BakiBondhu_Database_Specification` |
-| Structure, style, testing | `../BakiBondhu_Development_Coding_Standards` |
+| Screens, tables, filters, role-gating | `../documents/BakiBondhu_Web_UIUX_Specification` |
+| Product/functional requirements | `../documents/BakiBondhu_Android_Web_Application_Specification_v1.1` |
+| API contract | `../documents/BakiBondhu_REST_API_Specification` |
+| Data model & reports source | `../documents/BakiBondhu_Database_Specification` |
+| Structure, style, testing | `../documents/BakiBondhu_Development_Coding_Standards` |
 
 ## Folder structure (Coding Standards §2.3)
 

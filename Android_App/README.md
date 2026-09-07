@@ -7,12 +7,12 @@ app for merchants and field staff; it must work reliably with weak/no internet (
 
 | Concern | Document |
 |---|---|
-| Screens, fields, states, navigation | `../BakiBondhu_Android_UIUX_Specification` |
-| Product/functional requirements | `../BakiBondhu_Android_Web_Application_Specification_v1.1` |
-| API contract | `../BakiBondhu_REST_API_Specification` |
-| Offline sync engine & payment allocation | `../BakiBondhu_Offline_Sync_Technical_Design` |
-| Local data mirror | `../BakiBondhu_Database_Specification` (SQLite mirrors the synced entities) |
-| Structure, style, testing | `../BakiBondhu_Development_Coding_Standards` |
+| Screens, fields, states, navigation | `../documents/BakiBondhu_Android_UIUX_Specification` |
+| Product/functional requirements | `../documents/BakiBondhu_Android_Web_Application_Specification_v1.1` |
+| API contract | `../documents/BakiBondhu_REST_API_Specification` |
+| Offline sync engine & payment allocation | `../documents/BakiBondhu_Offline_Sync_Technical_Design` |
+| Local data mirror | `../documents/BakiBondhu_Database_Specification` (SQLite mirrors the synced entities) |
+| Structure, style, testing | `../documents/BakiBondhu_Development_Coding_Standards` |
 
 ## Folder structure (Coding Standards §2.2 — feature-first)
 

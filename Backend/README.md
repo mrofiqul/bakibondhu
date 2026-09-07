@@ -8,13 +8,13 @@ both the Android and Web apps use (app-spec §29). REST/JSON over HTTPS, JWT aut
 
 | Concern | Document |
 |---|---|
-| API contract (endpoints, request/response, errors) | `../BakiBondhu_REST_API_Specification` |
-| Data model, views, triggers, RLS, `reallocate_customer` | `../BakiBondhu_Database_Specification` · `../BakiBondhu_PostgreSQL_Schema.sql` |
-| Offline sync (push/pull, conflicts, FIFO allocation) | `../BakiBondhu_Offline_Sync_Technical_Design` |
-| Product/functional requirements | `../BakiBondhu_Android_Web_Application_Specification_v1.1` |
-| Structure, style, the transactional write pattern | `../BakiBondhu_Development_Coding_Standards` (§2.1, §11) |
-| Build, deploy, secrets, backups, observability | `../BakiBondhu_Deployment_DevOps_Specification` |
-| Test strategy & fixtures (incl. allocation) | `../BakiBondhu_QA_Test_Specification` |
+| API contract (endpoints, request/response, errors) | `../documents/BakiBondhu_REST_API_Specification` |
+| Data model, views, triggers, RLS, `reallocate_customer` | `../documents/BakiBondhu_Database_Specification` · `../documents/BakiBondhu_PostgreSQL_Schema.sql` |
+| Offline sync (push/pull, conflicts, FIFO allocation) | `../documents/BakiBondhu_Offline_Sync_Technical_Design` |
+| Product/functional requirements | `../documents/BakiBondhu_Android_Web_Application_Specification_v1.1` |
+| Structure, style, the transactional write pattern | `../documents/BakiBondhu_Development_Coding_Standards` (§2.1, §11) |
+| Build, deploy, secrets, backups, observability | `../documents/BakiBondhu_Deployment_DevOps_Specification` |
+| Test strategy & fixtures (incl. allocation) | `../documents/BakiBondhu_QA_Test_Specification` |
 
 ## Folder structure (Coding Standards §2.1 — Clean Architecture)
 
@@ -43,7 +43,7 @@ unit-tested in isolation (Coding Standards §2.1, §8).
 1. Create the solution and five projects (matching the folders above), e.g.
    `dotnet new webapi -n BakiBondhu.Api`, `dotnet new classlib` for the other three, and
    `dotnet new xunit -n BakiBondhu.Tests`; wire the project references per the dependency rule.
-2. Apply the schema: run `../BakiBondhu_PostgreSQL_Schema.sql` (the canonical, runnable schema)
+2. Apply the schema: run `../documents/BakiBondhu_PostgreSQL_Schema.sql` (the canonical, runnable schema)
    against PostgreSQL 13+ as a migration step.
 3. In `Infrastructure/Security`, set the RLS session context on every request
    (`app.current_business_id`, `app.current_user_id`) and connect as a **non-owner** DB role

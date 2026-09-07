@@ -33,7 +33,7 @@ schema is also a runnable **`.sql`** file.
 | 7 | **QA / Test-Case Specification** | `…_QA_Test_Specification` | ✅ new |
 | 8 | **Deployment & DevOps Specification** | `…_Deployment_DevOps_Specification` | ✅ new |
 | 9 | **Development & Coding Standards** | `…_Development_Coding_Standards` | ✅ new |
-| — | **Specification Review** (findings + schema fixes) | `docs/spec-review.md` | ✅ |
+| — | **Specification Review** (findings + schema fixes) | `spec-review.md` | ✅ |
 
 Security is specified inline in the Application Specification (§22) and reinforced in the
 Database (RLS), API (auth/RBAC), and DevOps specs, rather than as a separate document.
@@ -67,7 +67,7 @@ recommended build path is **validate first, then ship an Android-only, offline, 
 MVP around the core loop**, and add the backend/web/roles once daily-use retention is proven.
 
 **Phase-1 MVP reference (kept intentionally):** the earlier, narrower local-first MVP is
-documented in [`docs/`](docs/README.md) and rendered as `BakiBondhu_MVP_Spec.pdf`. It is the
+documented in [`phase1-mvp/`](phase1-mvp/README.md) and rendered as `BakiBondhu_MVP_Spec.pdf`. It is the
 Phase-1 detail of §42 — a subset of this platform, not a competing spec.
 
 **Strategy & validation assets (not specifications):** `BakiBondhu_Founders_Kit.pdf`,
@@ -76,7 +76,7 @@ Phase-1 detail of §42 — a subset of this platform, not a competing spec.
 
 ## 6. Open items carried from the review
 
-Tracked in `docs/spec-review.md`:
+Tracked in `spec-review.md`:
 
 - ✅ **FIFO payment allocation** — specified: `reallocate_customer()` in the schema (DB spec
   §13c), the full logic in Offline Sync Technical Design §5, and the aging view made
