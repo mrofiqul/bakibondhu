@@ -63,6 +63,9 @@ class TxnEntry {
   /// When the entry was recorded (drives ordering of payments).
   final DateTime createdAt;
 
+  /// Optional short note (e.g. "চাল, ডাল").
+  final String? note;
+
   /// When set, this entry reverses the transaction with this id. Both the
   /// original and this reversal are excluded from balances-aging attribution.
   final String? reversalOfId;
@@ -75,5 +78,6 @@ class TxnEntry {
     required this.createdAt,
     this.dueDate,
     this.reversalOfId,
+    this.note,
   });
 }
