@@ -579,8 +579,8 @@ BEGIN
      EXECUTE format('ALTER TABLE %I FORCE  ROW LEVEL SECURITY;', t);
      EXECUTE format($f$
         CREATE POLICY tenant_isolation ON %I
-        USING (business_id = current_setting('app.current_business_id', true)::uuid)
-        WITH CHECK (business_id = current_setting('app.current_business_id', true)::uuid);
+        USING (business_id = NULLIF(current_setting('app.current_business_id', true), '')::uuid)
+        WITH CHECK (business_id = NULLIF(current_setting('app.current_business_id', true), '')::uuid);
      $f$, t);
   END LOOP;
 END $$;
@@ -595,10 +595,10 @@ ALTER TABLE business_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE business_users FORCE  ROW LEVEL SECURITY;
 CREATE POLICY membership_visibility ON business_users
     USING (
-        user_id     = current_setting('app.current_user_id',     true)::uuid
-     OR business_id = current_setting('app.current_business_id', true)::uuid
+        user_id     = NULLIF(current_setting('app.current_user_id',     true), '')::uuid
+     OR business_id = NULLIF(current_setting('app.current_business_id', true), '')::uuid
     )
-    WITH CHECK (business_id = current_setting('app.current_business_id', true)::uuid);
+    WITH CHECK (business_id = NULLIF(current_setting('app.current_business_id', true), '')::uuid);
 
 -- NOTE: reminder_templates.business_id is NULL for system defaults; the tenant
 -- policy above hides them. Add a permissive read policy for shared templates:

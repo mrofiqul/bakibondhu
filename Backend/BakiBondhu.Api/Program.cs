@@ -1,42 +1,66 @@
-// BakiBondhu API — bootstrap.
+// BakiBondhu API.
 //
-// This is the runnable skeleton: it boots without a database and exposes a
-// health check and a versioned ping. The real endpoints (auth, customers,
-// transactions, sync) follow the REST API spec and use the transactional write
-// pattern from Coding Standards §11 (every financial write ends with
-// reallocate_customer in the same DB transaction). The schema lives in
-// ../../documents/BakiBondhu_PostgreSQL_Schema.sql.
+// Production-shaped: PostgreSQL (Npgsql/Dapper), JWT auth, and tenant isolation
+// via row-level security (the app connects as a non-owner role and sets
+// app.current_business_id / app.current_user_id per request). Endpoints follow
+// the REST API spec; financial writes re-run reallocate_customer in the same
+// transaction (Coding Standards §11).
 
-using BakiBondhu.Api.Sync;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using BakiBondhu.Api.Endpoints;
+using BakiBondhu.Api.Security;
+using BakiBondhu.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
+// Keep original claim names ("sub", "business_id") instead of the SOAP-era URIs.
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
-// In-memory dev sync backend (see SyncService — replace with PostgreSQL-backed).
-builder.Services.AddSingleton<SyncService>();
+var connectionString = builder.Configuration.GetConnectionString("App")
+    ?? "Host=localhost;Port=5432;Database=bakibondhu;Username=bakibondhu_app;Password=app_pw";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "dev-only-change-me-please-32-bytes-minimum-key!";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "bakibondhu";
+var jwtMinutes = int.TryParse(builder.Configuration["Jwt:AccessMinutes"], out var m) ? m : 60;
+
+builder.Services.AddSingleton(new AppDb(connectionString));
+builder.Services.AddSingleton(new JwtService(jwtKey, jwtIssuer, jwtMinutes));
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtIssuer,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateLifetime = true,
+        };
+    });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
-// Liveness/readiness probe (DevOps spec §8).
-app.MapGet("/health", () => Results.Ok(new
-{
-    status = "ok",
-    service = "bakibondhu-api",
-    time = DateTimeOffset.UtcNow,
-}));
+// Liveness probe.
+app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "bakibondhu-api", time = DateTimeOffset.UtcNow }));
 
-// Versioned API root (REST API spec §1 — /api/v1). Real resources mount here.
 var v1 = app.MapGroup("/api/v1");
 v1.MapGet("/ping", () => Results.Ok(new { pong = true, version = "v1" }));
 
-// Offline sync (REST API spec §12). Dev in-memory implementation.
-var sync = v1.MapGroup("/sync");
-sync.MapPost("/push", (PushRequest req, SyncService svc) => Results.Ok(svc.Push(req)));
-sync.MapGet("/pull", (SyncService svc, string? since) =>
-    Results.Ok(svc.Pull(long.TryParse(since, out var s) ? s : 0)));
+AuthEndpoints.Map(v1);   // anonymous
+SyncEndpoints.Map(v1);   // requires a JWT
 
 app.Run();

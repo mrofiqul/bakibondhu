@@ -1,17 +1,17 @@
 # BakiBondhu — PostgreSQL Database Specification
 
-**Version 1.0** · rev. 2026-09-07 (spec-review fixes) · Target PostgreSQL 13+
+**Version 1.0** · rev. 2026-09-08 · Target PostgreSQL 13+ (validated on 17)
 Companion to the Application Specification (v1.1). Markdown companion to the `.docx`; the runnable schema is `BakiBondhu_PostgreSQL_Schema.sql`.
 
 ---
 
 ## 1. Overview
 
-This is the complete, runnable PostgreSQL schema: enum types, all tables with fields, keys and indexes, computed balance/aging views, append-only ledger triggers, tenant-isolation row-level security, payment allocation, and seed data.
+Complete, runnable PostgreSQL schema: enum types, tables, keys and indexes, computed balance/aging views, append-only ledger triggers, FIFO payment allocation (`reallocate_customer`), tenant-isolation row-level security, and seed data. Validated end-to-end on PostgreSQL 17 (`psql -f`, `ON_ERROR_STOP`).
 
-**Design principles (from the app spec):** multi-tenant isolation by `business_id` (§5); append-only financial ledger with reversal/adjustment (§15); balances are COMPUTED, never stored (§15); offline sync fields on synced entities (§17); money is `NUMERIC(14,2)`; timestamps `timestamptz` (UTC), displayed Asia/Dhaka; UUID primary keys so the Android app can generate ids offline (§19).
+**Design principles:** multi-tenant isolation by `business_id` (§5); append-only ledger with reversal/adjustment (§15); balances COMPUTED, never stored (§15); offline sync fields (§17); money `NUMERIC(14,2)`; `timestamptz` UTC displayed Asia/Dhaka; UUID keys for offline id-generation (§19).
 
-**Rev 2026-09-07 (specification review):** added `payment_allocations` and reworked `customer_aging` to age *unpaid* credit in the business timezone; RLS `FORCE` + non-owner app-role guidance; `business_users` moved to a user-scoped membership policy (plain tenant isolation broke multi-business login); `promise_to_pay` gained offline sync fields. See `spec-review.md`.
+**Rev 2026-09-08:** RLS policies use `NULLIF(current_setting(...),'')::uuid` so an unset/empty tenant GUC denies access instead of erroring (pooled-connection safety). The application connects as a non-owner role — see `Backend/scripts/dev_db_setup.sql`.
 
 ## 2. Complete schema (runnable)
 
@@ -597,8 +597,8 @@ BEGIN
      EXECUTE format('ALTER TABLE %I FORCE  ROW LEVEL SECURITY;', t);
      EXECUTE format($f$
         CREATE POLICY tenant_isolation ON %I
-        USING (business_id = current_setting('app.current_business_id', true)::uuid)
-        WITH CHECK (business_id = current_setting('app.current_business_id', true)::uuid);
+        USING (business_id = NULLIF(current_setting('app.current_business_id', true), '')::uuid)
+        WITH CHECK (business_id = NULLIF(current_setting('app.current_business_id', true), '')::uuid);
      $f$, t);
   END LOOP;
 END $$;
@@ -613,10 +613,10 @@ ALTER TABLE business_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE business_users FORCE  ROW LEVEL SECURITY;
 CREATE POLICY membership_visibility ON business_users
     USING (
-        user_id     = current_setting('app.current_user_id',     true)::uuid
-     OR business_id = current_setting('app.current_business_id', true)::uuid
+        user_id     = NULLIF(current_setting('app.current_user_id',     true), '')::uuid
+     OR business_id = NULLIF(current_setting('app.current_business_id', true), '')::uuid
     )
-    WITH CHECK (business_id = current_setting('app.current_business_id', true)::uuid);
+    WITH CHECK (business_id = NULLIF(current_setting('app.current_business_id', true), '')::uuid);
 
 -- NOTE: reminder_templates.business_id is NULL for system defaults; the tenant
 -- policy above hides them. Add a permissive read policy for shared templates:
