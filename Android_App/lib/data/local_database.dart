@@ -9,16 +9,17 @@ import 'package:sqflite/sqflite.dart';
 ///    float, matching the server's NUMERIC(14,2).
 ///  - Transactions are append-only; a mistake is corrected with a reversing row
 ///    (`reversal_of_id`), never an edit/delete.
-///  - `sync_status` tracks the offline outbox (LOCAL/PENDING/SYNCED/…) for the
-///    sync engine added later.
-///  - Balances/aging are COMPUTED from these rows in Dart (domain layer), never
-///    stored.
-const int kLocalDbVersion = 1;
+///  - `sync_status` tracks the offline outbox (LOCAL/PENDING/SYNCED/…) and
+///    `server_id` is filled once the record is confirmed by the server
+///    (see sqflite_sync_store.dart). `sync_meta` holds the pull cursor.
+///  - Balances/aging are COMPUTED from these rows in Dart, never stored.
+const int kLocalDbVersion = 2;
 
 const List<String> kLocalSchema = [
   '''
   CREATE TABLE IF NOT EXISTS customers (
     id           TEXT PRIMARY KEY,
+    server_id    TEXT,
     name         TEXT NOT NULL,
     phone        TEXT,
     created_at   TEXT NOT NULL,
@@ -28,6 +29,7 @@ const List<String> kLocalSchema = [
   '''
   CREATE TABLE IF NOT EXISTS transactions (
     id              TEXT PRIMARY KEY,
+    server_id       TEXT,
     customer_id     TEXT NOT NULL,
     type            TEXT NOT NULL,               -- credit|payment|adjustment_debit|adjustment_credit
     amount_paisa    INTEGER NOT NULL CHECK (amount_paisa >= 0),
@@ -41,9 +43,12 @@ const List<String> kLocalSchema = [
   ''',
   'CREATE INDEX IF NOT EXISTS idx_txn_customer ON transactions (customer_id);',
   'CREATE INDEX IF NOT EXISTS idx_txn_sync ON transactions (sync_status);',
+  'CREATE INDEX IF NOT EXISTS idx_cust_server ON customers (server_id);',
+  'CREATE INDEX IF NOT EXISTS idx_txn_server ON transactions (server_id);',
+  'CREATE TABLE IF NOT EXISTS sync_meta (key TEXT PRIMARY KEY, value TEXT);',
 ];
 
-/// Opens (and creates on first run) the local database.
+/// Opens (and creates/migrates) the local database.
 Future<Database> openLocalDatabase({String fileName = 'bakibondhu.db'}) async {
   final dir = await getDatabasesPath();
   return openDatabase(
@@ -53,6 +58,18 @@ Future<Database> openLocalDatabase({String fileName = 'bakibondhu.db'}) async {
     onCreate: (db, version) async {
       for (final stmt in kLocalSchema) {
         await db.execute(stmt);
+      }
+    },
+    onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 2) {
+        await db.execute('ALTER TABLE customers ADD COLUMN server_id TEXT;');
+        await db.execute('ALTER TABLE transactions ADD COLUMN server_id TEXT;');
+        await db.execute(
+            'CREATE TABLE IF NOT EXISTS sync_meta (key TEXT PRIMARY KEY, value TEXT);');
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_cust_server ON customers (server_id);');
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_txn_server ON transactions (server_id);');
       }
     },
   );
