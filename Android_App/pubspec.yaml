@@ -26,6 +26,9 @@ dependencies:
   # HTTP client for the sync API (push/pull to the backend).
   http: ^1.2.0
 
+  # Secure storage for the JWT access token (spec §22/§38).
+  flutter_secure_storage: ^9.2.2
+
   # Formatting / dates (Asia/Dhaka display) — used as the UI is built out.
   intl: ^0.19.0
 

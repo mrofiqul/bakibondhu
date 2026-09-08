@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/theme.dart';
+import 'package:bakibondhu/data/auth_api.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
+import 'package:bakibondhu/data/session.dart';
 import 'package:bakibondhu/data/settings_store.dart';
 import 'package:bakibondhu/features/dashboard/home_screen.dart';
 import 'package:bakibondhu/features/onboarding/onboarding_screen.dart';
@@ -17,12 +19,16 @@ class BakiBondhuApp extends StatelessWidget {
   final SettingsStore settings;
   final SyncStore syncStore;
   final SyncEngine? syncEngine;
+  final Session session;
+  final AuthApi authApi;
   final bool startOnboarding;
 
   const BakiBondhuApp({
     required this.repo,
     required this.settings,
     required this.syncStore,
+    required this.session,
+    required this.authApi,
     this.syncEngine,
     this.startOnboarding = false,
     super.key,
@@ -35,6 +41,8 @@ class BakiBondhuApp extends StatelessWidget {
       settings: settings,
       syncStore: syncStore,
       syncEngine: syncEngine,
+      session: session,
+      authApi: authApi,
       child: MaterialApp(
         title: S.appName,
         debugShowCheckedModeBanner: false,

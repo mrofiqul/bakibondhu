@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
+import 'package:bakibondhu/features/auth/login_screen.dart';
 import 'package:bakibondhu/sync/sync_store.dart';
 import 'package:bakibondhu/sync/sync_types.dart';
 
@@ -40,20 +41,40 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
 
   Future<void> _syncNow() async {
     final engine = AppScope.syncEngineOf(context);
-    if (engine == null) return;
+    if (engine == null || !AppScope.sessionOf(context).isLoggedIn) return;
     setState(() => _syncing = true);
-    final report = await engine.syncNow();
-    if (!mounted) return;
-    setState(() => _syncing = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(S.syncResult(report.pushed, report.pulled))),
-    );
-    _refresh();
+    try {
+      final report = await engine.syncNow();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.syncResult(report.pushed, report.pulled))),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text(S.couldNotOpen)));
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+      _refresh();
+    }
+  }
+
+  Future<void> _login() async {
+    final ok = await Navigator.push<bool>(
+      context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+    if (ok == true && mounted) setState(() {});
+  }
+
+  Future<void> _logout() async {
+    await AppScope.sessionOf(context).clear();
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final canSync = AppScope.syncEngineOf(context) != null;
+    final engine = AppScope.syncEngineOf(context);
+    final session = AppScope.sessionOf(context);
+    final canSync = engine != null && session.isLoggedIn;
     return Scaffold(
       appBar: AppBar(title: const Text(S.syncCenter)),
       body: FutureBuilder<_SyncData>(
@@ -80,20 +101,35 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
               _StatTile(
                   label: S.conflictsLabel, value: c.conflict, icon: Icons.merge_type),
               const SizedBox(height: 16),
-              if (!canSync)
-                Text(S.notConnected,
-                    style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height: 8),
-              FilledButton.icon(
-                onPressed: (canSync && !_syncing) ? _syncNow : null,
-                icon: _syncing
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.sync),
-                label: const Text(S.syncNow),
-              ),
+              if (engine == null)
+                Text(S.notConnected, style: Theme.of(context).textTheme.bodySmall)
+              else if (!session.isLoggedIn) ...[
+                Text(S.signInToSync, style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: _login,
+                  icon: const Icon(Icons.login),
+                  label: const Text(S.logIn),
+                ),
+              ] else ...[
+                Row(children: [
+                  const Icon(Icons.verified_user, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(S.loggedInAs(session.role ?? ''))),
+                  TextButton(onPressed: _logout, child: const Text(S.logOut)),
+                ]),
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: (canSync && !_syncing) ? _syncNow : null,
+                  icon: _syncing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.sync),
+                  label: const Text(S.syncNow),
+                ),
+              ],
               if (data.conflicts.isNotEmpty) ...[
                 const SizedBox(height: 24),
                 Text(S.conflictsNeedReview,

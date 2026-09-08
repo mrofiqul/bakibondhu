@@ -3,8 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import 'package:bakibondhu/data/auth_api.dart';
 import 'package:bakibondhu/data/in_memory_ledger_repository.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
+import 'package:bakibondhu/data/session.dart';
 import 'package:bakibondhu/data/settings_store.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/dashboard/home_screen.dart';
@@ -16,6 +20,8 @@ Widget _app(LedgerRepository repo) => AppScope(
       repo: repo,
       settings: InMemorySettingsStore(),
       syncStore: InMemorySyncStore(const []),
+      session: Session(const FlutterSecureStorage()),
+      authApi: AuthApi(baseUrl: Uri.parse('http://localhost')),
       child: const MaterialApp(home: HomeScreen()),
     );
 

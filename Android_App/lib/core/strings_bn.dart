@@ -61,6 +61,20 @@ class S {
   static String syncResult(int pushed, int pulled) =>
       'আপলোড $pushed · ডাউনলোড $pulled';
 
+  // Auth (login to sync)
+  static const logIn = 'লগ ইন';
+  static const registerAction = 'নিবন্ধন';
+  static const signInToSync = 'সিঙ্ক করতে লগ ইন করুন';
+  static const logOut = 'লগ আউট';
+  static const passwordLabel = 'পাসওয়ার্ড';
+  static const businessNameLabel = 'দোকান/ব্যবসার নাম';
+  static const yourNameLabel = 'আপনার নাম';
+  static const identifierLabel = 'মোবাইল নম্বর';
+  static const toggleToLogin = 'অ্যাকাউন্ট আছে? লগ ইন করুন';
+  static const toggleToRegister = 'নতুন? নিবন্ধন করুন';
+  static const authFailed = 'ব্যর্থ হয়েছে';
+  static String loggedInAs(String role) => 'লগ ইন করা আছে ($role)';
+
   // First run / onboarding
   static const welcome = 'স্বাগতম';
   static const onboardSubtitle = 'আপনার দোকানের নাম দিন — রিমাইন্ডারে ব্যবহার হবে।';
