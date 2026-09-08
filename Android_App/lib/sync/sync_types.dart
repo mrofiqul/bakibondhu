@@ -1,4 +1,4 @@
-/// Types shared by the sync engine (Offline Sync Technical Design §2–§6).
+// Types shared by the sync engine (Offline Sync Technical Design §2–§6).
 
 /// Lifecycle of a locally-created record (spec §17).
 enum SyncState { local, pending, synced, failed, conflict }

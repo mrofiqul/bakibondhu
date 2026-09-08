@@ -196,7 +196,7 @@ class _EmptyState extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium,
                 textAlign: TextAlign.center),
             const SizedBox(height: 8),
-            Text(S.emptyPrompt, textAlign: TextAlign.center),
+            const Text(S.emptyPrompt, textAlign: TextAlign.center),
           ],
         ),
       ),

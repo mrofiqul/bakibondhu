@@ -133,7 +133,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             padding: const EdgeInsets.all(12),
             child: FilledButton(
               onPressed: _valid && !_saving ? _save : null,
-              child: Text(S.save),
+              child: const Text(S.save),
             ),
           ),
         ],

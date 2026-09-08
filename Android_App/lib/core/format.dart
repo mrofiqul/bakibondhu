@@ -12,7 +12,7 @@ String shortDate(DateTime d) => '${d.day}/${d.month}';
 String balanceLabel(Money balance) {
   if (balance.isZero) return S.settled;
   if (balance.isNegative) return '${S.advance} ${Money(-balance.paisa).format()}';
-  return '${balance.format()} ${_baki}';
+  return '${balance.format()} $_baki';
 }
 
 const String _baki = 'বাকি';

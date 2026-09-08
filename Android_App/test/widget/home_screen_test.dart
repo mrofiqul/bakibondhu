@@ -8,12 +8,14 @@ import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/data/settings_store.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/dashboard/home_screen.dart';
+import 'package:bakibondhu/sync/sync_store.dart';
 
 /// Widget tests for the Home screen. Run with `flutter test` (needs the Flutter
 /// SDK; the pure-Dart harness can't render widgets).
 Widget _app(LedgerRepository repo) => AppScope(
       repo: repo,
       settings: InMemorySettingsStore(),
+      syncStore: InMemorySyncStore(const []),
       child: const MaterialApp(home: HomeScreen()),
     );
 

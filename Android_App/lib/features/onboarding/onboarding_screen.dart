@@ -57,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 24),
-              Text(S.onboardSubtitle, textAlign: TextAlign.center),
+              const Text(S.onboardSubtitle, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               TextField(
                 controller: _shopCtrl,

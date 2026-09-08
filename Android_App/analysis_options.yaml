@@ -1,3 +1,6 @@
+analyzer:
+  exclude:
+    - build/**
 include: package:flutter_lints/flutter.yaml
 
 # Project-wide analysis for BakiBondhu. Keep the build warning-free (Coding
