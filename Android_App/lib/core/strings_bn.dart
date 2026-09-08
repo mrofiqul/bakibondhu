@@ -31,4 +31,20 @@ class S {
   static const save = 'সেভ করুন';
   static const add = 'যোগ করুন';
   static const cancel = 'বাতিল';
+
+  // Add transaction (Screen 3)
+  static const dateLabel = 'তারিখ';
+  static const today = 'আজ';
+  static const dueDateLabel = 'শেষ তারিখ';
+
+  // Reminder (Screen 5)
+  static const reminderTitle = 'মনে করিয়ে দিন';
+  static const sendSms = 'SMS পাঠান';
+  static const whatsapp = 'WhatsApp';
+  static const editBeforeSend = 'পাঠানোর আগে বদলাতে পারেন';
+  static const needPhone = 'রিমাইন্ডার পাঠাতে মোবাইল নম্বর দরকার';
+  static const nothingDue = 'এই কাস্টমারের কোনো বাকি নেই';
+  static const shopNamePlaceholder = 'আপনার দোকান';
+  static const couldNotOpen = 'অ্যাপটি খোলা গেল না';
 }
+

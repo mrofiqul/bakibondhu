@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
-import 'package:bakibondhu/core/dialogs.dart';
 import 'package:bakibondhu/core/format.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/theme.dart';
-import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/models.dart';
 import 'package:bakibondhu/domain/money.dart';
+import 'package:bakibondhu/features/reminders/reminder_preview_screen.dart';
+import 'package:bakibondhu/features/transactions/add_transaction_screen.dart';
 
 /// Screen 2 — Customer detail: balance on top, full history, and the three
 /// actions বাকি দিলাম · টাকা পেলাম · মনে করান (spec §8.5, Android UI/UX §5.7).
@@ -29,8 +29,6 @@ class _DetailData {
 class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   late Future<_DetailData> _future;
 
-  LedgerRepository get _repo => AppScope.of(context);
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -47,25 +45,31 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
   void _refresh() => setState(() => _future = _load());
 
-  Future<void> _recordCredit() async {
-    final input = await showAmountDialog(context, title: S.gaveCredit);
-    if (input == null) return;
-    await _repo.recordCredit(
-        customerId: widget.customerId, amount: input.amount, note: input.note);
-    _refresh();
+  Future<void> _openAdd(TxnType type) async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            AddTransactionScreen(customerId: widget.customerId, type: type),
+      ),
+    );
+    if (saved == true) _refresh();
   }
 
-  Future<void> _recordPayment() async {
-    final input = await showAmountDialog(context, title: S.gotPayment);
-    if (input == null) return;
-    await _repo.recordPayment(
-        customerId: widget.customerId, amount: input.amount, note: input.note);
-    _refresh();
-  }
+  void _snack(String msg) => ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text(msg)));
 
-  void _remind() {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text(S.reminderSoon)));
+  void _openReminder(_DetailData data) {
+    if (data.balance <= Money.zero) return _snack(S.nothingDue);
+    final phone = data.customer.phone;
+    if (phone == null || phone.isEmpty) return _snack(S.needPhone);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReminderPreviewScreen(
+            customer: data.customer, balance: data.balance),
+      ),
+    );
   }
 
   @override
@@ -90,9 +94,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       children: [
         _BalanceHeader(customer: data.customer, balance: data.balance),
         _ActionsRow(
-          onCredit: _recordCredit,
-          onPayment: _recordPayment,
-          onRemind: _remind,
+          onCredit: () => _openAdd(TxnType.credit),
+          onPayment: () => _openAdd(TxnType.payment),
+          onRemind: () => _openReminder(data),
         ),
         const Divider(height: 1),
         Expanded(
