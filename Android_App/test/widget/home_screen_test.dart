@@ -1,0 +1,41 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:bakibondhu/core/app_scope.dart';
+import 'package:bakibondhu/core/strings_bn.dart';
+import 'package:bakibondhu/data/in_memory_ledger_repository.dart';
+import 'package:bakibondhu/data/ledger_repository.dart';
+import 'package:bakibondhu/data/settings_store.dart';
+import 'package:bakibondhu/domain/money.dart';
+import 'package:bakibondhu/features/dashboard/home_screen.dart';
+
+/// Widget tests for the Home screen. Run with `flutter test` (needs the Flutter
+/// SDK; the pure-Dart harness can't render widgets).
+Widget _app(LedgerRepository repo) => AppScope(
+      repo: repo,
+      settings: InMemorySettingsStore(),
+      child: const MaterialApp(home: HomeScreen()),
+    );
+
+void main() {
+  testWidgets('empty state prompts to add the first customer', (tester) async {
+    await tester.pumpWidget(_app(InMemoryLedgerRepository()));
+    await tester.pumpAndSettle();
+
+    expect(find.text(S.emptyTitle), findsOneWidget);
+    expect(find.text(S.newCustomer), findsOneWidget); // the FAB label
+  });
+
+  testWidgets('shows the total and a customer once data exists', (tester) async {
+    final repo = InMemoryLedgerRepository();
+    final k = await repo.addCustomer(name: 'করিম স্টোর', phone: '01712345678');
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(45000));
+
+    await tester.pumpWidget(_app(repo));
+    await tester.pumpAndSettle();
+
+    expect(find.text('করিম স্টোর'), findsOneWidget);
+    // ৳45,000 appears in both the total card and the customer row.
+    expect(find.textContaining('৳45,000'), findsWidgets);
+  });
+}

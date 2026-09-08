@@ -46,5 +46,11 @@ class S {
   static const nothingDue = 'এই কাস্টমারের কোনো বাকি নেই';
   static const shopNamePlaceholder = 'আপনার দোকান';
   static const couldNotOpen = 'অ্যাপটি খোলা গেল না';
+
+  // First run / onboarding
+  static const welcome = 'স্বাগতম';
+  static const onboardSubtitle = 'আপনার দোকানের নাম দিন — রিমাইন্ডারে ব্যবহার হবে।';
+  static const shopNameLabel = 'দোকানের নাম (ঐচ্ছিক)';
+  static const getStarted = 'শুরু করুন';
 }
 

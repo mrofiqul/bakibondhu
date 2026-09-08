@@ -59,15 +59,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   void _snack(String msg) => ScaffoldMessenger.of(context)
       .showSnackBar(SnackBar(content: Text(msg)));
 
-  void _openReminder(_DetailData data) {
+  Future<void> _openReminder(_DetailData data) async {
     if (data.balance <= Money.zero) return _snack(S.nothingDue);
     final phone = data.customer.phone;
     if (phone == null || phone.isEmpty) return _snack(S.needPhone);
+    final shopName = await AppScope.settingsOf(context).shopName();
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ReminderPreviewScreen(
-            customer: data.customer, balance: data.balance),
+          customer: data.customer,
+          balance: data.balance,
+          shopName: shopName ?? S.shopNamePlaceholder,
+        ),
       ),
     );
   }
