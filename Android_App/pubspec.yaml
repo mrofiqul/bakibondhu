@@ -23,6 +23,9 @@ dependencies:
   # Small persisted settings (shop name, onboarding flag).
   shared_preferences: ^2.3.0
 
+  # HTTP client for the sync API (push/pull to the backend).
+  http: ^1.2.0
+
   # Formatting / dates (Asia/Dhaka display) — used as the UI is built out.
   intl: ^0.19.0
 
