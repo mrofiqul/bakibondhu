@@ -67,6 +67,24 @@ class PullData {
   });
 }
 
+/// A snapshot of the local outbox by state, for the Sync Center (spec §5.14).
+class SyncStatusCounts {
+  final int pending;
+  final int failed;
+  final int conflict;
+  final int synced;
+
+  const SyncStatusCounts({
+    this.pending = 0,
+    this.failed = 0,
+    this.conflict = 0,
+    this.synced = 0,
+  });
+
+  int get unsynced => pending + failed + conflict;
+  int get total => unsynced + synced;
+}
+
 /// Outcome of a sync run, for the UI / logs.
 class SyncReport {
   final int pushed;

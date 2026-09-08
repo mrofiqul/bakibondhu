@@ -47,6 +47,20 @@ class S {
   static const shopNamePlaceholder = 'আপনার দোকান';
   static const couldNotOpen = 'অ্যাপটি খোলা গেল না';
 
+  // Sync Center (Screen §5.14)
+  static const syncCenter = 'সিঙ্ক';
+  static const syncNow = 'এখন সিঙ্ক করুন';
+  static const synced = 'সিঙ্ক হয়েছে';
+  static const toUpload = 'আপলোডের অপেক্ষায়';
+  static const failedLabel = 'ব্যর্থ';
+  static const conflictsLabel = 'দ্বন্দ্ব';
+  static const allSynced = 'সব সিঙ্ক হয়েছে';
+  static const notConnected = 'সার্ভার এখনো যুক্ত হয়নি — সব ডেটা এই ফোনে সংরক্ষিত।';
+  static const conflictsNeedReview = 'কিছু লেনদেন পর্যালোচনা দরকার';
+  static const conflictReviewSoon = 'সার্ভার যুক্ত হলে দ্বন্দ্ব পর্যালোচনা করা যাবে';
+  static String syncResult(int pushed, int pulled) =>
+      'আপলোড $pushed · ডাউনলোড $pulled';
+
   // First run / onboarding
   static const welcome = 'স্বাগতম';
   static const onboardSubtitle = 'আপনার দোকানের নাম দিন — রিমাইন্ডারে ব্যবহার হবে।';

@@ -13,6 +13,12 @@ abstract class SyncStore {
   Future<void> applyServerRecords(List<ServerRecord> records);
   Future<String?> cursor();
   Future<void> setCursor(String value);
+
+  /// Counts by sync state, for the Sync Center.
+  Future<SyncStatusCounts> status();
+
+  /// Records currently in CONFLICT, for the review screen.
+  Future<List<LocalChange>> conflicts();
 }
 
 /// In-memory [SyncStore] for tests.
@@ -61,4 +67,29 @@ class InMemorySyncStore implements SyncStore {
 
   @override
   Future<void> setCursor(String value) async => _cursor = value;
+
+  @override
+  Future<SyncStatusCounts> status() async {
+    var pending = 0, failed = 0, conflict = 0, synced = 0;
+    for (final s in statuses.values) {
+      switch (s) {
+        case SyncState.local:
+        case SyncState.pending:
+          pending++;
+        case SyncState.failed:
+          failed++;
+        case SyncState.conflict:
+          conflict++;
+        case SyncState.synced:
+          synced++;
+      }
+    }
+    return SyncStatusCounts(
+        pending: pending, failed: failed, conflict: conflict, synced: synced);
+  }
+
+  @override
+  Future<List<LocalChange>> conflicts() async => _pending
+      .where((c) => statuses[_key(c.kind, c.localId)] == SyncState.conflict)
+      .toList();
 }

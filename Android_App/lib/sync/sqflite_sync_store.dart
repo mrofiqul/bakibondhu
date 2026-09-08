@@ -170,4 +170,47 @@ class SqfliteSyncStore implements SyncStore {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+
+  // ---- status / conflicts ---------------------------------------------------
+
+  @override
+  Future<SyncStatusCounts> status() async {
+    final rows = await _db.rawQuery('''
+      SELECT sync_status AS s, COUNT(*) AS c FROM (
+        SELECT sync_status FROM customers
+        UNION ALL
+        SELECT sync_status FROM transactions
+      ) GROUP BY sync_status
+    ''');
+    var pending = 0, failed = 0, conflict = 0, synced = 0;
+    for (final r in rows) {
+      final c = (r['c'] as int?) ?? 0;
+      switch ((r['s'] as String?) ?? '') {
+        case 'SYNCED':
+          synced += c;
+        case 'FAILED':
+          failed += c;
+        case 'CONFLICT':
+          conflict += c;
+        default: // LOCAL / PENDING
+          pending += c;
+      }
+    }
+    return SyncStatusCounts(
+        pending: pending, failed: failed, conflict: conflict, synced: synced);
+  }
+
+  @override
+  Future<List<LocalChange>> conflicts() async {
+    final out = <LocalChange>[];
+    for (final kind in EntityKind.values) {
+      final rows = await _db.query(_table(kind),
+          columns: ['id'], where: "sync_status = 'CONFLICT'");
+      for (final r in rows) {
+        out.add(LocalChange(
+            kind: kind, localId: r['id'] as String, data: const {}));
+      }
+    }
+    return out;
+  }
 }

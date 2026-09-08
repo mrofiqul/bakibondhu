@@ -8,6 +8,7 @@ import 'package:bakibondhu/core/theme.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/customers/customer_detail_screen.dart';
+import 'package:bakibondhu/features/sync/sync_center_screen.dart';
 
 /// Screen 1 — Home ("money out there"): one big total, customers sorted by who
 /// owes most, and a button to add a customer (spec §8.2, Android UI/UX §5.4).
@@ -54,7 +55,22 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(S.appName)),
+      appBar: AppBar(
+        title: const Text(S.appName),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync),
+            tooltip: S.syncCenter,
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SyncCenterScreen()),
+              );
+              _refresh();
+            },
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addCustomer,
         icon: const Icon(Icons.person_add_alt_1),
