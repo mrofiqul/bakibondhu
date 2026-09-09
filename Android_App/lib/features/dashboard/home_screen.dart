@@ -27,30 +27,33 @@ class _HomeData {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<_HomeData> _future;
+  _HomeData? _data;
 
   LedgerRepository get _repo => AppScope.of(context);
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _future = _load();
+    _refresh();
   }
 
-  Future<_HomeData> _load() async {
+  /// Reloads customers + total from the repository and rebuilds. We store the
+  /// result in state (rather than swapping a FutureBuilder's future) so a reload
+  /// after add/edit reliably repaints — swapping the future left the old
+  /// snapshot on screen.
+  Future<void> _refresh() async {
     final repo = AppScope.of(context);
     final customers = await repo.customersWithBalances();
     final total = await repo.totalReceivable();
-    return _HomeData(total, customers);
+    if (!mounted) return;
+    setState(() => _data = _HomeData(total, customers));
   }
-
-  void _refresh() => setState(() => _future = _load());
 
   Future<void> _addCustomer() async {
     final input = await showAddCustomerDialog(context);
     if (input == null) return;
     await _repo.addCustomer(name: input.name, phone: input.phone);
-    _refresh();
+    await _refresh();
   }
 
   @override
@@ -85,13 +88,12 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: const Icon(Icons.person_add_alt_1),
         label: const Text(S.newCustomer),
       ),
-      body: FutureBuilder<_HomeData>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
+      body: Builder(
+        builder: (context) {
+          final data = _data;
+          if (data == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          final data = snap.data!;
           if (data.customers.isEmpty) return const _EmptyState();
           return Column(
             children: [

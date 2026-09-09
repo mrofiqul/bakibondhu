@@ -24,21 +24,24 @@ class _Data {
 }
 
 class _CollectionScreenState extends State<CollectionScreen> {
-  late Future<_Data> _future;
+  _Data? _data;
   LedgerRepository get _repo => AppScope.of(context);
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _future = _load();
+    _refresh();
   }
 
-  Future<_Data> _load() async => _Data(
-        await _repo.collectionActivitiesOf(widget.customerId),
-        await _repo.promisesOf(widget.customerId),
-      );
-
-  void _refresh() => setState(() => _future = _load());
+  /// Reloads activities + promises into state and rebuilds. Storing the result
+  /// (rather than swapping a FutureBuilder's future) makes a reload after adding
+  /// an activity/promise reliably repaint.
+  Future<void> _refresh() async {
+    final activities = await _repo.collectionActivitiesOf(widget.customerId);
+    final promises = await _repo.promisesOf(widget.customerId);
+    if (!mounted) return;
+    setState(() => _data = _Data(activities, promises));
+  }
 
   Future<void> _addActivity() async {
     final result = await _showActivityDialog(context);
@@ -69,13 +72,12 @@ class _CollectionScreenState extends State<CollectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(S.collections)),
-      body: FutureBuilder<_Data>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
+      body: Builder(
+        builder: (context) {
+          final data = _data;
+          if (data == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          final data = snap.data!;
           return ListView(
             padding: const EdgeInsets.all(12),
             children: [

@@ -28,23 +28,25 @@ class _DetailData {
 }
 
 class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
-  late Future<_DetailData> _future;
+  _DetailData? _data;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _future = _load();
+    _refresh();
   }
 
-  Future<_DetailData> _load() async {
+  /// Reloads balance + history into state and rebuilds. Storing the result
+  /// (rather than swapping a FutureBuilder's future) makes a reload after a new
+  /// transaction reliably repaint.
+  Future<void> _refresh() async {
     final repo = AppScope.of(context);
     final customer = await repo.customer(widget.customerId);
     final balance = await repo.balanceOf(widget.customerId);
     final history = await repo.transactionsOf(widget.customerId);
-    return _DetailData(customer!, balance, history);
+    if (!mounted) return;
+    setState(() => _data = _DetailData(customer!, balance, history));
   }
-
-  void _refresh() => setState(() => _future = _load());
 
   Future<void> _openAdd(TxnType type) async {
     final saved = await Navigator.push<bool>(
@@ -80,33 +82,27 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<_DetailData>(
-      future: _future,
-      builder: (context, snap) {
-        final title = snap.hasData ? snap.data!.customer.name : '';
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(title),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.assignment_outlined),
-                tooltip: S.collections,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        CollectionScreen(customerId: widget.customerId),
-                  ),
-                ),
+    final data = _data;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(data?.customer.name ?? ''),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.assignment_outlined),
+            tooltip: S.collections,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    CollectionScreen(customerId: widget.customerId),
               ),
-            ],
+            ),
           ),
-          body: switch (snap.connectionState) {
-            ConnectionState.done => _body(snap.data!),
-            _ => const Center(child: CircularProgressIndicator()),
-          },
-        );
-      },
+        ],
+      ),
+      body: data == null
+          ? const Center(child: CircularProgressIndicator())
+          : _body(data),
     );
   }
 
