@@ -6,6 +6,7 @@ import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/theme.dart';
 import 'package:bakibondhu/domain/models.dart';
 import 'package:bakibondhu/domain/money.dart';
+import 'package:bakibondhu/features/collections/collection_screen.dart';
 import 'package:bakibondhu/features/reminders/reminder_preview_screen.dart';
 import 'package:bakibondhu/features/transactions/add_transaction_screen.dart';
 
@@ -84,7 +85,22 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       builder: (context, snap) {
         final title = snap.hasData ? snap.data!.customer.name : '';
         return Scaffold(
-          appBar: AppBar(title: Text(title)),
+          appBar: AppBar(
+            title: Text(title),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.assignment_outlined),
+                tooltip: S.collections,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        CollectionScreen(customerId: widget.customerId),
+                  ),
+                ),
+              ),
+            ],
+          ),
           body: switch (snap.connectionState) {
             ConnectionState.done => _body(snap.data!),
             _ => const Center(child: CircularProgressIndicator()),

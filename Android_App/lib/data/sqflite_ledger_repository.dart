@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/aging.dart';
 import 'package:bakibondhu/domain/balance.dart';
+import 'package:bakibondhu/domain/collections.dart';
 import 'package:bakibondhu/domain/models.dart';
 import 'package:bakibondhu/domain/money.dart';
 
@@ -181,5 +182,106 @@ class SqfliteLedgerRepository implements LedgerRepository {
       byCustomer.putIfAbsent(t.customerId, () => []).add(t);
     }
     return totalOwed(byCustomer.values.map(customerBalance));
+  }
+
+  // ---- collections ----
+
+  @override
+  Future<CollectionActivity> addCollectionActivity({
+    required String customerId,
+    required ContactMethod method,
+    required CollectionStatus status,
+    String? note,
+    DateTime? nextFollowUp,
+    DateTime? at,
+  }) async {
+    final activity = CollectionActivity(
+      id: _uuid.v4(),
+      customerId: customerId,
+      method: method,
+      status: status,
+      note: note,
+      nextFollowUp: nextFollowUp,
+      contactedAt: at ?? DateTime.now(),
+    );
+    await _db.insert('collection_activities', {
+      'id': activity.id,
+      'customer_id': customerId,
+      'method': contactMethodCodes[method],
+      'status': collectionStatusCodes[status],
+      'note': note,
+      'contacted_at': activity.contactedAt.toUtc().toIso8601String(),
+      'next_follow_up': nextFollowUp?.toIso8601String(),
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+      'sync_status': 'PENDING',
+    });
+    return activity;
+  }
+
+  @override
+  Future<List<CollectionActivity>> collectionActivitiesOf(String customerId) async {
+    final rows = await _db.query('collection_activities',
+        where: 'customer_id = ?', whereArgs: [customerId], orderBy: 'contacted_at DESC, rowid DESC');
+    return rows.map((r) => CollectionActivity(
+          id: r['id'] as String,
+          customerId: r['customer_id'] as String,
+          method: contactMethodFromCode(r['method'] as String),
+          status: collectionStatusFromCode(r['status'] as String),
+          note: r['note'] as String?,
+          contactedAt: DateTime.parse(r['contacted_at'] as String),
+          nextFollowUp: (r['next_follow_up'] as String?) == null
+              ? null
+              : DateTime.parse(r['next_follow_up'] as String),
+        )).toList();
+  }
+
+  @override
+  Future<PromiseToPay> addPromise({
+    required String customerId,
+    required Money amount,
+    required DateTime promiseDate,
+    DateTime? followUpDate,
+    String? note,
+    DateTime? at,
+  }) async {
+    final promise = PromiseToPay(
+      id: _uuid.v4(),
+      customerId: customerId,
+      promisedAmount: amount,
+      promiseDate: promiseDate,
+      followUpDate: followUpDate,
+      customerNote: note,
+      createdAt: at ?? DateTime.now(),
+    );
+    await _db.insert('promise_to_pay', {
+      'id': promise.id,
+      'customer_id': customerId,
+      'promised_amount_paisa': amount.paisa,
+      'promise_date': promiseDate.toIso8601String(),
+      'follow_up_date': followUpDate?.toIso8601String(),
+      'customer_note': note,
+      'status': promiseStatusCodes[PromiseStatus.open],
+      'created_at': promise.createdAt.toUtc().toIso8601String(),
+      'sync_status': 'PENDING',
+    });
+    return promise;
+  }
+
+  @override
+  Future<List<PromiseToPay>> promisesOf(String customerId) async {
+    final rows = await _db.query('promise_to_pay',
+        where: 'customer_id = ?', whereArgs: [customerId], orderBy: 'created_at DESC, rowid DESC');
+    return rows.map((r) => PromiseToPay(
+          id: r['id'] as String,
+          customerId: r['customer_id'] as String,
+          promisedAmount: Money(r['promised_amount_paisa'] as int),
+          promiseDate: DateTime.parse(r['promise_date'] as String),
+          followUpDate: (r['follow_up_date'] as String?) == null
+              ? null
+              : DateTime.parse(r['follow_up_date'] as String),
+          customerNote: r['customer_note'] as String?,
+          status: promiseStatusFromCode(r['status'] as String),
+          createdAt: DateTime.parse(r['created_at'] as String),
+        )).toList();
   }
 }

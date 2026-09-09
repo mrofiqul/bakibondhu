@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bakibondhu/data/in_memory_ledger_repository.dart';
+import 'package:bakibondhu/domain/collections.dart';
 import 'package:bakibondhu/domain/money.dart';
 
 /// Behavioural tests for the repository contract, against the in-memory store.
@@ -54,5 +55,37 @@ void main() {
     final repo = newRepo();
     expect(await repo.customers(), isEmpty);
     expect(await repo.totalReceivable(), Money.zero);
+  });
+
+  test('records collection activities and promises, newest first', () async {
+    final repo = newRepo();
+    final k = await repo.addCustomer(name: 'করিম');
+
+    await repo.addCollectionActivity(
+      customerId: k.id,
+      method: ContactMethod.phone,
+      status: CollectionStatus.promiseToPay,
+      note: 'শুক্রবার দেবে',
+      at: DateTime(2026, 9, 1),
+    );
+    await repo.addCollectionActivity(
+      customerId: k.id,
+      method: ContactMethod.visit,
+      status: CollectionStatus.paid,
+      at: DateTime(2026, 9, 5),
+    );
+    await repo.addPromise(
+      customerId: k.id,
+      amount: Money.taka(20000),
+      promiseDate: DateTime(2026, 9, 12),
+    );
+
+    final activities = await repo.collectionActivitiesOf(k.id);
+    expect(activities.length, 2);
+    expect(activities.first.status, CollectionStatus.paid); // newest first
+
+    final promises = await repo.promisesOf(k.id);
+    expect(promises.single.promisedAmount, Money.taka(20000));
+    expect(promises.single.status, PromiseStatus.open);
   });
 }

@@ -1,4 +1,5 @@
 import 'package:bakibondhu/domain/aging.dart';
+import 'package:bakibondhu/domain/collections.dart';
 import 'package:bakibondhu/domain/models.dart';
 import 'package:bakibondhu/domain/money.dart';
 
@@ -48,4 +49,30 @@ abstract class LedgerRepository {
 
   /// Home headline: total owed to the merchant (positive balances only).
   Future<Money> totalReceivable();
+
+  // ---- collections (spec §8.8/§8.9) ----
+
+  Future<CollectionActivity> addCollectionActivity({
+    required String customerId,
+    required ContactMethod method,
+    required CollectionStatus status,
+    String? note,
+    DateTime? nextFollowUp,
+    DateTime? at,
+  });
+
+  /// A customer's collection activity, newest first.
+  Future<List<CollectionActivity>> collectionActivitiesOf(String customerId);
+
+  Future<PromiseToPay> addPromise({
+    required String customerId,
+    required Money amount,
+    required DateTime promiseDate,
+    DateTime? followUpDate,
+    String? note,
+    DateTime? at,
+  });
+
+  /// A customer's promises, newest first.
+  Future<List<PromiseToPay>> promisesOf(String customerId);
 }

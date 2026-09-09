@@ -1,6 +1,7 @@
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/aging.dart';
 import 'package:bakibondhu/domain/balance.dart';
+import 'package:bakibondhu/domain/collections.dart';
 import 'package:bakibondhu/domain/models.dart';
 import 'package:bakibondhu/domain/money.dart';
 
@@ -107,4 +108,67 @@ class InMemoryLedgerRepository implements LedgerRepository {
   @override
   Future<Money> totalReceivable() async =>
       totalOwed(_customers.keys.map((id) => customerBalance(_of(id))));
+
+  // ---- collections ----
+
+  final List<CollectionActivity> _activities = [];
+  final List<PromiseToPay> _promises = [];
+
+  @override
+  Future<CollectionActivity> addCollectionActivity({
+    required String customerId,
+    required ContactMethod method,
+    required CollectionStatus status,
+    String? note,
+    DateTime? nextFollowUp,
+    DateTime? at,
+  }) async {
+    final a = CollectionActivity(
+      id: _newId(),
+      customerId: customerId,
+      method: method,
+      status: status,
+      note: note,
+      nextFollowUp: nextFollowUp,
+      contactedAt: at ?? DateTime.now(),
+    );
+    _activities.add(a);
+    return a;
+  }
+
+  @override
+  Future<List<CollectionActivity>> collectionActivitiesOf(String customerId) async {
+    final list = _activities.where((a) => a.customerId == customerId).toList()
+      ..sort((a, b) => b.contactedAt.compareTo(a.contactedAt));
+    return list;
+  }
+
+  @override
+  Future<PromiseToPay> addPromise({
+    required String customerId,
+    required Money amount,
+    required DateTime promiseDate,
+    DateTime? followUpDate,
+    String? note,
+    DateTime? at,
+  }) async {
+    final p = PromiseToPay(
+      id: _newId(),
+      customerId: customerId,
+      promisedAmount: amount,
+      promiseDate: promiseDate,
+      followUpDate: followUpDate,
+      customerNote: note,
+      createdAt: at ?? DateTime.now(),
+    );
+    _promises.add(p);
+    return p;
+  }
+
+  @override
+  Future<List<PromiseToPay>> promisesOf(String customerId) async {
+    final list = _promises.where((p) => p.customerId == customerId).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
+  }
 }

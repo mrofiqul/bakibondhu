@@ -13,7 +13,7 @@ import 'package:sqflite/sqflite.dart';
 ///    `server_id` is filled once the record is confirmed by the server
 ///    (see sqflite_sync_store.dart). `sync_meta` holds the pull cursor.
 ///  - Balances/aging are COMPUTED from these rows in Dart, never stored.
-const int kLocalDbVersion = 2;
+const int kLocalDbVersion = 3;
 
 const List<String> kLocalSchema = [
   '''
@@ -46,6 +46,38 @@ const List<String> kLocalSchema = [
   'CREATE INDEX IF NOT EXISTS idx_cust_server ON customers (server_id);',
   'CREATE INDEX IF NOT EXISTS idx_txn_server ON transactions (server_id);',
   'CREATE TABLE IF NOT EXISTS sync_meta (key TEXT PRIMARY KEY, value TEXT);',
+  '''
+  CREATE TABLE IF NOT EXISTS collection_activities (
+    id             TEXT PRIMARY KEY,
+    server_id      TEXT,
+    customer_id    TEXT NOT NULL,
+    method         TEXT NOT NULL,               -- phone|visit|message|other
+    status         TEXT NOT NULL,               -- collection_status codes
+    note           TEXT,
+    contacted_at   TEXT NOT NULL,
+    next_follow_up TEXT,
+    created_at     TEXT NOT NULL,
+    sync_status    TEXT NOT NULL DEFAULT 'PENDING',
+    FOREIGN KEY (customer_id) REFERENCES customers (id)
+  );
+  ''',
+  '''
+  CREATE TABLE IF NOT EXISTS promise_to_pay (
+    id                     TEXT PRIMARY KEY,
+    server_id              TEXT,
+    customer_id            TEXT NOT NULL,
+    promised_amount_paisa  INTEGER NOT NULL CHECK (promised_amount_paisa > 0),
+    promise_date           TEXT NOT NULL,
+    follow_up_date         TEXT,
+    customer_note          TEXT,
+    status                 TEXT NOT NULL DEFAULT 'open',
+    created_at             TEXT NOT NULL,
+    sync_status            TEXT NOT NULL DEFAULT 'PENDING',
+    FOREIGN KEY (customer_id) REFERENCES customers (id)
+  );
+  ''',
+  'CREATE INDEX IF NOT EXISTS idx_collect_customer ON collection_activities (customer_id);',
+  'CREATE INDEX IF NOT EXISTS idx_promise_customer ON promise_to_pay (customer_id);',
 ];
 
 /// Opens (and creates/migrates) the local database.
@@ -70,6 +102,13 @@ Future<Database> openLocalDatabase({String fileName = 'bakibondhu.db'}) async {
             'CREATE INDEX IF NOT EXISTS idx_cust_server ON customers (server_id);');
         await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_txn_server ON transactions (server_id);');
+      }
+      if (oldVersion < 3) {
+        // Collection activities + promise-to-pay (the last two statements of the
+        // schema list, plus their indexes).
+        for (final stmt in kLocalSchema.sublist(kLocalSchema.length - 4)) {
+          await db.execute(stmt);
+        }
       }
     },
   );

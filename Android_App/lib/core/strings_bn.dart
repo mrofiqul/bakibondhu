@@ -61,6 +61,28 @@ class S {
   static String syncResult(int pushed, int pulled) =>
       'আপলোড $pushed · ডাউনলোড $pulled';
 
+  // Collections (§8.8/§8.9)
+  static const collections = 'কালেকশন';
+  static const recordCollection = 'কালেকশন যোগ করুন';
+  static const recordPromise = 'প্রতিশ্রুতি যোগ করুন';
+  static const promises = 'প্রতিশ্রুতি';
+  static const activityHistory = 'কালেকশন ইতিহাস';
+  static const noActivity = 'এখনো কোনো কালেকশন নেই';
+  static const noPromises = 'এখনো কোনো প্রতিশ্রুতি নেই';
+  static const methodLabel = 'যোগাযোগ';
+  static const statusLabel = 'অবস্থা';
+  static const nextFollowUpLabel = 'পরবর্তী ফলো-আপ';
+  static const promiseAmountLabel = 'প্রতিশ্রুত পরিমাণ';
+  static const promiseDateLabel = 'প্রতিশ্রুতির তারিখ';
+
+  // Settings
+  static const settings = 'সেটিংস';
+  static const shopNameSetting = 'দোকানের নাম';
+  static const accountSection = 'সিঙ্ক ও অ্যাকাউন্ট';
+  static const aboutSection = 'সম্পর্কে';
+  static const savedMsg = 'সংরক্ষিত হয়েছে';
+  static const notLoggedIn = 'লগ ইন করা নেই';
+
   // Auth (login to sync)
   static const logIn = 'লগ ইন';
   static const registerAction = 'নিবন্ধন';

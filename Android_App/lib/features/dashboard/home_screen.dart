@@ -8,6 +8,7 @@ import 'package:bakibondhu/core/theme.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/customers/customer_detail_screen.dart';
+import 'package:bakibondhu/features/settings/settings_screen.dart';
 import 'package:bakibondhu/features/sync/sync_center_screen.dart';
 
 /// Screen 1 — Home ("money out there"): one big total, customers sorted by who
@@ -68,6 +69,14 @@ class _HomeScreenState extends State<HomeScreen> {
               );
               _refresh();
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: S.settings,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
           ),
         ],
       ),
