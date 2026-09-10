@@ -72,3 +72,6 @@ build/
 captures/
 local.properties
 *.iml
+
+# Local build artifacts / packaged installers (APKs, zips)
+Installer/

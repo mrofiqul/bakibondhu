@@ -1,0 +1,19 @@
+# Render Blueprint — one service, built from Backend/Dockerfile.
+# In Render: New → Blueprint → connect this repo → it reads this file.
+# The two secret env vars are set in the dashboard after the service is created.
+services:
+  - type: web
+    name: bakibondhu-api
+    runtime: docker
+    plan: free
+    rootDir: Backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ConnectionStrings__App
+        sync: false          # set in dashboard (Neon connection string, secret)
+      - key: Jwt__Key
+        sync: false          # set in dashboard (secret)
+      - key: Jwt__Issuer
+        value: bakibondhu

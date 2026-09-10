@@ -1,0 +1,10 @@
+# Keep the build context small and clean.
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+**/appsettings.Development.json
+Dockerfile
+.dockerignore
+README.md
