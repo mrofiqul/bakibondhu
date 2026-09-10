@@ -7,7 +7,10 @@ import 'package:bakibondhu/data/auth_api.dart';
 /// Login / register (spec REST §2). Pops `true` on success. Optional — the app
 /// works offline without it; this is only needed to sync with the backend.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  /// Open directly on the registration form (from the landing "Register" button)
+  /// instead of the login form.
+  final bool startInRegister;
+  const LoginScreen({this.startInRegister = false, super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -20,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _business = TextEditingController();
   final _password = TextEditingController();
 
-  bool _registering = false;
+  late bool _registering = widget.startInRegister;
   bool _busy = false;
   String? _error;
 
@@ -41,6 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     final api = AppScope.authApiOf(context);
     final session = AppScope.sessionOf(context);
+    final settings = AppScope.settingsOf(context);
     try {
       final result = _registering
           ? await api.register(
@@ -54,6 +58,12 @@ class _LoginScreenState extends State<LoginScreen> {
               password: _password.text,
             );
       await session.save(result);
+      // Mark setup complete so the landing screen doesn't reappear; on register,
+      // reuse the business name as the shop name for reminder signatures.
+      if (_registering && _business.text.trim().isNotEmpty) {
+        await settings.setShopName(_business.text.trim());
+      }
+      await settings.setOnboardingComplete(true);
       if (mounted) Navigator.pop(context, true);
     } on AuthException catch (e) {
       setState(() => _error = '${S.authFailed} (${e.status})');

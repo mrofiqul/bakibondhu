@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:bakibondhu/app.dart';
 import 'package:bakibondhu/data/auth_api.dart';
+import 'package:bakibondhu/data/infinityfree_client.dart';
 import 'package:bakibondhu/data/local_database.dart';
 import 'package:bakibondhu/data/session.dart';
 import 'package:bakibondhu/data/shared_prefs_settings_store.dart';
@@ -35,8 +36,17 @@ Future<void> main() async {
   final session = Session(const FlutterSecureStorage());
   await session.load();
 
+  // Opening screen: show the Login/Register landing only until the user has
+  // either signed in or finished offline setup (shop-name onboarding).
+  final startLanding = !onboarded && session.token == null;
+
   final baseUrl = Uri.parse(kSyncBaseUrl);
-  final authApi = AuthApi(baseUrl: baseUrl);
+
+  // Shared HTTP client that passes free-host "browser check" challenges so the
+  // app can reach the backend (see InfinityFreeClient); inert on normal hosts.
+  final httpClient = InfinityFreeClient();
+
+  final authApi = AuthApi(baseUrl: baseUrl, client: httpClient);
 
   // A stable per-install device id (idempotency key on the server).
   var deviceId = prefs.getString('device_id');
@@ -48,6 +58,7 @@ Future<void> main() async {
   final syncApi = HttpSyncApi(
     baseUrl: baseUrl,
     accessToken: () => session.token ?? '', // empty until logged in
+    client: httpClient,
   );
   final syncEngine =
       SyncEngine(api: syncApi, store: syncStore, deviceId: deviceId);
@@ -59,6 +70,6 @@ Future<void> main() async {
     syncEngine: syncEngine,
     session: session,
     authApi: authApi,
-    startOnboarding: !onboarded,
+    startLanding: startLanding,
   ));
 }

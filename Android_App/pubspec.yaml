@@ -26,6 +26,10 @@ dependencies:
   # HTTP client for the sync API (push/pull to the backend).
   http: ^1.2.0
 
+  # AES (used only to solve the shared-host "browser check" cookie — see
+  # data/infinityfree_client.dart).
+  pointycastle: ^3.9.1
+
   # Secure storage for the JWT access token (spec §22/§38).
   flutter_secure_storage: ^9.2.2
 

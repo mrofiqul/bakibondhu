@@ -8,7 +8,7 @@ import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/data/session.dart';
 import 'package:bakibondhu/data/settings_store.dart';
 import 'package:bakibondhu/features/dashboard/home_screen.dart';
-import 'package:bakibondhu/features/onboarding/onboarding_screen.dart';
+import 'package:bakibondhu/features/onboarding/landing_screen.dart';
 import 'package:bakibondhu/sync/sync_engine.dart';
 import 'package:bakibondhu/sync/sync_store.dart';
 
@@ -21,7 +21,10 @@ class BakiBondhuApp extends StatelessWidget {
   final SyncEngine? syncEngine;
   final Session session;
   final AuthApi authApi;
-  final bool startOnboarding;
+
+  /// Show the landing (Login / Register / offline) screen on launch. False once
+  /// the user has logged in or completed offline setup — then we open on Home.
+  final bool startLanding;
 
   const BakiBondhuApp({
     required this.repo,
@@ -30,7 +33,7 @@ class BakiBondhuApp extends StatelessWidget {
     required this.session,
     required this.authApi,
     this.syncEngine,
-    this.startOnboarding = false,
+    this.startLanding = false,
     super.key,
   });
 
@@ -47,7 +50,7 @@ class BakiBondhuApp extends StatelessWidget {
         title: S.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
-        home: startOnboarding ? const OnboardingScreen() : const HomeScreen(),
+        home: startLanding ? const LandingScreen() : const HomeScreen(),
       ),
     );
   }
