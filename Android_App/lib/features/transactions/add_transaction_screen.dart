@@ -94,49 +94,68 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final title = _isCredit ? S.gaveCredit : S.gotPayment;
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Column(
-        children: [
-          // Amount display
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 28),
-            alignment: Alignment.center,
-            child: Text(
-              '৳ ${_amount.isEmpty ? '0' : _amount}',
-              style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold),
+      // SafeArea keeps the pinned Save button clear of the phone's gesture /
+      // navigation bar; the top section scrolls so nothing is cut off on short
+      // screens.
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Amount display
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 28),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '৳ ${_amount.isEmpty ? '0' : _amount}',
+                        style: const TextStyle(
+                            fontSize: 44, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    // Date + due date + note
+                    ListTile(
+                      leading: const Icon(Icons.event),
+                      title: const Text(S.dateLabel),
+                      trailing:
+                          Text(_isToday(_date) ? S.today : shortDate(_date)),
+                      onTap: () => _pickDate(due: false),
+                    ),
+                    if (_isCredit)
+                      ListTile(
+                        leading: const Icon(Icons.schedule),
+                        title: const Text(S.dueDateLabel),
+                        trailing:
+                            Text(_dueDate == null ? '—' : shortDate(_dueDate!)),
+                        onTap: () => _pickDate(due: true),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _noteCtrl,
+                        decoration:
+                            const InputDecoration(labelText: S.noteLabel),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          // Date + due date + note
-          ListTile(
-            leading: const Icon(Icons.event),
-            title: const Text(S.dateLabel),
-            trailing: Text(_isToday(_date) ? S.today : shortDate(_date)),
-            onTap: () => _pickDate(due: false),
-          ),
-          if (_isCredit)
-            ListTile(
-              leading: const Icon(Icons.schedule),
-              title: const Text(S.dueDateLabel),
-              trailing: Text(_dueDate == null ? '—' : shortDate(_dueDate!)),
-              onTap: () => _pickDate(due: true),
+            _NumberPad(onKey: _tap),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _valid && !_saving ? _save : null,
+                  child: const Text(S.save),
+                ),
+              ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _noteCtrl,
-              decoration: const InputDecoration(labelText: S.noteLabel),
-            ),
-          ),
-          const Spacer(),
-          _NumberPad(onKey: _tap),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: FilledButton(
-              onPressed: _valid && !_saving ? _save : null,
-              child: const Text(S.save),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
