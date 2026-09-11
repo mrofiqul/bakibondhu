@@ -1,7 +1,15 @@
 # বাকিবন্ধু · BakiBondhu
 
-A **Bangla-first, offline-first credit-ledger app** for Bangladeshi micro-merchants —
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Live site](https://img.shields.io/badge/Live-bakibondhu.infinityfreeapp.com-blue.svg)](https://bakibondhu.infinityfreeapp.com)
+[![Platform: Android](https://img.shields.io/badge/Platform-Android-brightgreen.svg)](https://github.com/mrofiqul/bakibondhu-app/releases/latest)
+[![Built with Flutter](https://img.shields.io/badge/Built%20with-Flutter-02569B.svg)](https://flutter.dev)
+
+A **Bangla-first, offline-first credit-ledger (baki) app** for Bangladeshi micro-merchants —
 keep customers' *baki* (credit) and payments with ease, even without internet.
+
+**Topics:** `flutter` · `dart` · `android` · `offline-first` · `bangla` · `bangladesh` ·
+`ledger` · `sqlite` · `php` · `mysql` · `fintech` · `small-business`
 
 - **Android app:** Flutter/Dart (works fully offline; local SQLite)
 - **Auth backend:** PHP + MySQL, hosted on InfinityFree
