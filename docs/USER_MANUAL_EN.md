@@ -1,0 +1,142 @@
+# BakiBondhu — User Guide (English)
+
+An easy credit ledger for shopkeepers. This guide shows, step by step, how to use
+the BakiBondhu app. (The app's on-screen text is in Bangla; the Bangla labels are
+shown in brackets.)
+
+---
+
+## 1. What is BakiBondhu?
+
+BakiBondhu is a mobile app to keep your customers' **credit (baki) and payment
+records** easily — instead of a paper notebook.
+
+- ✅ **Works without internet** — all records stay on your phone.
+- ✅ **In Bangla** — simple and clear.
+- ✅ Send customers a **reminder** (SMS / WhatsApp).
+
+---
+
+## 2. Install the app
+
+1. On your phone, open **Chrome** and go to **bakibondhu.infinityfreeapp.com**
+2. Tap **📥 Download the App** (অ্যাপ ডাউনলোড করুন) — `BakiBondhu.apk` downloads.
+3. When it finishes, tap the downloaded file.
+4. If the phone warns about **“unknown apps”**, open **Settings → Allow from this
+   source**.
+5. **Install → Open**. BakiBondhu launches.
+
+> If an older version is installed, uninstall it first, then install the new one.
+
+---
+
+## 3. Opening the app the first time
+
+A welcome screen appears with three choices:
+
+| Option | When to choose it |
+|---|---|
+| **Log in** (লগ ইন করুন) | If you already created an account. |
+| **Create account** (নতুন অ্যাকাউন্ট খুলুন) | First time — name, shop name, mobile and a password. |
+| **Continue offline** (অ্যাকাউন্ট ছাড়া চালিয়ে যান) | Use it on this phone only, without an account. |
+
+> 💡 Everything works without an account too. An account is mainly for future
+> multi-device sync. Only logging in / registering needs internet.
+
+---
+
+## 4. Home screen
+
+At the top: **Total credit — your receivable** (মোট বাকি — আপনার পাওনা), the total
+owed to you across all customers. Below is the customer list — whoever owes the
+most is on top.
+
+- Bottom-right: **➕ New Customer** (নতুন কাস্টমার).
+- Top-right: **🔄 Sync** and **⚙️ Settings**.
+
+---
+
+## 5. Add a customer
+
+1. Tap **➕ New Customer**.
+2. Enter the customer's **name**. Mobile number is optional (needed for reminders).
+3. Tap **Add** (যোগ করুন). The customer joins the list.
+
+---
+
+## 6. Recording credit & payments
+
+Tap a customer to open their account (current balance and full history).
+
+- **⬆️ Gave credit** (বাকি দিলাম) — when you give goods on credit. Enter the amount,
+  tap **Save**; the balance goes up.
+- **⬇️ Got payment** (টাকা পেলাম) — when the customer pays. Enter the amount, tap
+  **Save**; the balance goes down.
+
+The **Current due** figure updates instantly; when fully paid it shows **Settled**
+(পরিশোধিত).
+
+---
+
+## 7. Sending reminders
+
+On a customer's account screen, tap **🔔 Remind** (মনে করান).
+
+- A polite Bangla message is prepared automatically (name, amount due, shop name).
+- Edit it if you like, then choose **Send SMS** or **WhatsApp**.
+- The customer must have a mobile number saved.
+
+---
+
+## 8. Collections & promises
+
+On the customer screen, tap the **📋 Collections** (কালেকশন) icon at the top.
+
+- **Add collection** — when you called/visited, the status, next follow-up date.
+- **Add promise** — record when and how much the customer promised to pay.
+
+---
+
+## 9. Settings & shop name
+
+Open **⚙️ Settings** and set your **Shop name** — used in reminder messages. The
+**Sync & account** section is here too.
+
+---
+
+## 10. Account & logout
+
+Go to **Settings → Sync & account** for **Log in / Log out**. Logging out returns
+you to the first (Login / Register) screen.
+
+> Logging out does **not** delete the records stored on this phone.
+
+---
+
+## 11. Using it offline
+
+BakiBondhu works fully **offline** — adding customers, recording credit/payments and
+reminders all work without internet, and your data stays safely on your phone. Only
+logging in / creating an account needs internet.
+
+---
+
+## 12. FAQ
+
+**Can anyone else see my data?**
+Your records stay on your phone. Passwords are stored securely.
+
+**Does it work without internet?**
+Yes — all the core features work offline.
+
+**What do I do when a new version comes out?**
+Download the new APK from the same website, uninstall the old app, then install the
+new one.
+
+**It says “unknown apps” — is that safe?**
+That's normal for apps installed outside the Play Store — allow installation from
+that source in Settings.
+
+---
+
+*BakiBondhu · Bangla-first · Offline-first*
