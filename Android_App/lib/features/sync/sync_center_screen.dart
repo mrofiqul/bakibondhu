@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/features/auth/login_screen.dart';
+import 'package:bakibondhu/features/onboarding/landing_screen.dart';
 import 'package:bakibondhu/sync/sync_store.dart';
 import 'package:bakibondhu/sync/sync_types.dart';
 
@@ -66,8 +67,18 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
   }
 
   Future<void> _logout() async {
-    await AppScope.sessionOf(context).clear();
-    if (mounted) setState(() {});
+    final session = AppScope.sessionOf(context);
+    final settings = AppScope.settingsOf(context);
+    final navigator = Navigator.of(context);
+    await session.clear();
+    // Return to the pre-auth state so the opening screen shows again — here now,
+    // and on the next app launch (startLanding checks the onboarding flag + token).
+    await settings.setOnboardingComplete(false);
+    if (!mounted) return;
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LandingScreen()),
+      (route) => false,
+    );
   }
 
   @override
