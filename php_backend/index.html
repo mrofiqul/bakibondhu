@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>বাকিবন্ধু — সহজ বাকির হিসাব</title>
+  <style>
+    :root { --green:#167c48; --green-d:#0f5f37; --bg:#f3f4ef; --card:#eaf3ec; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Segoe UI', Tahoma, system-ui, sans-serif; color:#20221f;
+           background:var(--bg); line-height:1.65; }
+    .wrap { max-width:820px; margin:0 auto; padding:24px; }
+    header { text-align:center; padding:56px 20px 40px; }
+    .logo { font-size:52px; font-weight:800; color:var(--green); letter-spacing:.5px; }
+    .tag { font-size:19px; color:#4b5a50; margin-top:10px; }
+    .hero-note { display:inline-block; margin-top:20px; background:var(--card);
+                 color:var(--green-d); padding:8px 16px; border-radius:999px; font-size:14px; }
+    section { background:#fff; border:1px solid #e4e7e0; border-radius:16px;
+              padding:26px 24px; margin:16px 0; }
+    h2 { color:var(--green-d); font-size:20px; margin-bottom:14px; }
+    ul { list-style:none; }
+    li { padding:8px 0 8px 30px; position:relative; }
+    li::before { content:'✓'; position:absolute; left:0; color:var(--green);
+                 font-weight:700; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+    .feat { background:var(--card); border-radius:12px; padding:16px; }
+    .feat b { color:var(--green-d); }
+    footer { text-align:center; color:#7a857d; font-size:13px; padding:30px 10px 50px; }
+    code { background:#eef0ea; padding:2px 7px; border-radius:6px; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">বাকিবন্ধু</div>
+      <div class="tag">বাকির হিসাব সহজে রাখুন — ইন্টারনেট ছাড়াও চলে।</div>
+      <div class="hero-note">বাংলাদেশের ছোট দোকানদারের জন্য অফলাইন-ফার্স্ট বাকি খাতা</div>
+    </header>
+
+    <section>
+      <h2>বাকিবন্ধু কী?</h2>
+      <p>বাকিবন্ধু একটি বাংলা-ভিত্তিক, অফলাইন-ফার্স্ট অ্যাপ যা দোকানদারদের কাস্টমারের
+      বাকি ও পরিশোধের হিসাব সহজে রাখতে সাহায্য করে। ইন্টারনেট ছাড়াই সব কাজ করে —
+      অ্যাকাউন্ট খুললে ভবিষ্যতে একাধিক ডিভাইসে সিঙ্ক করা যাবে।</p>
+    </section>
+
+    <section>
+      <h2>প্রধান সুবিধা</h2>
+      <div class="grid">
+        <div class="feat"><b>বাকি ও পরিশোধ</b><br>কাস্টমারভিত্তিক বাকির পরিমাণ ও ইতিহাস।</div>
+        <div class="feat"><b>অফলাইনে চলে</b><br>নেট ছাড়াই — ডেটা ফোনেই সংরক্ষিত।</div>
+        <div class="feat"><b>রিমাইন্ডার</b><br>SMS/WhatsApp-এ ভদ্র বাংলা রিমাইন্ডার।</div>
+        <div class="feat"><b>কালেকশন</b><br>প্রতিশ্রুতি ও ফলো-আপ ট্র্যাকিং।</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ব্যবহার করবেন যেভাবে</h2>
+      <ul>
+        <li>অ্যান্ড্রয়েড অ্যাপটি ফোনে ইনস্টল করুন।</li>
+        <li>লগ ইন / রেজিস্টার করুন, অথবা অ্যাকাউন্ট ছাড়া অফলাইনে শুরু করুন।</li>
+        <li>কাস্টমার যোগ করে বাকি ও পরিশোধের হিসাব রাখুন।</li>
+      </ul>
+    </section>
+
+    <footer>
+      বাকিবন্ধু · বাংলা-ফার্স্ট · অফলাইন-ফার্স্ট<br>
+      সার্ভার স্ট্যাটাস: <code>/health</code>
+    </footer>
+  </div>
+</body>
+</html>
