@@ -38,6 +38,14 @@ try {
         handle_login($cfg);
     }
 
+    if ($path === '/api/v1/sync/push' && $method === 'POST') {
+        handle_sync_push($cfg);
+    }
+
+    if ($path === '/api/v1/sync/pull' && $method === 'GET') {
+        handle_sync_pull($cfg);
+    }
+
     bb_error(404, 'not_found', 'no such endpoint');
 } catch (Throwable $e) {
     // Don't leak internals; log server-side.
@@ -112,4 +120,215 @@ function handle_login(array $cfg): void
         'business_id' => $user['business_id'],
         'tokens'      => bb_tokens($cfg, $user['id'], $user['business_id'], $user['role']),
     ]);
+}
+
+// ---- Sync (Offline Sync design; contract in Android_App/lib/sync) -----------
+
+// POST /api/v1/sync/push — upload locally-created changes. Idempotent on
+// (business_id, device_id, local_id); replays return the same server id.
+// Body: { device_id, changes:[{entity,local_id,op,data}] }
+// Reply: { results:[{entity,local_id,server_id,sync_status,reason}] }
+function handle_sync_push(array $cfg): void
+{
+    $claims     = bb_auth($cfg);
+    $businessId = (string) $claims['business_id'];
+
+    $in       = bb_body();
+    $deviceId = trim((string) ($in['device_id'] ?? ''));
+    $changes  = is_array($in['changes'] ?? null) ? $in['changes'] : [];
+    if ($deviceId === '') {
+        bb_error(400, 'validation_failed', 'device_id is required');
+    }
+
+    $db      = bb_db($cfg);
+    $results = [];
+
+    foreach ($changes as $ch) {
+        $entity  = (string) ($ch['entity'] ?? '');
+        $localId = (string) ($ch['local_id'] ?? '');
+        $data    = is_array($ch['data'] ?? null) ? $ch['data'] : [];
+        if ($localId === '' || ($entity !== 'customer' && $entity !== 'transaction')) {
+            $results[] = bb_push_result($entity, $localId, 'FAILED', null, 'bad change');
+            continue;
+        }
+
+        try {
+            if ($entity === 'customer') {
+                $serverId = bb_upsert_customer($db, $businessId, $deviceId, $localId, $data);
+                $results[] = bb_push_result($entity, $localId, 'SYNCED', $serverId, null);
+            } else {
+                $serverId = bb_upsert_transaction($db, $businessId, $deviceId, $localId, $data);
+                if ($serverId === null) {
+                    // Customer not on the server yet — retry after it syncs.
+                    $results[] = bb_push_result($entity, $localId, 'FAILED', null, 'unknown customer');
+                } else {
+                    $results[] = bb_push_result($entity, $localId, 'SYNCED', $serverId, null);
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('sync push item failed: ' . $e->getMessage());
+            $results[] = bb_push_result($entity, $localId, 'FAILED', null, 'server error');
+        }
+    }
+
+    bb_json(200, ['results' => $results]);
+}
+
+function bb_push_result(string $entity, string $localId, string $status, ?string $serverId, ?string $reason): array
+{
+    return [
+        'entity'      => $entity,
+        'local_id'    => $localId,
+        'server_id'   => $serverId,
+        'sync_status' => $status,
+        'reason'      => $reason,
+    ];
+}
+
+// Insert a customer (idempotent). Returns the server id (existing on replay).
+function bb_upsert_customer(PDO $db, string $businessId, string $deviceId, string $localId, array $data): string
+{
+    $existing = $db->prepare(
+        'SELECT id FROM customers WHERE business_id = ? AND device_id = ? AND local_id = ? LIMIT 1');
+    $existing->execute([$businessId, $deviceId, $localId]);
+    if ($row = $existing->fetch()) {
+        return (string) $row['id'];
+    }
+
+    // Use the client's local_id as the server id: local ids are UUIDs, so this
+    // keeps the id stable across devices and makes a device's pull of its own
+    // pushed rows a harmless no-op (no id remapping needed on the client).
+    $serverId = $localId;
+    $db->prepare(
+        'INSERT INTO customers (id, business_id, device_id, local_id, name, phone, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
+       ->execute([
+           $serverId, $businessId, $deviceId, $localId,
+           (string) ($data['name'] ?? ''),
+           isset($data['phone']) && $data['phone'] !== '' ? (string) $data['phone'] : null,
+           gmdate('Y-m-d H:i:s'),
+       ]);
+    return $serverId;
+}
+
+// Insert a transaction (idempotent). Resolves the client's customer_local_id to
+// a server customer id. Returns null if that customer isn't on the server yet.
+function bb_upsert_transaction(PDO $db, string $businessId, string $deviceId, string $localId, array $data): ?string
+{
+    $existing = $db->prepare(
+        'SELECT id FROM transactions WHERE business_id = ? AND device_id = ? AND local_id = ? LIMIT 1');
+    $existing->execute([$businessId, $deviceId, $localId]);
+    if ($row = $existing->fetch()) {
+        return (string) $row['id'];
+    }
+
+    $customerLocalId = (string) ($data['customer_local_id'] ?? '');
+    $customerId = bb_resolve_customer_id($db, $businessId, $deviceId, $customerLocalId);
+    if ($customerId === null) {
+        return null;
+    }
+
+    // Server id == the client's local id (see bb_upsert_customer).
+    $serverId = $localId;
+    $db->prepare(
+        'INSERT INTO transactions
+           (id, business_id, device_id, local_id, customer_id, type, amount_paisa, due_date, note, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
+       ->execute([
+           $serverId, $businessId, $deviceId, $localId, $customerId,
+           (string) ($data['type'] ?? 'credit'),
+           (int) ($data['amount_paisa'] ?? 0),
+           isset($data['due_date']) && $data['due_date'] !== '' ? (string) $data['due_date'] : null,
+           isset($data['note']) && $data['note'] !== '' ? (string) $data['note'] : null,
+           isset($data['created_at']) && $data['created_at'] !== '' ? (string) $data['created_at'] : gmdate('Y-m-d H:i:s'),
+       ]);
+    return $serverId;
+}
+
+// A transaction's customer_local_id is either the client's local id for a
+// customer created on THIS device, or (for a customer that was pulled from the
+// server) already a server id. Try both.
+function bb_resolve_customer_id(PDO $db, string $businessId, string $deviceId, string $localId): ?string
+{
+    if ($localId === '') return null;
+
+    $byLocal = $db->prepare(
+        'SELECT id FROM customers WHERE business_id = ? AND device_id = ? AND local_id = ? LIMIT 1');
+    $byLocal->execute([$businessId, $deviceId, $localId]);
+    if ($row = $byLocal->fetch()) return (string) $row['id'];
+
+    $byServer = $db->prepare(
+        'SELECT id FROM customers WHERE business_id = ? AND id = ? LIMIT 1');
+    $byServer->execute([$businessId, $localId]);
+    if ($row = $byServer->fetch()) return (string) $row['id'];
+
+    return null;
+}
+
+// GET /api/v1/sync/pull?since=<cursor>&device_id=<id> — everything changed after
+// the cursor. Reply: { customers:[…], transactions:[…], server_time, has_more }.
+function handle_sync_pull(array $cfg): void
+{
+    $claims     = bb_auth($cfg);
+    $businessId = (string) $claims['business_id'];
+    $since      = isset($_GET['since']) && $_GET['since'] !== '' ? (string) $_GET['since'] : null;
+
+    $db = bb_db($cfg);
+
+    // Cursor snapshot taken before reading, so rows written during this request
+    // are simply picked up next pull (never skipped).
+    $serverTime = (string) $db->query('SELECT UTC_TIMESTAMP(6)')->fetchColumn();
+
+    $limit = 5000;
+
+    $customers    = bb_pull_rows($db, 'customers', $businessId, $since, $serverTime, $limit);
+    $transactions = bb_pull_rows($db, 'transactions', $businessId, $since, $serverTime, $limit);
+
+    $out = ['customers' => [], 'transactions' => []];
+    foreach ($customers as $r) {
+        $out['customers'][] = [
+            'id'         => $r['id'],
+            'name'       => $r['name'],
+            'phone'      => $r['phone'],
+            'updated_at' => bb_iso_utc($r['updated_at']),
+        ];
+    }
+    foreach ($transactions as $r) {
+        $out['transactions'][] = [
+            'id'           => $r['id'],
+            'customer_id'  => $r['customer_id'],
+            'type'         => $r['type'],
+            'amount_paisa' => (int) $r['amount_paisa'],
+            'due_date'     => $r['due_date'],
+            'note'         => $r['note'],
+            'updated_at'   => bb_iso_utc($r['updated_at']),
+        ];
+    }
+
+    $out['server_time'] = $serverTime;
+    $out['has_more']    = (count($customers) >= $limit) || (count($transactions) >= $limit);
+    bb_json(200, $out);
+}
+
+function bb_pull_rows(PDO $db, string $table, string $businessId, ?string $since, string $upTo, int $limit): array
+{
+    if ($since === null) {
+        $stmt = $db->prepare(
+            "SELECT * FROM $table WHERE business_id = ? AND updated_at <= ?
+             ORDER BY updated_at ASC LIMIT $limit");
+        $stmt->execute([$businessId, $upTo]);
+    } else {
+        $stmt = $db->prepare(
+            "SELECT * FROM $table WHERE business_id = ? AND updated_at > ? AND updated_at <= ?
+             ORDER BY updated_at ASC LIMIT $limit");
+        $stmt->execute([$businessId, $since, $upTo]);
+    }
+    return $stmt->fetchAll();
+}
+
+// MySQL DATETIME(6) "Y-m-d H:i:s.u" (UTC) -> ISO-8601 with T…Z so Dart's
+// DateTime.parse reads it as UTC.
+function bb_iso_utc(string $mysqlDateTime): string
+{
+    return str_replace(' ', 'T', $mysqlDateTime) . 'Z';
 }

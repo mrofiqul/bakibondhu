@@ -7,6 +7,13 @@ AddType application/vnd.android.package-archive .apk
 # Route every request that isn't a real file/folder to index.php, so paths like
 # /api/v1/auth/login work. Standard on Apache shared hosting (cPanel).
 RewriteEngine On
+
+# Pass the Authorization header through to PHP (Apache/CGI strips it by default,
+# which would break Bearer-token auth on the sync endpoints).
+RewriteCond %{HTTP:Authorization} .
+RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]

@@ -58,6 +58,61 @@ function bb_jwt(array $claims, string $secret): string
     return "$header.$payload.$sig";
 }
 
+function bb_base64url_decode(string $data): string
+{
+    $pad = strlen($data) % 4;
+    if ($pad) $data .= str_repeat('=', 4 - $pad);
+    return base64_decode(strtr($data, '-_', '+/'));
+}
+
+// Verify an HS256 JWT and return its claims, or null if invalid/expired.
+function bb_jwt_verify(string $token, string $secret): ?array
+{
+    $parts = explode('.', $token);
+    if (count($parts) !== 3) return null;
+    [$h, $p, $s] = $parts;
+
+    $expected = bb_base64url(hash_hmac('sha256', "$h.$p", $secret, true));
+    if (!hash_equals($expected, $s)) return null;
+
+    $claims = json_decode(bb_base64url_decode($p), true);
+    if (!is_array($claims)) return null;
+    if (isset($claims['exp']) && time() >= (int) $claims['exp']) return null;
+
+    return $claims;
+}
+
+// Pull the Bearer token off the request (shared hosting strips Authorization from
+// $_SERVER unless the .htaccess passes it through, so check several places).
+function bb_bearer_token(): ?string
+{
+    $header = '';
+    if (function_exists('apache_request_headers')) {
+        foreach (apache_request_headers() as $k => $v) {
+            if (strcasecmp($k, 'Authorization') === 0) { $header = $v; break; }
+        }
+    }
+    if ($header === '') {
+        $header = $_SERVER['HTTP_AUTHORIZATION']
+            ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    }
+    if ($header !== '' && preg_match('/Bearer\s+(.+)/i', $header, $m)) {
+        return trim($m[1]);
+    }
+    return null;
+}
+
+// Require a valid token; returns its claims (sub, business_id, role) or 401s.
+function bb_auth(array $cfg): array
+{
+    $token = bb_bearer_token();
+    $claims = $token ? bb_jwt_verify($token, $cfg['jwt_secret']) : null;
+    if (!$claims || empty($claims['business_id'])) {
+        bb_error(401, 'unauthorized', 'a valid access token is required');
+    }
+    return $claims;
+}
+
 // Build the token response block the Flutter app reads (tokens.access_token …).
 function bb_tokens(array $cfg, string $userId, string $businessId, string $role): array
 {

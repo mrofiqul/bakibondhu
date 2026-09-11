@@ -16,5 +16,7 @@ return [
     // Ask the assistant for a generated one, or make your own. Keep it secret.
     'jwt_secret'  => 'REPLACE_WITH_A_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS',
     'jwt_issuer'  => 'bakibondhu',
-    'jwt_ttl_sec' => 3600, // access token lifetime (seconds)
+    // Access-token lifetime. This backend has no refresh flow, so keep it long
+    // enough that shopkeepers aren't forced to re-login between syncs.
+    'jwt_ttl_sec' => 2592000, // 30 days
 ];
