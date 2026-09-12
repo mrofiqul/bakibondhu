@@ -37,8 +37,13 @@ A welcome screen appears with three choices:
 | Option | When to choose it |
 |---|---|
 | **Log in** (লগ ইন করুন) | If you already created an account. |
-| **Create account** (নতুন অ্যাকাউন্ট খুলুন) | First time — name, shop name, mobile and a password. |
+| **Create account** (নতুন অ্যাকাউন্ট খুলুন) | First time — see the required fields below. |
 | **Continue offline** (অ্যাকাউন্ট ছাড়া চালিয়ে যান) | Use it on this phone only, without an account. |
+
+**Creating an account:** enter your **name, shop name, mobile number, and a
+password (at least 6 characters)** — all four are required. **Thana** (থানা) and
+**Zila** (জেলা) are optional. The mobile must be a **Bangladesh 11-digit number**
+(e.g. `01712345678`).
 
 > 💡 Everything works without an account too. Signing in lets you **sync to the
 > cloud** and share your ledger across phones (see §11). Only logging in /
@@ -76,7 +81,9 @@ and year**.
 ## 5. Add a customer
 
 1. Tap **➕ New Customer**.
-2. Enter the customer's **name**. Mobile number is optional (needed for reminders).
+2. Enter the customer's **name** and **mobile number** — both required (the mobile
+   must be a Bangladesh 11-digit number; it's also used for reminders). **Address**
+   is optional.
 3. Tap **Add** (যোগ করুন). The customer joins the list.
 
 ---
