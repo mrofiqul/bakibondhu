@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BakiBondhu Admin</title>
+<style>
+  :root{
+    --bg:#f4f5f8; --surface:#ffffff; --surface-2:#fafbfc; --border:#e3e6ec;
+    --text:#1a1d24; --muted:#606875; --primary:#3f4ea3; --primary-ink:#ffffff;
+    --good:#1c7c54; --good-bg:#e5f4ec; --warn:#a15c00; --warn-bg:#fdf1dd;
+    --bad:#b3261e; --bad-bg:#fbe9e7; --shadow:0 1px 2px rgba(20,25,40,.06),0 4px 16px rgba(20,25,40,.05);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#12141a; --surface:#1a1d25; --surface-2:#20242e; --border:#2c313d;
+    --text:#e8eaf0; --muted:#9aa2b1; --primary:#8b98e8; --primary-ink:#0e1016;
+    --good:#5fd39b; --good-bg:#12301f; --warn:#e6b567; --warn-bg:#33260f;
+    --bad:#f2857c; --bad-bg:#3a1512; --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:14px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Bengali","Hind Siliguri",Roboto,sans-serif}
+  h1,h2,h3{margin:0}
+  a{color:var(--primary)}
+  button{font:inherit;cursor:pointer;border:1px solid var(--border);background:var(--surface);
+    color:var(--text);border-radius:8px;padding:7px 12px}
+  button:hover{border-color:var(--primary)}
+  button.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+  button.danger{color:var(--bad);border-color:var(--bad)}
+  button.danger:hover{background:var(--bad-bg)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  input{font:inherit;padding:9px 11px;border:1px solid var(--border);border-radius:8px;
+    background:var(--surface);color:var(--text);width:100%}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px}
+  header.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:14px;padding:12px 20px}
+  header.top .brand{font-weight:700;font-size:16px;letter-spacing:.2px}
+  header.top .brand span{color:var(--muted);font-weight:500}
+  header.top .sp{flex:1}
+  nav.tabs{display:flex;gap:6px;margin:18px 0 14px}
+  nav.tabs button{border:none;background:transparent;color:var(--muted);border-radius:8px;padding:8px 14px;font-weight:600}
+  nav.tabs button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+  .kpi .label{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .kpi .val{font-size:26px;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums}
+  .kpi .val.money{color:var(--primary)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-top:16px;overflow:hidden}
+  .card > h3{padding:14px 16px;border-bottom:1px solid var(--border);font-size:14px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);font-weight:600}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.active{background:var(--good-bg);color:var(--good)}
+  .pill.suspended{background:var(--bad-bg);color:var(--bad)}
+  .pill.credit{background:var(--warn-bg);color:var(--warn)}
+  .pill.payment{background:var(--good-bg);color:var(--good)}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .row-actions button{padding:5px 9px;font-size:13px}
+  .scroll{overflow-x:auto}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:90px;padding:16px}
+  .bars .b{flex:1;background:var(--primary);border-radius:4px 4px 0 0;min-height:2px;opacity:.85;position:relative}
+  .bars .b:hover{opacity:1}
+  .bars .b .t{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);white-space:nowrap}
+  .muted{color:var(--muted)}
+  .center{min-height:70vh;display:grid;place-items:center;padding:20px}
+  .login{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);
+    padding:28px;width:min(360px,92vw)}
+  .login h2{margin-bottom:4px}
+  .login p{color:var(--muted);margin:0 0 18px}
+  .login .field{margin-bottom:12px}
+  .err{color:var(--bad);font-size:13px;margin-top:8px;min-height:18px}
+  .modal-bg{position:fixed;inset:0;background:rgba(10,12,20,.5);display:grid;place-items:center;padding:20px;z-index:20}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);
+    width:min(680px,96vw);max-height:88vh;overflow:auto}
+  .modal h2{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+  .modal .body{padding:16px 18px}
+  .modal .x{margin-left:auto;background:transparent;border:none;font-size:20px;color:var(--muted);padding:0 4px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);
+    padding:10px 18px;border-radius:10px;box-shadow:var(--shadow);z-index:40;font-weight:600}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="center">
+  <form class="login" id="loginForm">
+    <h2>বাকিবন্ধু · Admin</h2>
+    <p>Platform administration</p>
+    <div class="field"><input id="u" placeholder="Username" autocomplete="username" required></div>
+    <div class="field"><input id="p" type="password" placeholder="Password" autocomplete="current-password" required></div>
+    <button class="primary" style="width:100%" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- APP -->
+<div id="appView" hidden>
+  <header class="top">
+    <div class="brand">বাকিবন্ধু <span>· Admin</span></div>
+    <div class="sp"></div>
+    <span class="muted" id="who"></span>
+    <button id="refresh">↻ Refresh</button>
+    <button id="logout">Log out</button>
+  </header>
+  <div class="wrap">
+    <nav class="tabs">
+      <button data-tab="overview" class="on">Overview</button>
+      <button data-tab="shops">Shops</button>
+      <button data-tab="audit">Audit log</button>
+    </nav>
+    <section id="tab-overview"></section>
+    <section id="tab-shops" hidden></section>
+    <section id="tab-audit" hidden></section>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+const API = '/api/v1';
+const store = {
+  get t(){ try{return localStorage.getItem('bb_admin_tok')}catch(e){return _mem} },
+  set t(v){ _mem=v; try{v?localStorage.setItem('bb_admin_tok',v):localStorage.removeItem('bb_admin_tok')}catch(e){} },
+  get who(){ try{return localStorage.getItem('bb_admin_who')||''}catch(e){return _who} },
+  set who(v){ _who=v; try{localStorage.setItem('bb_admin_who',v)}catch(e){} },
+};
+let _mem=null,_who='';
+
+function taka(paisa){ const t=(paisa||0)/100;
+  return '৳'+t.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function when(s){ if(!s)return '—'; const d=new Date(s.replace(' ','T')); return isNaN(d)?esc(s):d.toLocaleString(); }
+function toast(msg){ const r=document.getElementById('toastRoot');
+  r.innerHTML='<div class="toast">'+esc(msg)+'</div>'; setTimeout(()=>r.innerHTML='',2600); }
+
+async function api(path, opts={}){
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(store.t) headers['Authorization']='Bearer '+store.t;
+  const res = await fetch(API+path, Object.assign({}, opts, {headers}));
+  const text = await res.text();
+  let data; try{ data=JSON.parse(text) }catch(e){ data={error:{message:'server error'}} }
+  if(res.status===401){ logout(); throw new Error('session expired'); }
+  if(!res.ok) throw new Error(data.error?.message || ('HTTP '+res.status));
+  return data;
+}
+
+// ---- auth ----
+document.getElementById('loginForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const errEl=document.getElementById('loginErr'); errEl.textContent='';
+  try{
+    const d = await api('/admin/login',{method:'POST',body:JSON.stringify({
+      username:document.getElementById('u').value.trim(),
+      password:document.getElementById('p').value })});
+    store.t = d.tokens.access_token; store.who = d.admin.username;
+    showApp();
+  }catch(err){ errEl.textContent = err.message; }
+});
+function logout(){ store.t=null; document.getElementById('appView').hidden=true;
+  document.getElementById('loginView').hidden=false; }
+document.getElementById('logout').onclick=logout;
+
+// ---- app shell ----
+function showApp(){
+  document.getElementById('loginView').hidden=true;
+  document.getElementById('appView').hidden=false;
+  document.getElementById('who').textContent='@'+store.who;
+  loadOverview(); loadShops(); loadAudit();
+}
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['overview','shops','audit'].forEach(t=>document.getElementById('tab-'+t).hidden = t!==b.dataset.tab);
+});
+document.getElementById('refresh').onclick=()=>{ loadOverview(); loadShops(); loadAudit(); toast('Refreshed'); };
+
+// ---- overview ----
+async function loadOverview(){
+  const el=document.getElementById('tab-overview'); el.innerHTML='<p class="muted">Loading…</p>';
+  try{
+    const d=await api('/admin/overview');
+    const t=d.totals;
+    const kpis=[
+      ['Shops',t.businesses],['Users',t.users],['Customers',t.customers],
+      ['Transactions',t.transactions],['Suspended',t.suspended],
+    ].map(([l,v])=>`<div class="kpi"><div class="label">${l}</div><div class="val">${v.toLocaleString()}</div></div>`).join('');
+    const money=`<div class="kpi"><div class="label">Outstanding credit</div><div class="val money">${taka(t.outstanding_paisa)}</div></div>`;
+    // signups bar chart
+    const max=Math.max(1,...d.signups_14d.map(s=>+s.c));
+    const bars=d.signups_14d.length? d.signups_14d.map(s=>{
+      const day=s.d.slice(5);
+      return `<div class="b" style="height:${Math.round(+s.c/max*100)}%" title="${esc(s.d)}: ${s.c}"><span class="t">${s.c}</span></div>`;
+    }).join('') : '<span class="muted" style="padding:16px">No signups in the last 14 days.</span>';
+    const recent = d.recent.length? d.recent.map(r=>`<tr>
+        <td>${esc(r.shop)}</td><td>${esc(r.customer)}</td>
+        <td><span class="pill ${esc(r.type)}">${esc(r.type)}</span></td>
+        <td class="num">${taka(r.amount_paisa)}</td>
+        <td class="muted">${when(r.updated_at)}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="muted">No transactions yet.</td></tr>';
+    el.innerHTML=`
+      <div class="grid">${kpis}${money}</div>
+      <div class="card"><h3>New shops · last 14 days</h3><div class="bars">${bars}</div></div>
+      <div class="card"><h3>Recent activity</h3><div class="scroll"><table>
+        <thead><tr><th>Shop</th><th>Customer</th><th>Type</th><th class="num">Amount</th><th>When</th></tr></thead>
+        <tbody>${recent}</tbody></table></div></div>`;
+  }catch(err){ el.innerHTML='<p class="err">'+esc(err.message)+'</p>'; }
+}
+
+// ---- shops ----
+async function loadShops(){
+  const el=document.getElementById('tab-shops'); el.innerHTML='<p class="muted">Loading…</p>';
+  try{
+    const d=await api('/admin/businesses');
+    const rows=d.businesses.length? d.businesses.map(b=>`<tr>
+        <td><strong>${esc(b.name)}</strong><br><span class="muted" style="font-size:12px">${when(b.created_at)}</span></td>
+        <td><span class="pill ${esc(b.status)}">${esc(b.status)}</span></td>
+        <td class="num">${b.users}</td><td class="num">${b.customers}</td><td class="num">${b.transactions}</td>
+        <td class="num">${taka(b.outstanding_paisa)}</td>
+        <td><div class="row-actions">
+          <button onclick="openShop('${b.id}')">View</button>
+          ${b.status==='active'
+            ? `<button onclick="act('suspend_business','${b.id}','Suspend '+${JSON.stringify(b.name)}+'? Its users cannot log in or sync until you unsuspend.')">Suspend</button>`
+            : `<button onclick="act('unsuspend_business','${b.id}')">Unsuspend</button>`}
+          <button class="danger" onclick="act('delete_business','${b.id}','Permanently DELETE '+${JSON.stringify(b.name)}+' and ALL its data? This cannot be undone.')">Delete</button>
+        </div></td></tr>`).join('')
+      : '<tr><td colspan="7" class="muted">No shops yet.</td></tr>';
+    el.innerHTML=`<div class="card"><h3>All shops (${d.businesses.length})</h3><div class="scroll"><table>
+      <thead><tr><th>Shop</th><th>Status</th><th class="num">Users</th><th class="num">Cust.</th>
+        <th class="num">Txns</th><th class="num">Outstanding</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
+  }catch(err){ el.innerHTML='<p class="err">'+esc(err.message)+'</p>'; }
+}
+
+async function openShop(id){
+  try{
+    const d=await api('/admin/business?id='+encodeURIComponent(id));
+    const b=d.business;
+    const users=d.users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.phone)}</td><td>${esc(u.role)}</td>
+      <td><div class="row-actions">
+        <button onclick="resetPw('${u.id}','${esc(u.phone)}')">Reset password</button>
+        <button class="danger" onclick="act('delete_user','${u.id}','Delete user '+${JSON.stringify(u.phone)}+'?',()=>openShop('${id}'))">Delete</button>
+      </div></td></tr>`).join('') || '<tr><td colspan="4" class="muted">No users.</td></tr>';
+    const custs=d.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone||'—')}</td>
+      <td class="num">${c.txn_count}</td><td class="num">${taka(c.balance_paisa)}</td></tr>`).join('')
+      || '<tr><td colspan="4" class="muted">No customers.</td></tr>';
+    modal(`${esc(b.name)} <span class="pill ${esc(b.status)}">${esc(b.status)}</span>`, `
+      <h3 style="margin-bottom:8px">Users</h3>
+      <div class="scroll"><table><thead><tr><th>Name</th><th>Phone</th><th>Role</th><th></th></tr></thead>
+        <tbody>${users}</tbody></table></div>
+      <h3 style="margin:18px 0 8px">Customers &amp; balances</h3>
+      <div class="scroll"><table><thead><tr><th>Customer</th><th>Phone</th><th class="num">Txns</th><th class="num">Balance</th></tr></thead>
+        <tbody>${custs}</tbody></table></div>`);
+  }catch(err){ toast(err.message); }
+}
+
+// ---- actions ----
+async function act(action, id, confirmMsg, after){
+  if(confirmMsg && !confirm(confirmMsg)) return;
+  try{
+    await api('/admin/action',{method:'POST',body:JSON.stringify({action,id})});
+    toast('Done');
+    closeModal(); loadShops(); loadOverview(); loadAudit();
+    if(after) after();
+  }catch(err){ toast(err.message); }
+}
+async function resetPw(id, phone){
+  const pw=prompt('New password for '+phone+' (min 6 chars):');
+  if(pw==null) return;
+  if(pw.length<6){ toast('Password too short'); return; }
+  try{
+    await api('/admin/action',{method:'POST',body:JSON.stringify({action:'reset_password',id,password:pw})});
+    toast('Password reset'); loadAudit();
+  }catch(err){ toast(err.message); }
+}
+
+// ---- audit ----
+async function loadAudit(){
+  const el=document.getElementById('tab-audit'); el.innerHTML='<p class="muted">Loading…</p>';
+  try{
+    const d=await api('/admin/audit');
+    const rows=d.audit.length? d.audit.map(a=>`<tr>
+      <td>${when(a.at)}</td><td>@${esc(a.username||'?')}</td>
+      <td>${esc(a.action)}</td><td class="muted">${esc(a.target||'')} ${esc(a.detail||'')}</td></tr>`).join('')
+      : '<tr><td colspan="4" class="muted">No admin actions recorded yet.</td></tr>';
+    el.innerHTML=`<div class="card"><h3>Admin audit log (latest 50)</h3><div class="scroll"><table>
+      <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target</th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
+  }catch(err){ el.innerHTML='<p class="err">'+esc(err.message)+'</p>'; }
+}
+
+// ---- modal ----
+function modal(title, html){
+  document.getElementById('modalRoot').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal"><h2>${title}<button class="x" onclick="closeModal()">×</button></h2>
+    <div class="body">${html}</div></div></div>`;
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
+
+// boot
+if(store.t){ showApp(); }
+</script>
+</body>
+</html>

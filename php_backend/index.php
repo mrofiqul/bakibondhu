@@ -5,6 +5,7 @@
 // unchanged apart from its base URL.
 
 require __DIR__ . '/lib.php';
+require __DIR__ . '/admin_lib.php';
 $cfg = require __DIR__ . '/config.php';
 
 // --- CORS (so the future web app can call this too) ---
@@ -44,6 +45,26 @@ try {
 
     if ($path === '/api/v1/sync/pull' && $method === 'GET') {
         handle_sync_pull($cfg);
+    }
+
+    // --- Admin panel (super-admin; see admin_lib.php) ---
+    if ($path === '/api/v1/admin/login' && $method === 'POST') {
+        handle_admin_login($cfg);
+    }
+    if ($path === '/api/v1/admin/overview' && $method === 'GET') {
+        handle_admin_overview($cfg);
+    }
+    if ($path === '/api/v1/admin/businesses' && $method === 'GET') {
+        handle_admin_businesses($cfg);
+    }
+    if ($path === '/api/v1/admin/business' && $method === 'GET') {
+        handle_admin_business_detail($cfg);
+    }
+    if ($path === '/api/v1/admin/action' && $method === 'POST') {
+        handle_admin_action($cfg);
+    }
+    if ($path === '/api/v1/admin/audit' && $method === 'GET') {
+        handle_admin_audit_log($cfg);
     }
 
     bb_error(404, 'not_found', 'no such endpoint');
@@ -114,6 +135,7 @@ function handle_login(array $cfg): void
     if (!$user || !password_verify($password, $user['password_hash'])) {
         bb_error(401, 'invalid_credentials', 'wrong phone number or password');
     }
+    bb_require_active_business($db, $user['business_id']);
 
     bb_json(200, [
         'role'        => $user['role'],
@@ -141,6 +163,7 @@ function handle_sync_push(array $cfg): void
     }
 
     $db      = bb_db($cfg);
+    bb_require_active_business($db, $businessId);
     $results = [];
 
     foreach ($changes as $ch) {
@@ -274,6 +297,7 @@ function handle_sync_pull(array $cfg): void
     $since      = isset($_GET['since']) && $_GET['since'] !== '' ? (string) $_GET['since'] : null;
 
     $db = bb_db($cfg);
+    bb_require_active_business($db, $businessId);
 
     // Cursor snapshot taken before reading, so rows written during this request
     // are simply picked up next pull (never skipped).

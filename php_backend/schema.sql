@@ -7,9 +7,11 @@ CREATE TABLE IF NOT EXISTS businesses (
     name       VARCHAR(200) NOT NULL,
     timezone   VARCHAR(64)  NOT NULL DEFAULT 'Asia/Dhaka',
     currency   VARCHAR(8)   NOT NULL DEFAULT 'BDT',
+    status     VARCHAR(16)  NOT NULL DEFAULT 'active',  -- active|suspended (admin panel)
     created_at DATETIME     NOT NULL,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Existing installs: ALTER TABLE businesses ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'active';
 
 CREATE TABLE IF NOT EXISTS users (
     id            CHAR(36)     NOT NULL,
@@ -58,4 +60,29 @@ CREATE TABLE IF NOT EXISTS transactions (
     UNIQUE KEY uq_txn_idem (business_id, device_id, local_id),
     KEY idx_txn_business_updated (business_id, updated_at),
     KEY idx_txn_customer (customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---- Admin panel (super-admin over the whole platform) --------------------
+
+-- Platform admins (separate from per-business users). Password bcrypt-hashed.
+CREATE TABLE IF NOT EXISTS admins (
+    id            CHAR(36)     NOT NULL,
+    username      VARCHAR(64)  NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at    DATETIME     NOT NULL,
+    last_login    DATETIME     NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_admins_username (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Audit trail: every admin action (esp. destructive ones) is recorded.
+CREATE TABLE IF NOT EXISTS admin_audit (
+    id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    admin_id   CHAR(36)        NOT NULL,
+    action     VARCHAR(64)     NOT NULL,   -- e.g. suspend_business, delete_user
+    target     VARCHAR(200)    NULL,       -- id/name the action applied to
+    detail     TEXT            NULL,
+    at         DATETIME(6)     NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_audit_at (at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

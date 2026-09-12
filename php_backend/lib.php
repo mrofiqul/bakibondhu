@@ -113,6 +113,22 @@ function bb_auth(array $cfg): array
     return $claims;
 }
 
+// Block access when an admin has suspended the business (403). The `status`
+// column may not exist on very old installs, so treat a missing column as active.
+function bb_require_active_business(PDO $db, string $businessId): void
+{
+    try {
+        $s = $db->prepare('SELECT status FROM businesses WHERE id = ? LIMIT 1');
+        $s->execute([$businessId]);
+        $status = $s->fetchColumn();
+    } catch (Throwable $e) {
+        return; // no status column yet → treat as active
+    }
+    if ($status === 'suspended') {
+        bb_error(403, 'account_suspended', 'this account has been suspended; contact support');
+    }
+}
+
 // Build the token response block the Flutter app reads (tokens.access_token …).
 function bb_tokens(array $cfg, string $userId, string $businessId, string $role): array
 {
