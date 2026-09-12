@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:bakibondhu/app.dart';
+import 'package:bakibondhu/core/config.dart';
 import 'package:bakibondhu/data/auth_api.dart';
 import 'package:bakibondhu/data/infinityfree_client.dart';
 import 'package:bakibondhu/data/local_database.dart';
@@ -13,12 +14,6 @@ import 'package:bakibondhu/data/sqflite_ledger_repository.dart';
 import 'package:bakibondhu/sync/http_sync_api.dart';
 import 'package:bakibondhu/sync/sqflite_sync_store.dart';
 import 'package:bakibondhu/sync/sync_engine.dart';
-
-/// Backend base URL. Defaults to the Android-emulator host loopback (10.0.2.2)
-/// pointing at the dev API on :5080. Override at build/run time with:
-///   flutter run --dart-define=SYNC_BASE_URL=http://192.168.0.10:5080
-const String kSyncBaseUrl =
-    String.fromEnvironment('SYNC_BASE_URL', defaultValue: 'http://10.0.2.2:5080');
 
 /// Entry point. Opens the local SQLite store, settings and session
 /// (offline-first), wires the sync engine + auth to the backend, then starts.
