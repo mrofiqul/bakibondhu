@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
+import 'package:bakibondhu/core/config.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/features/sync/sync_center_screen.dart';
 
@@ -38,6 +40,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text(S.savedMsg)));
+    }
+  }
+
+  Future<void> _openAdminPanel() async {
+    final ok =
+        await launchUrl(kAdminPanelUrl, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text(S.couldNotOpen)));
     }
   }
 
@@ -82,6 +93,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Icon(Icons.info_outline),
             title: Text('${S.appName} · v0.1.0'),
             subtitle: Text('Bangla-first · offline-first'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.admin_panel_settings_outlined),
+            title: const Text(S.adminPanel),
+            subtitle: const Text(S.adminPanelSubtitle),
+            trailing: const Icon(Icons.open_in_new, size: 18),
+            onTap: _openAdminPanel,
           ),
         ],
       ),
