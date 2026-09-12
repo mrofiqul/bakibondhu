@@ -106,6 +106,7 @@ void main() {
               'id': 'srv-c1',
               'name': 'রহিম',
               'phone': '01700000000',
+              'address': 'মিরপুর, ঢাকা',
               'updated_at': '2026-09-11T06:30:00.123456Z',
             },
           ],
@@ -153,6 +154,7 @@ void main() {
     final customer = data.records.firstWhere((r) => r.kind == EntityKind.customer);
     expect(customer.id, 'srv-c1');
     expect(customer.data['name'], 'রহিম');
+    expect(customer.data['address'], 'মিরপুর, ঢাকা');
     final txn = data.records.firstWhere((r) => r.kind == EntityKind.transaction);
     expect(txn.data['customer_id'], 'srv-c1');
     expect(txn.data['amount_paisa'], 5000);

@@ -8,10 +8,13 @@ CREATE TABLE IF NOT EXISTS businesses (
     timezone   VARCHAR(64)  NOT NULL DEFAULT 'Asia/Dhaka',
     currency   VARCHAR(8)   NOT NULL DEFAULT 'BDT',
     status     VARCHAR(16)  NOT NULL DEFAULT 'active',  -- active|suspended (admin panel)
+    thana      VARCHAR(100) NULL,   -- shop location (optional, from registration)
+    zila       VARCHAR(100) NULL,
     created_at DATETIME     NOT NULL,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 -- Existing installs: ALTER TABLE businesses ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'active';
+-- Existing installs: ALTER TABLE businesses ADD COLUMN thana VARCHAR(100) NULL, ADD COLUMN zila VARCHAR(100) NULL;
 
 CREATE TABLE IF NOT EXISTS users (
     id            CHAR(36)     NOT NULL,
@@ -37,6 +40,7 @@ CREATE TABLE IF NOT EXISTS customers (
     local_id    CHAR(36)     NOT NULL,   -- the client's local uuid
     name        VARCHAR(200) NOT NULL,
     phone       VARCHAR(32)  NULL,
+    address     VARCHAR(255) NULL,
     created_at  VARCHAR(64)  NOT NULL,
     updated_at  DATETIME(6)  NOT NULL,
     PRIMARY KEY (id),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
+import 'package:bakibondhu/core/validators.dart';
 import 'package:bakibondhu/data/auth_api.dart';
 
 /// Login / register (spec REST §2). Pops `true` on success. Optional — the app
@@ -22,6 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _phone = TextEditingController();
   final _business = TextEditingController();
   final _password = TextEditingController();
+  final _thana = TextEditingController();
+  final _zila = TextEditingController();
 
   late bool _registering = widget.startInRegister;
   bool _busy = false;
@@ -33,6 +36,8 @@ class _LoginScreenState extends State<LoginScreen> {
     _phone.dispose();
     _business.dispose();
     _password.dispose();
+    _thana.dispose();
+    _zila.dispose();
     super.dispose();
   }
 
@@ -46,15 +51,18 @@ class _LoginScreenState extends State<LoginScreen> {
     final session = AppScope.sessionOf(context);
     final settings = AppScope.settingsOf(context);
     try {
+      final phone = normalizeBdMobile(_phone.text.trim());
       final result = _registering
           ? await api.register(
               name: _name.text.trim(),
-              phone: _phone.text.trim(),
+              phone: phone,
               password: _password.text,
               businessName: _business.text.trim(),
+              thana: _thana.text.trim().isEmpty ? null : _thana.text.trim(),
+              zila: _zila.text.trim().isEmpty ? null : _zila.text.trim(),
             )
           : await api.login(
-              identifier: _phone.text.trim(),
+              identifier: phone,
               password: _password.text,
             );
       await session.save(result);
@@ -88,27 +96,41 @@ class _LoginScreenState extends State<LoginScreen> {
               if (_registering) ...[
                 TextFormField(
                   controller: _name,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(labelText: S.yourNameLabel),
                   validator: (v) => (v == null || v.trim().isEmpty) ? S.nameRequired : null,
                 ),
                 TextFormField(
                   controller: _business,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(labelText: S.businessNameLabel),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? S.nameRequired : null,
+                  validator: (v) => (v == null || v.trim().isEmpty) ? S.businessRequired : null,
                 ),
               ],
               TextFormField(
                 controller: _phone,
                 keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: S.identifierLabel),
-                validator: (v) => (v == null || v.trim().isEmpty) ? S.nameRequired : null,
+                validator: bdMobileValidator,
               ),
               TextFormField(
                 controller: _password,
                 obscureText: true,
                 decoration: const InputDecoration(labelText: S.passwordLabel),
-                validator: (v) => (v == null || v.length < 6) ? S.authFailed : null,
+                validator: (v) => (v == null || v.length < 6) ? S.passwordShort : null,
               ),
+              if (_registering) ...[
+                TextFormField(
+                  controller: _thana,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(labelText: S.thanaLabel),
+                ),
+                TextFormField(
+                  controller: _zila,
+                  decoration: const InputDecoration(labelText: S.zilaLabel),
+                ),
+              ],
               const SizedBox(height: 16),
               if (_error != null)
                 Padding(

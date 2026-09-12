@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:bakibondhu/core/strings_bn.dart';
+import 'package:bakibondhu/core/validators.dart';
 import 'package:bakibondhu/domain/money.dart';
 
-/// Lightweight add-customer dialog so Home is usable now. The full Add-customer
-/// screen (Screen 4) with more fields comes later; name-only is enough to start.
-Future<({String name, String? phone})?> showAddCustomerDialog(
+/// Add-customer dialog: name and mobile number are required (mobile validated
+/// as a Bangladesh number), address is optional.
+Future<({String name, String phone, String? address})?> showAddCustomerDialog(
     BuildContext context) {
   final nameCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
+  final addressCtrl = TextEditingController();
   final formKey = GlobalKey<FormState>();
 
-  return showDialog<({String name, String? phone})>(
+  return showDialog<({String name, String phone, String? address})>(
     context: context,
     builder: (context) => AlertDialog(
       title: const Text(S.newCustomer),
@@ -24,6 +26,7 @@ Future<({String name, String? phone})?> showAddCustomerDialog(
             TextFormField(
               controller: nameCtrl,
               autofocus: true,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(labelText: S.nameLabel),
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? S.nameRequired : null,
@@ -31,7 +34,13 @@ Future<({String name, String? phone})?> showAddCustomerDialog(
             TextFormField(
               controller: phoneCtrl,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: S.mobileLabel),
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(labelText: S.mobileLabelRequired),
+              validator: bdMobileValidator,
+            ),
+            TextFormField(
+              controller: addressCtrl,
+              decoration: const InputDecoration(labelText: S.addressLabelOptional),
             ),
           ],
         ),
@@ -42,10 +51,11 @@ Future<({String name, String? phone})?> showAddCustomerDialog(
         FilledButton(
           onPressed: () {
             if (!formKey.currentState!.validate()) return;
-            final phone = phoneCtrl.text.trim();
+            final address = addressCtrl.text.trim();
             Navigator.pop(context, (
               name: nameCtrl.text.trim(),
-              phone: phone.isEmpty ? null : phone,
+              phone: normalizeBdMobile(phoneCtrl.text.trim()),
+              address: address.isEmpty ? null : address,
             ));
           },
           child: const Text(S.add),

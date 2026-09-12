@@ -40,14 +40,16 @@ class AuthApi {
     required String phone,
     required String password,
     required String businessName,
-    String? area,
+    String? thana,
+    String? zila,
   }) =>
       _post('/api/v1/auth/register', {
         'name': name,
         'phone': phone,
         'password': password,
         'business_name': businessName,
-        'area': area,
+        'thana': thana,
+        'zila': zila,
       });
 
   Future<AuthResult> login({

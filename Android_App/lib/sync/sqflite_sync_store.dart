@@ -27,14 +27,14 @@ class SqfliteSyncStore implements SyncStore {
 
     // Customers first so a transaction's customer resolves on the server.
     final custRows = await _db.query('customers',
-        columns: ['id', 'name', 'phone'],
+        columns: ['id', 'name', 'phone', 'address'],
         where: "sync_status <> 'SYNCED'",
         orderBy: 'created_at');
     for (final r in custRows) {
       changes.add(LocalChange(
         kind: EntityKind.customer,
         localId: r['id'] as String,
-        data: {'name': r['name'], 'phone': r['phone']},
+        data: {'name': r['name'], 'phone': r['phone'], 'address': r['address']},
       ));
     }
 
@@ -150,6 +150,7 @@ class SqfliteSyncStore implements SyncStore {
     final values = {
       'name': r.data['name'],
       'phone': r.data['phone'],
+      'address': r.data['address'],
       'sync_status': 'SYNCED',
     };
     final updated = await txn.update('customers', values,

@@ -42,7 +42,7 @@ class SalesBucket {
 /// aging from the append-only ledger via the domain functions, so the offline
 /// numbers match the server exactly.
 abstract class LedgerRepository {
-  Future<Customer> addCustomer({required String name, String? phone});
+  Future<Customer> addCustomer({required String name, String? phone, String? address});
   Future<List<Customer>> customers();
   Future<Customer?> customer(String id);
 

@@ -13,7 +13,7 @@ import 'package:sqflite/sqflite.dart';
 ///    `server_id` is filled once the record is confirmed by the server
 ///    (see sqflite_sync_store.dart). `sync_meta` holds the pull cursor.
 ///  - Balances/aging are COMPUTED from these rows in Dart, never stored.
-const int kLocalDbVersion = 4;
+const int kLocalDbVersion = 5;
 
 const List<String> kLocalSchema = [
   '''
@@ -22,6 +22,7 @@ const List<String> kLocalSchema = [
     server_id    TEXT,
     name         TEXT NOT NULL,
     phone        TEXT,
+    address      TEXT,
     created_at   TEXT NOT NULL,
     sync_status  TEXT NOT NULL DEFAULT 'PENDING'
   );
@@ -131,6 +132,9 @@ Future<Database> openLocalDatabase({String fileName = 'bakibondhu.db'}) async {
         for (final stmt in kLocalSchema.sublist(kLocalSchema.length - 4)) {
           await db.execute(stmt);
         }
+      }
+      if (oldVersion < 5) {
+        await db.execute('ALTER TABLE customers ADD COLUMN address TEXT;');
       }
     },
   );

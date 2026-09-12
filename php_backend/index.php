@@ -81,9 +81,14 @@ function handle_register(array $cfg): void
     $phone    = trim((string) ($in['phone'] ?? ''));
     $password = (string) ($in['password'] ?? '');
     $business = trim((string) ($in['business_name'] ?? ''));
+    $thana    = trim((string) ($in['thana'] ?? ''));
+    $zila     = trim((string) ($in['zila'] ?? ''));
 
-    if ($phone === '' || $password === '' || $business === '') {
-        bb_error(400, 'validation_failed', 'phone, password and business_name are required');
+    if ($name === '' || $phone === '' || $password === '' || $business === '') {
+        bb_error(400, 'validation_failed', 'name, phone, password and business_name are required');
+    }
+    if (!preg_match('/^01[3-9]\d{8}$/', $phone)) {
+        bb_error(400, 'validation_failed', 'a valid Bangladesh mobile number is required (01XXXXXXXXX)');
     }
     if (strlen($password) < 6) {
         bb_error(400, 'validation_failed', 'password must be at least 6 characters');
@@ -103,10 +108,11 @@ function handle_register(array $cfg): void
     $hash       = password_hash($password, PASSWORD_BCRYPT);
 
     $db->beginTransaction();
-    $db->prepare('INSERT INTO businesses (id, name, timezone, currency, created_at) VALUES (?, ?, ?, ?, ?)')
-       ->execute([$businessId, $business, 'Asia/Dhaka', 'BDT', $now]);
+    $db->prepare('INSERT INTO businesses (id, name, timezone, currency, thana, zila, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+       ->execute([$businessId, $business, 'Asia/Dhaka', 'BDT',
+                  $thana !== '' ? $thana : null, $zila !== '' ? $zila : null, $now]);
     $db->prepare('INSERT INTO users (id, business_id, name, phone, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-       ->execute([$userId, $businessId, $name !== '' ? $name : $business, $phone, $hash, 'owner', $now]);
+       ->execute([$userId, $businessId, $name, $phone, $hash, 'owner', $now]);
     $db->commit();
 
     bb_json(201, [
@@ -226,12 +232,13 @@ function bb_upsert_customer(PDO $db, string $businessId, string $deviceId, strin
     // pushed rows a harmless no-op (no id remapping needed on the client).
     $serverId = $localId;
     $db->prepare(
-        'INSERT INTO customers (id, business_id, device_id, local_id, name, phone, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
+        'INSERT INTO customers (id, business_id, device_id, local_id, name, phone, address, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
        ->execute([
            $serverId, $businessId, $deviceId, $localId,
            (string) ($data['name'] ?? ''),
            isset($data['phone']) && $data['phone'] !== '' ? (string) $data['phone'] : null,
+           isset($data['address']) && $data['address'] !== '' ? (string) $data['address'] : null,
            gmdate('Y-m-d H:i:s'),
        ]);
     return $serverId;
@@ -342,6 +349,7 @@ function handle_sync_pull(array $cfg): void
             'id'         => $r['id'],
             'name'       => $r['name'],
             'phone'      => $r['phone'],
+            'address'    => $r['address'],
             'updated_at' => bb_iso_utc($r['updated_at']),
         ];
     }
