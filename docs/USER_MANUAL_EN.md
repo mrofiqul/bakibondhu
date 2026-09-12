@@ -40,8 +40,9 @@ A welcome screen appears with three choices:
 | **Create account** (নতুন অ্যাকাউন্ট খুলুন) | First time — name, shop name, mobile and a password. |
 | **Continue offline** (অ্যাকাউন্ট ছাড়া চালিয়ে যান) | Use it on this phone only, without an account. |
 
-> 💡 Everything works without an account too. An account is mainly for future
-> multi-device sync. Only logging in / registering needs internet.
+> 💡 Everything works without an account too. Signing in lets you **sync to the
+> cloud** and share your ledger across phones (see §11). Only logging in /
+> registering and syncing need internet.
 
 ---
 
@@ -113,21 +114,60 @@ you to the first (Login / Register) screen.
 
 ---
 
-## 11. Using it offline
+## 11. Syncing your data across phones
 
-BakiBondhu works fully **offline** — adding customers, recording credit/payments and
-reminders all work without internet, and your data stays safely on your phone. Only
-logging in / creating an account needs internet.
+Once you're signed in, you can **sync your ledger to the cloud** — so if you lose
+your phone or move to a new one, your records come back.
+
+1. Go to **⚙️ Settings → Sync & account**; tap **Log in** if needed.
+2. Tap **🔄 Sync Now**.
+3. When you see an "uploaded / downloaded" message, the sync is done.
+
+- After logging in once, you stay signed in for about **30 days** — no need to
+  re-enter your password each time.
+- Syncing needs internet. Offline, your entries stay on the phone; sync again when
+  you're back online.
+- On a **new phone**, log in with the same account and tap **Sync Now** — your old
+  records download.
+
+> The app works fully without syncing; sync is only for backing up your ledger and
+> moving between phones.
 
 ---
 
-## 12. FAQ
+## 12. Admin panel (for the platform owner)
+
+There's a separate **web admin panel** for the platform administrator — a
+bird's-eye view of all shops (totals, outstanding credit, signups) with management
+actions (suspend/delete a shop, reset a password).
+
+- Open **⚙️ Settings → About → Admin panel** to launch it in your browser.
+- It requires an **admin username and password** to log in.
+
+> ℹ️ Ordinary shopkeepers don't need this — it's a tool for whoever runs the
+> platform. Without an admin account you can't log in here.
+
+---
+
+## 13. Using it offline
+
+BakiBondhu works fully **offline** — adding customers, recording credit/payments and
+reminders all work without internet, and your data stays safely on your phone. Only
+logging in / creating an account and syncing need internet.
+
+---
+
+## 14. FAQ
 
 **Can anyone else see my data?**
 Your records stay on your phone. Passwords are stored securely.
 
 **Does it work without internet?**
 Yes — all the core features work offline.
+
+**How do I get my old records on a new phone?**
+Sync on the old phone, then log in with the same account on the new phone and tap
+**Sync Now** — your records download (see §11).
 
 **What do I do when a new version comes out?**
 Download the new APK from the same website, uninstall the old app, then install the
