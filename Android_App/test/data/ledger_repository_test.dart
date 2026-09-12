@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bakibondhu/data/in_memory_ledger_repository.dart';
+import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/collections.dart';
 import 'package:bakibondhu/domain/money.dart';
 
@@ -56,43 +57,63 @@ void main() {
     expect(await repo.customers(), isEmpty);
     expect(await repo.totalReceivable(), Money.zero);
     expect(await repo.totalSales(), Money.zero);
-    expect(await repo.dailySales(), isEmpty);
+    expect(await repo.salesBuckets(SalesPeriod.day), isEmpty);
   });
 
-  test('total sales = credit only, grouped by day, newest first', () async {
+  test('sales are direct entries (not customer credit)', () async {
     final repo = newRepo();
     final k = await repo.addCustomer(name: 'করিম');
-    final b = await repo.addCustomer(name: 'বকুল');
-
-    // Sep 5: two credits (৳1000 + ৳500)
-    await repo.recordCredit(customerId: k.id, amount: Money.taka(1000), at: DateTime(2026, 9, 5, 10));
-    await repo.recordCredit(customerId: b.id, amount: Money.taka(500), at: DateTime(2026, 9, 5, 16));
-    // Sep 7: one credit (৳2000) + a payment that must NOT count as a sale
-    await repo.recordCredit(customerId: k.id, amount: Money.taka(2000), at: DateTime(2026, 9, 7, 9));
-    await repo.recordPayment(customerId: k.id, amount: Money.taka(300), at: DateTime(2026, 9, 7, 12));
-
-    expect(await repo.totalSales(), Money.taka(3500)); // 1000+500+2000; payment excluded
-
-    final days = await repo.dailySales();
-    expect(days.length, 2);
-    expect(days.first.day, DateTime(2026, 9, 7)); // newest day first
-    expect(days.first.total, Money.taka(2000));
-    expect(days.first.count, 1);
-    expect(days[1].day, DateTime(2026, 9, 5));
-    expect(days[1].total, Money.taka(1500));
-    expect(days[1].count, 2);
+    // Customer credit is NOT a sale.
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(5000));
+    expect(await repo.totalSales(), Money.zero);
+    // A recorded sale is.
+    await repo.addSale(amount: Money.taka(800), note: 'চাল');
+    expect(await repo.totalSales(), Money.taka(800));
+    expect((await repo.sales()).single.note, 'চাল');
   });
 
-  test('todaysSales counts only today\'s credit', () async {
+  test('sales total and buckets by day/month/quarter/year', () async {
     final repo = newRepo();
-    final k = await repo.addCustomer(name: 'করিম');
+    await repo.addSale(amount: Money.taka(1000), at: DateTime(2026, 9, 5, 10));
+    await repo.addSale(amount: Money.taka(500), at: DateTime(2026, 9, 5, 16));
+    await repo.addSale(amount: Money.taka(2000), at: DateTime(2026, 9, 7, 9));
+    await repo.addSale(amount: Money.taka(400), at: DateTime(2026, 6, 2, 9)); // Q2
+    await repo.addSale(amount: Money.taka(9999), at: DateTime(2025, 12, 1, 9));
+
+    expect(await repo.totalSales(), Money.taka(13899));
+
+    final byDay = await repo.salesBuckets(SalesPeriod.day);
+    expect(byDay.length, 4);
+    expect(byDay.first.start, DateTime(2026, 9, 7)); // newest first
+    expect(byDay.first.total, Money.taka(2000));
+    expect(byDay[1].start, DateTime(2026, 9, 5));
+    expect(byDay[1].total, Money.taka(1500));
+    expect(byDay[1].count, 2);
+
+    final byMonth = await repo.salesBuckets(SalesPeriod.month);
+    expect(byMonth.length, 3);
+    expect(byMonth.first.start, DateTime(2026, 9));
+    expect(byMonth.first.total, Money.taka(3500));
+
+    final byQuarter = await repo.salesBuckets(SalesPeriod.quarter);
+    expect(byQuarter.length, 3);
+    expect(byQuarter.first.start, DateTime(2026, 7)); // Q3 (Jul–Sep)
+    expect(byQuarter.first.total, Money.taka(3500));
+
+    final byYear = await repo.salesBuckets(SalesPeriod.year);
+    expect(byYear.length, 2);
+    expect(byYear.first.start, DateTime(2026));
+    expect(byYear.first.total, Money.taka(3900)); // 3500 + 400
+    expect(byYear[1].total, Money.taka(9999));
+  });
+
+  test('todaysSales counts only today', () async {
+    final repo = newRepo();
     final now = DateTime.now();
-    await repo.recordCredit(customerId: k.id, amount: Money.taka(700), at: now);
-    await repo.recordCredit(customerId: k.id, amount: Money.taka(300), at: now);
-    await repo.recordCredit(customerId: k.id, amount: Money.taka(9999), at: now.subtract(const Duration(days: 3)));
-    await repo.recordPayment(customerId: k.id, amount: Money.taka(100), at: now); // not a sale
-
-    expect(await repo.todaysSales(), Money.taka(1000)); // 700 + 300 only
+    await repo.addSale(amount: Money.taka(700), at: now);
+    await repo.addSale(amount: Money.taka(300), at: now);
+    await repo.addSale(amount: Money.taka(9999), at: now.subtract(const Duration(days: 3)));
+    expect(await repo.todaysSales(), Money.taka(1000)); // 700 + 300
   });
 
   test('records collection activities and promises, newest first', () async {

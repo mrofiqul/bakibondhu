@@ -13,8 +13,11 @@ class SqfliteSyncStore implements SyncStore {
   final Database _db;
   SqfliteSyncStore(this._db);
 
-  static String _table(EntityKind kind) =>
-      kind == EntityKind.customer ? 'customers' : 'transactions';
+  static String _table(EntityKind kind) => switch (kind) {
+        EntityKind.customer => 'customers',
+        EntityKind.transaction => 'transactions',
+        EntityKind.sale => 'sales',
+      };
 
   // ---- outbox ---------------------------------------------------------------
 
@@ -61,6 +64,23 @@ class SqfliteSyncStore implements SyncStore {
         },
       ));
     }
+
+    // Sales (no customer dependency).
+    final saleRows = await _db.query('sales',
+        columns: ['id', 'amount_paisa', 'note', 'sold_at'],
+        where: "sync_status <> 'SYNCED'",
+        orderBy: 'sold_at');
+    for (final r in saleRows) {
+      changes.add(LocalChange(
+        kind: EntityKind.sale,
+        localId: r['id'] as String,
+        data: {
+          'amount_paisa': r['amount_paisa'],
+          'note': r['note'],
+          'sold_at': r['sold_at'],
+        },
+      ));
+    }
     return changes;
   }
 
@@ -95,13 +115,35 @@ class SqfliteSyncStore implements SyncStore {
     final ordered = [...records]..sort((a, b) => a.kind.index.compareTo(b.kind.index));
     await _db.transaction((txn) async {
       for (final r in ordered) {
-        if (r.kind == EntityKind.customer) {
-          await _upsertCustomer(txn, r);
-        } else {
-          await _upsertTransaction(txn, r);
+        switch (r.kind) {
+          case EntityKind.customer:
+            await _upsertCustomer(txn, r);
+          case EntityKind.transaction:
+            await _upsertTransaction(txn, r);
+          case EntityKind.sale:
+            await _upsertSale(txn, r);
         }
       }
     });
+  }
+
+  Future<void> _upsertSale(DatabaseExecutor txn, ServerRecord r) async {
+    final values = {
+      'amount_paisa': _amountPaisa(r.data),
+      'note': r.data['note'],
+      'sold_at': (r.data['sold_at'] as String?) ??
+          r.updatedAt.toUtc().toIso8601String(),
+      'sync_status': 'SYNCED',
+    };
+    final updated = await txn.update('sales', values,
+        where: 'server_id = ?', whereArgs: [r.id]);
+    if (updated == 0) {
+      await txn.insert('sales', {
+        'id': r.id,
+        'server_id': r.id,
+        ...values,
+      });
+    }
   }
 
   Future<void> _upsertCustomer(DatabaseExecutor txn, ServerRecord r) async {
@@ -180,6 +222,8 @@ class SqfliteSyncStore implements SyncStore {
         SELECT sync_status FROM customers
         UNION ALL
         SELECT sync_status FROM transactions
+        UNION ALL
+        SELECT sync_status FROM sales
       ) GROUP BY sync_status
     ''');
     var pending = 0, failed = 0, conflict = 0, synced = 0;

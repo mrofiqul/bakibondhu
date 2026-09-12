@@ -24,11 +24,23 @@ class HttpSyncApi implements SyncApi {
         'Authorization': 'Bearer ${accessToken()}',
       };
 
-  static String _kindCode(EntityKind k) =>
-      k == EntityKind.customer ? 'customer' : 'transaction';
+  static String _kindCode(EntityKind k) => switch (k) {
+        EntityKind.customer => 'customer',
+        EntityKind.transaction => 'transaction',
+        EntityKind.sale => 'sale',
+      };
 
-  static EntityKind _kindFrom(String s) =>
-      s == 'customer' ? EntityKind.customer : EntityKind.transaction;
+  static EntityKind _kindFrom(String s) => switch (s) {
+        'customer' => EntityKind.customer,
+        'sale' => EntityKind.sale,
+        _ => EntityKind.transaction,
+      };
+
+  static String _pullKey(EntityKind k) => switch (k) {
+        EntityKind.customer => 'customers',
+        EntityKind.transaction => 'transactions',
+        EntityKind.sale => 'sales',
+      };
 
   static SyncState _stateFrom(String s) => switch (s.toUpperCase()) {
         'SYNCED' => SyncState.synced,
@@ -85,7 +97,7 @@ class HttpSyncApi implements SyncApi {
 
     final records = <ServerRecord>[];
     for (final kind in EntityKind.values) {
-      final key = kind == EntityKind.customer ? 'customers' : 'transactions';
+      final key = _pullKey(kind);
       for (final row in (decoded[key] as List? ?? const [])
           .cast<Map<String, Object?>>()) {
         records.add(ServerRecord(

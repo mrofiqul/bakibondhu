@@ -11,6 +11,7 @@ import 'package:bakibondhu/domain/money.dart';
 class InMemoryLedgerRepository implements LedgerRepository {
   final Map<String, Customer> _customers = {};
   final List<TxnEntry> _txns = [];
+  final List<Sale> _sales = [];
   final String Function() _newId;
 
   /// [newId] is injectable so tests can use deterministic ids; production passes
@@ -110,36 +111,50 @@ class InMemoryLedgerRepository implements LedgerRepository {
       totalOwed(_customers.keys.map((id) => customerBalance(_of(id))));
 
   @override
-  Future<Money> totalSales() async => Money(_txns
-      .where((t) => t.type == TxnType.credit)
-      .fold(0, (sum, t) => sum + t.amount.paisa));
+  Future<Sale> addSale(
+      {required Money amount, String? note, DateTime? at}) async {
+    assert(!amount.isNegative, 'amount must be >= 0');
+    final s = Sale(
+        id: _newId(), amount: amount, note: note, soldAt: at ?? DateTime.now());
+    _sales.add(s);
+    return s;
+  }
+
+  @override
+  Future<List<Sale>> sales() async {
+    final list = [..._sales]..sort((a, b) => b.soldAt.compareTo(a.soldAt));
+    return list;
+  }
+
+  @override
+  Future<Money> totalSales() async =>
+      Money(_sales.fold(0, (sum, s) => sum + s.amount.paisa));
 
   @override
   Future<Money> todaysSales() async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    for (final d in await dailySales()) {
-      if (d.day == today) return d.total;
+    for (final b in await salesBuckets(SalesPeriod.day)) {
+      if (b.start == today) return b.total;
     }
     return Money.zero;
   }
 
   @override
-  Future<List<DailySales>> dailySales() async {
-    final byDay = <DateTime, List<int>>{};
-    for (final t in _txns.where((t) => t.type == TxnType.credit)) {
-      final local = t.createdAt.toLocal();
-      final day = DateTime(local.year, local.month, local.day);
-      byDay.putIfAbsent(day, () => []).add(t.amount.paisa);
+  Future<List<SalesBucket>> salesBuckets(SalesPeriod period) async {
+    final byBucket = <DateTime, List<int>>{};
+    for (final s in _sales) {
+      final key = salesBucketStart(s.soldAt.toLocal(), period);
+      byBucket.putIfAbsent(key, () => []).add(s.amount.paisa);
     }
     return [
-      for (final e in byDay.entries)
-        DailySales(
-          day: e.key,
+      for (final e in byBucket.entries)
+        SalesBucket(
+          start: e.key,
           total: Money(e.value.fold(0, (a, b) => a + b)),
           count: e.value.length,
         )
-    ]..sort((a, b) => b.day.compareTo(a.day));
+    ]..sort((a, b) => b.start.compareTo(a.start));
   }
 
   // ---- collections ----

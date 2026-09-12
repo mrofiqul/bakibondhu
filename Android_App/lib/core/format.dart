@@ -12,6 +12,9 @@ const List<String> _bnMonths = [
   'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
 ];
 
+/// Bangla month name for a 1-based month number.
+String bnMonth(int month) => _bnMonths[month - 1];
+
 /// A friendly day label for the daily sales report: "আজ" / "গতকাল" for the
 /// most recent days, otherwise `12 সেপ্টেম্বর 2026`.
 String dayLabel(DateTime day, {DateTime? today}) {

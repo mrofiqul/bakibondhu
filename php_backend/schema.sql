@@ -62,6 +62,23 @@ CREATE TABLE IF NOT EXISTS transactions (
     KEY idx_txn_customer (customer_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Direct sales (owner records each sale's amount; no customer). Daily/monthly/
+-- quarterly/yearly totals come from these rows. Same idempotency as the ledger.
+CREATE TABLE IF NOT EXISTS sales (
+    id           CHAR(36)     NOT NULL,   -- server id (== client local_id)
+    business_id  CHAR(36)     NOT NULL,
+    device_id    VARCHAR(64)  NOT NULL,
+    local_id     CHAR(36)     NOT NULL,
+    amount_paisa BIGINT       NOT NULL,
+    note         TEXT         NULL,
+    sold_at      VARCHAR(64)  NOT NULL,   -- when the sale happened (client, UTC ISO)
+    created_at   VARCHAR(64)  NOT NULL,
+    updated_at   DATETIME(6)  NOT NULL,   -- pull cursor
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_sales_idem (business_id, device_id, local_id),
+    KEY idx_sales_business_updated (business_id, updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ---- Admin panel (super-admin over the whole platform) --------------------
 
 -- Platform admins (separate from per-business users). Password bcrypt-hashed.

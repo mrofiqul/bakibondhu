@@ -188,7 +188,8 @@ async function loadOverview(){
       ['Shops',t.businesses],['Users',t.users],['Customers',t.customers],
       ['Transactions',t.transactions],['Suspended',t.suspended],
     ].map(([l,v])=>`<div class="kpi"><div class="label">${l}</div><div class="val">${v.toLocaleString()}</div></div>`).join('');
-    const money=`<div class="kpi"><div class="label">Outstanding credit</div><div class="val money">${taka(t.outstanding_paisa)}</div></div>`;
+    const money=`<div class="kpi"><div class="label">Outstanding credit</div><div class="val money">${taka(t.outstanding_paisa)}</div></div>`
+      +`<div class="kpi"><div class="label">Total sales</div><div class="val money">${taka(t.sales_paisa)}</div></div>`;
     // signups bar chart
     const max=Math.max(1,...d.signups_14d.map(s=>+s.c));
     const bars=d.signups_14d.length? d.signups_14d.map(s=>{
@@ -220,6 +221,7 @@ async function loadShops(){
         <td><span class="pill ${esc(b.status)}">${esc(b.status)}</span></td>
         <td class="num">${b.users}</td><td class="num">${b.customers}</td><td class="num">${b.transactions}</td>
         <td class="num">${taka(b.outstanding_paisa)}</td>
+        <td class="num">${taka(b.sales_paisa)}</td>
         <td><div class="row-actions">
           <button onclick="openShop('${b.id}')">View</button>
           ${b.status==='active'
@@ -230,7 +232,7 @@ async function loadShops(){
       : '<tr><td colspan="7" class="muted">No shops yet.</td></tr>';
     el.innerHTML=`<div class="card"><h3>All shops (${d.businesses.length})</h3><div class="scroll"><table>
       <thead><tr><th>Shop</th><th>Status</th><th class="num">Users</th><th class="num">Cust.</th>
-        <th class="num">Txns</th><th class="num">Outstanding</th><th></th></tr></thead>
+        <th class="num">Txns</th><th class="num">Outstanding</th><th class="num">Sales</th><th></th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
   }catch(err){ el.innerHTML='<p class="err">'+esc(err.message)+'</p>'; }
 }

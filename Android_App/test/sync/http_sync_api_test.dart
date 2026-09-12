@@ -66,6 +66,11 @@ void main() {
           'amount_paisa': 12000,
         },
       ),
+      const LocalChange(
+        kind: EntityKind.sale,
+        localId: 'loc-s1',
+        data: {'amount_paisa': 800, 'note': 'চাল', 'sold_at': '2026-09-12T04:00:00.000Z'},
+      ),
     ]);
 
     // Request shape the PHP `handle_sync_push` reads.
@@ -77,6 +82,8 @@ void main() {
     expect((changes[0]['data'] as Map)['name'], 'করিম');
     expect(changes[1]['entity'], 'transaction');
     expect((changes[1]['data'] as Map)['amount_paisa'], 12000);
+    expect(changes[2]['entity'], 'sale');
+    expect((changes[2]['data'] as Map)['amount_paisa'], 800);
 
     // Response parsing.
     expect(results[0].kind, EntityKind.customer);
@@ -113,6 +120,15 @@ void main() {
               'updated_at': '2026-09-11T06:31:00.000000Z',
             },
           ],
+          'sales': [
+            {
+              'id': 'srv-s1',
+              'amount_paisa': 800,
+              'note': 'চাল',
+              'sold_at': '2026-09-11T05:00:00.000000Z',
+              'updated_at': '2026-09-11T06:31:02.000000Z',
+            },
+          ],
           'server_time': '2026-09-11 06:31:05.000000',
           'has_more': false,
         }),
@@ -133,13 +149,17 @@ void main() {
     expect(calledUri.queryParameters['since'], '2026-09-10 00:00:00.000000');
     expect(calledUri.queryParameters['device_id'], 'device-1');
 
-    expect(data.records.length, 2);
+    expect(data.records.length, 3);
     final customer = data.records.firstWhere((r) => r.kind == EntityKind.customer);
     expect(customer.id, 'srv-c1');
     expect(customer.data['name'], 'রহিম');
     final txn = data.records.firstWhere((r) => r.kind == EntityKind.transaction);
     expect(txn.data['customer_id'], 'srv-c1');
     expect(txn.data['amount_paisa'], 5000);
+    final sale = data.records.firstWhere((r) => r.kind == EntityKind.sale);
+    expect(sale.id, 'srv-s1');
+    expect(sale.data['amount_paisa'], 800);
+    expect(sale.data['sold_at'], '2026-09-11T05:00:00.000000Z');
     // server_time is the opaque cursor passed back as the next `since`.
     expect(data.serverTime, '2026-09-11 06:31:05.000000');
     expect(data.hasMore, false);

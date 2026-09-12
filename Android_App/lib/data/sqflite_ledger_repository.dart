@@ -184,10 +184,41 @@ class SqfliteLedgerRepository implements LedgerRepository {
     return totalOwed(byCustomer.values.map(customerBalance));
   }
 
+  // ---- sales (direct, not tied to a customer) ------------------------------
+
+  Sale _saleFromRow(Map<String, Object?> r) => Sale(
+        id: r['id'] as String,
+        amount: Money(r['amount_paisa'] as int),
+        note: r['note'] as String?,
+        soldAt: DateTime.parse(r['sold_at'] as String),
+      );
+
+  @override
+  Future<Sale> addSale(
+      {required Money amount, String? note, DateTime? at}) async {
+    if (amount.isNegative) throw ArgumentError('amount must be >= 0');
+    final s = Sale(
+        id: _uuid.v4(), amount: amount, note: note, soldAt: at ?? DateTime.now());
+    await _db.insert('sales', {
+      'id': s.id,
+      'amount_paisa': s.amount.paisa,
+      'note': s.note,
+      'sold_at': s.soldAt.toUtc().toIso8601String(),
+      'sync_status': 'PENDING',
+    });
+    return s;
+  }
+
+  @override
+  Future<List<Sale>> sales() async {
+    final rows = await _db.query('sales', orderBy: 'sold_at DESC, rowid DESC');
+    return rows.map(_saleFromRow).toList();
+  }
+
   @override
   Future<Money> totalSales() async {
-    final rows = await _db.rawQuery(
-        "SELECT COALESCE(SUM(amount_paisa), 0) AS s FROM transactions WHERE type = 'credit'");
+    final rows = await _db
+        .rawQuery('SELECT COALESCE(SUM(amount_paisa), 0) AS s FROM sales');
     return Money((rows.first['s'] as int?) ?? 0);
   }
 
@@ -195,32 +226,30 @@ class SqfliteLedgerRepository implements LedgerRepository {
   Future<Money> todaysSales() async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    for (final d in await dailySales()) {
-      if (d.day == today) return d.total;
+    for (final b in await salesBuckets(SalesPeriod.day)) {
+      if (b.start == today) return b.total;
     }
     return Money.zero;
   }
 
   @override
-  Future<List<DailySales>> dailySales() async {
-    // created_at is stored UTC; group by the merchant's LOCAL day.
-    final rows = await _db.query('transactions',
-        columns: ['amount_paisa', 'created_at'], where: "type = 'credit'");
-    final byDay = <DateTime, List<int>>{};
+  Future<List<SalesBucket>> salesBuckets(SalesPeriod period) async {
+    // sold_at is stored UTC; bucket by the merchant's LOCAL calendar.
+    final rows = await _db.query('sales', columns: ['amount_paisa', 'sold_at']);
+    final byBucket = <DateTime, List<int>>{};
     for (final r in rows) {
-      final local = DateTime.parse(r['created_at'] as String).toLocal();
-      final day = DateTime(local.year, local.month, local.day);
-      byDay.putIfAbsent(day, () => []).add(r['amount_paisa'] as int);
+      final local = DateTime.parse(r['sold_at'] as String).toLocal();
+      final key = salesBucketStart(local, period);
+      byBucket.putIfAbsent(key, () => []).add(r['amount_paisa'] as int);
     }
-    final list = [
-      for (final e in byDay.entries)
-        DailySales(
-          day: e.key,
+    return [
+      for (final e in byBucket.entries)
+        SalesBucket(
+          start: e.key,
           total: Money(e.value.fold(0, (a, b) => a + b)),
           count: e.value.length,
         )
-    ]..sort((a, b) => b.day.compareTo(a.day)); // newest day first
-    return list;
+    ]..sort((a, b) => b.start.compareTo(a.start));
   }
 
   // ---- collections ----

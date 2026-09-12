@@ -30,6 +30,7 @@ class _HomeData {
 
 class _HomeScreenState extends State<HomeScreen> {
   _HomeData? _data;
+  String? _shopName;
 
   LedgerRepository get _repo => AppScope.of(context);
 
@@ -45,11 +46,15 @@ class _HomeScreenState extends State<HomeScreen> {
   /// snapshot on screen.
   Future<void> _refresh() async {
     final repo = AppScope.of(context);
+    final shopName = await AppScope.settingsOf(context).shopName();
     final customers = await repo.customersWithBalances();
     final total = await repo.totalReceivable();
     final todaySales = await repo.todaysSales();
     if (!mounted) return;
-    setState(() => _data = _HomeData(total, todaySales, customers));
+    setState(() {
+      _shopName = shopName;
+      _data = _HomeData(total, todaySales, customers);
+    });
   }
 
   Future<void> _addCustomer() async {
@@ -63,7 +68,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(S.appName),
+        title: Text((_shopName == null || _shopName!.trim().isEmpty)
+            ? S.appName
+            : '${S.appName} / ${_shopName!.trim()}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.sync),
@@ -97,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
           if (data == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (data.customers.isEmpty) return const _EmptyState();
           return Column(
             children: [
               _TotalCard(total: data.total, count: data.customers.length),
@@ -113,26 +119,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               Expanded(
-                child: ListView.separated(
-                  itemCount: data.customers.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, i) {
-                    final row = data.customers[i];
-                    return _CustomerTile(
-                      row: row,
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                CustomerDetailScreen(customerId: row.customer.id),
-                          ),
-                        );
-                        _refresh(); // balance may have changed
-                      },
-                    );
-                  },
-                ),
+                child: data.customers.isEmpty
+                    ? const _EmptyState()
+                    : ListView.separated(
+                        itemCount: data.customers.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, i) {
+                          final row = data.customers[i];
+                          return _CustomerTile(
+                            row: row,
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CustomerDetailScreen(
+                                      customerId: row.customer.id),
+                                ),
+                              );
+                              _refresh(); // balance may have changed
+                            },
+                          );
+                        },
+                      ),
               ),
             ],
           );
