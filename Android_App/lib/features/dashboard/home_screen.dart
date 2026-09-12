@@ -23,9 +23,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeData {
   final Money total;
-  final Money sales;
+  final Money todaySales;
   final List<CustomerBalance> customers;
-  const _HomeData(this.total, this.sales, this.customers);
+  const _HomeData(this.total, this.todaySales, this.customers);
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -47,9 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final repo = AppScope.of(context);
     final customers = await repo.customersWithBalances();
     final total = await repo.totalReceivable();
-    final sales = await repo.totalSales();
+    final todaySales = await repo.todaysSales();
     if (!mounted) return;
-    setState(() => _data = _HomeData(total, sales, customers));
+    setState(() => _data = _HomeData(total, todaySales, customers));
   }
 
   Future<void> _addCustomer() async {
@@ -102,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _TotalCard(total: data.total, count: data.customers.length),
               _SalesCard(
-                sales: data.sales,
+                todaySales: data.todaySales,
                 onTap: () async {
                   await Navigator.push(
                     context,
@@ -180,9 +180,9 @@ class _TotalCard extends StatelessWidget {
 }
 
 class _SalesCard extends StatelessWidget {
-  final Money sales;
+  final Money todaySales;
   final VoidCallback onTap;
-  const _SalesCard({required this.sales, required this.onTap});
+  const _SalesCard({required this.todaySales, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +205,7 @@ class _SalesCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(S.totalSales,
+                      Text(S.todaysSales,
                           style: TextStyle(
                               color: scheme.onSecondaryContainer,
                               fontWeight: FontWeight.w600)),
@@ -217,7 +217,7 @@ class _SalesCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Text(sales.format(),
+                Text(todaySales.format(),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

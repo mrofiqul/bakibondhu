@@ -192,6 +192,16 @@ class SqfliteLedgerRepository implements LedgerRepository {
   }
 
   @override
+  Future<Money> todaysSales() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    for (final d in await dailySales()) {
+      if (d.day == today) return d.total;
+    }
+    return Money.zero;
+  }
+
+  @override
   Future<List<DailySales>> dailySales() async {
     // created_at is stored UTC; group by the merchant's LOCAL day.
     final rows = await _db.query('transactions',

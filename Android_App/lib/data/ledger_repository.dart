@@ -62,6 +62,9 @@ abstract class LedgerRepository {
   /// and adjustments are not sales; only `credit` entries count.
   Future<Money> totalSales();
 
+  /// Sales made today (the merchant's local date) — the Home headline figure.
+  Future<Money> todaysSales();
+
   /// Sales grouped by local calendar day, newest day first (daily sales report).
   Future<List<DailySales>> dailySales();
 

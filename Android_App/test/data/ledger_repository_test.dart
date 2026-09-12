@@ -83,6 +83,18 @@ void main() {
     expect(days[1].count, 2);
   });
 
+  test('todaysSales counts only today\'s credit', () async {
+    final repo = newRepo();
+    final k = await repo.addCustomer(name: 'করিম');
+    final now = DateTime.now();
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(700), at: now);
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(300), at: now);
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(9999), at: now.subtract(const Duration(days: 3)));
+    await repo.recordPayment(customerId: k.id, amount: Money.taka(100), at: now); // not a sale
+
+    expect(await repo.todaysSales(), Money.taka(1000)); // 700 + 300 only
+  });
+
   test('records collection activities and promises, newest first', () async {
     final repo = newRepo();
     final k = await repo.addCustomer(name: 'করিম');

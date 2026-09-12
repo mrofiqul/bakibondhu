@@ -115,6 +115,16 @@ class InMemoryLedgerRepository implements LedgerRepository {
       .fold(0, (sum, t) => sum + t.amount.paisa));
 
   @override
+  Future<Money> todaysSales() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    for (final d in await dailySales()) {
+      if (d.day == today) return d.total;
+    }
+    return Money.zero;
+  }
+
+  @override
   Future<List<DailySales>> dailySales() async {
     final byDay = <DateTime, List<int>>{};
     for (final t in _txns.where((t) => t.type == TxnType.credit)) {
