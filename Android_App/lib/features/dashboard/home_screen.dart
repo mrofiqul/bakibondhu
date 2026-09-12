@@ -8,6 +8,7 @@ import 'package:bakibondhu/core/theme.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/customers/customer_detail_screen.dart';
+import 'package:bakibondhu/features/reports/sales_report_screen.dart';
 import 'package:bakibondhu/features/settings/settings_screen.dart';
 import 'package:bakibondhu/features/sync/sync_center_screen.dart';
 
@@ -22,8 +23,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeData {
   final Money total;
+  final Money sales;
   final List<CustomerBalance> customers;
-  const _HomeData(this.total, this.customers);
+  const _HomeData(this.total, this.sales, this.customers);
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -45,8 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final repo = AppScope.of(context);
     final customers = await repo.customersWithBalances();
     final total = await repo.totalReceivable();
+    final sales = await repo.totalSales();
     if (!mounted) return;
-    setState(() => _data = _HomeData(total, customers));
+    setState(() => _data = _HomeData(total, sales, customers));
   }
 
   Future<void> _addCustomer() async {
@@ -98,6 +101,17 @@ class _HomeScreenState extends State<HomeScreen> {
           return Column(
             children: [
               _TotalCard(total: data.total, count: data.customers.length),
+              _SalesCard(
+                sales: data.sales,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const SalesReportScreen()),
+                  );
+                  _refresh();
+                },
+              ),
               Expanded(
                 child: ListView.separated(
                   itemCount: data.customers.length,
@@ -160,6 +174,60 @@ class _TotalCard extends StatelessWidget {
           Text(S.customerCount(count),
               style: TextStyle(color: scheme.onPrimaryContainer)),
         ],
+      ),
+    );
+  }
+}
+
+class _SalesCard extends StatelessWidget {
+  final Money sales;
+  final VoidCallback onTap;
+  const _SalesCard({required this.sales, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+      child: Material(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.trending_up, color: scheme.onSecondaryContainer),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(S.totalSales,
+                          style: TextStyle(
+                              color: scheme.onSecondaryContainer,
+                              fontWeight: FontWeight.w600)),
+                      Text(S.viewDailySales,
+                          style: TextStyle(
+                              color: scheme.onSecondaryContainer
+                                  .withValues(alpha: 0.75),
+                              fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Text(sales.format(),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: scheme.onSecondaryContainer,
+                    )),
+                Icon(Icons.chevron_right, color: scheme.onSecondaryContainer),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -10,6 +10,14 @@ class CustomerBalance {
   const CustomerBalance(this.customer, this.balance);
 }
 
+/// One day's sales total (credit given), for the daily sales report.
+class DailySales {
+  final DateTime day; // local date at midnight
+  final Money total; // sum of credit given that day
+  final int count; // number of credit entries that day
+  const DailySales({required this.day, required this.total, required this.count});
+}
+
 /// The app's gateway to stored customers and transactions.
 ///
 /// Two implementations exist: [InMemoryLedgerRepository] (pure Dart, used in
@@ -49,6 +57,13 @@ abstract class LedgerRepository {
 
   /// Home headline: total owed to the merchant (positive balances only).
   Future<Money> totalReceivable();
+
+  /// Total sales = the value of all goods given on credit (all-time). Payments
+  /// and adjustments are not sales; only `credit` entries count.
+  Future<Money> totalSales();
+
+  /// Sales grouped by local calendar day, newest day first (daily sales report).
+  Future<List<DailySales>> dailySales();
 
   // ---- collections (spec §8.8/§8.9) ----
 
