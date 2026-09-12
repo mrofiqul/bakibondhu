@@ -48,17 +48,28 @@ A welcome screen appears with three choices:
 
 ## 4. Home screen
 
-At the top: **Total credit — your receivable** (মোট বাকি — আপনার পাওনা), the total
-owed to you across all customers. Below it is a **📈 Today's sales** (আজকের বিক্রি)
-card showing how much you gave on credit today. Then the customer list — whoever
-owes the most is on top.
+When you're logged in, the title bar shows **বাকিবন্ধু / your shop name**.
 
-- Tap the **Today's sales** card to open the **Daily sales** report (দৈনিক বিক্রি) —
-  each day's sales, plus the all-time **total sales** (মোট বিক্রি).
+Below it: **Total credit — your receivable** (মোট বাকি — আপনার পাওনা), the total
+owed to you across all customers. Then a **📈 Today's sales** (আজকের বিক্রি) card
+showing how much you've **recorded in sales today**. Then the customer list —
+whoever owes the most is on top.
+
 - Bottom-right: **➕ New Customer** (নতুন কাস্টমার).
 - Top-right: **🔄 Sync** and **⚙️ Settings**.
 
-> Sales = the value of goods given on credit; money received is not counted as a sale.
+### Tracking your sales
+
+Record the amount of each sale, and you can see totals by **day, month, quarter,
+and year**.
+
+1. Tap the **📈 Today's sales** (আজকের বিক্রি) card → the **Sales** (বিক্রির হিসাব) screen opens.
+2. Tap **➕ Add sale** (বিক্রি যোগ করুন) → enter the **amount (৳)** and optionally a
+   **note** (e.g. the item) → **Add**.
+3. Use the **Daily / Monthly / Quarterly / Yearly** toggle at the top to see totals for that period.
+
+> 💡 Sales are **separate** from customer *baki* — only the amounts you add here
+> count as sales. Giving a customer credit is **not** counted as a sale.
 
 ---
 
