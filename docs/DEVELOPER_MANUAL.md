@@ -4,8 +4,10 @@ A complete guide for developers working on **BakiBondhu**, a Bangla-first,
 offline-first credit-ledger app for Bangladeshi micro-merchants.
 
 - **Android app:** Flutter/Dart (the primary product; works fully offline)
-- **Auth backend (in production):** vanilla PHP + MySQL, hosted on InfinityFree
-- **Sync backend (prepared, not yet deployed):** ASP.NET Core 9 + PostgreSQL
+- **Backend (in production):** vanilla PHP + MySQL on InfinityFree — auth, cloud
+  **sync**, and a super-**admin** panel
+- **Alternative sync backend (prepared, not deployed):** ASP.NET Core 9 +
+  PostgreSQL — for when usage outgrows shared hosting
 
 ---
 
@@ -25,15 +27,19 @@ BakiBondhu/
 │   │                       transactions, collections, reminders, auth, sync, settings)
 │   ├── test/               Unit + widget tests (pure-Dart domain + widgets)
 │   └── android/            Android project (gradle.properties has the Windows build fix)
-├── php_backend/            PHP + MySQL auth backend (deployed to InfinityFree)
-│   ├── index.php           Front controller / router (/health, /api/v1/auth/*)
-│   ├── lib.php             DB (PDO), JSON helpers, UUID, HS256 JWT
+├── php_backend/            PHP + MySQL backend (deployed to InfinityFree)
+│   ├── index.php           Front controller / router (auth, sync, admin)
+│   ├── lib.php             DB (PDO), JSON, UUID, HS256 JWT sign+verify, auth guards
+│   ├── admin_lib.php       Admin auth (scoped JWT), reports, actions, audit log
+│   ├── admin/index.html    Super-admin dashboard SPA (served at /admin)
+│   ├── admin_setup.php     One-time first-admin bootstrap (delete after use)
+│   ├── setup.php           One-time table creator (delete after use)
 │   ├── config.php          SECRETS (DB creds + jwt_secret) — GITIGNORED
 │   ├── config.sample.php   Template committed to git
-│   ├── setup.php           One-time table creator (delete after use)
-│   ├── schema.sql          MySQL schema (businesses, users)
+│   ├── schema.sql          MySQL schema (businesses, users, customers,
+│   │                       transactions, admins, admin_audit)
 │   ├── index.html          Public landing page (served at site root)
-│   └── .htaccess           DirectoryIndex + routing + apk MIME
+│   └── .htaccess           DirectoryIndex + routing + Authorization + apk MIME
 ├── Backend/                ASP.NET Core 9 + PostgreSQL (prepared for real sync)
 │   ├── BakiBondhu.Api/     Minimal-API endpoints, JWT, DI, PORT binding
 │   ├── BakiBondhu.Application / .Domain / .Infrastructure / .Tests
@@ -51,8 +57,9 @@ BakiBondhu/
 ## 2. Architecture at a glance
 
 - **Offline-first.** All data lives in on-device SQLite (`sqflite`). The app is
-  fully usable with no network. An account + backend enable (future) multi-device
-  sync; today the hosted backend covers **auth only**.
+  fully usable with no network. Signing in enables **cloud sync** (push/pull to the
+  PHP backend) so the ledger survives a lost or replaced phone; the same backend
+  also serves the platform **admin** panel.
 - **Domain is pure Dart.** `lib/domain/` holds the money/balance/allocation/aging
   rules with no Flutter or DB dependencies, and is unit-tested in isolation. The
   same rules are mirrored server-side (PL/pgSQL in the .NET path).
@@ -88,7 +95,9 @@ cd Android_App
 flutter pub get
 flutter run -d <device>          # picks up the default backend URL
 ```
-The backend base URL is a compile-time constant with a dart-define override:
+The backend base URL is a compile-time constant (`kSyncBaseUrl` in
+`lib/core/config.dart`) with a dart-define override; the admin-panel URL
+(`kAdminPanelUrl`) is derived from it:
 ```bash
 # default is http://10.0.2.2:5080 (emulator -> host loopback, for local .NET dev)
 flutter run --dart-define=SYNC_BASE_URL=https://bakibondhu.infinityfreeapp.com
@@ -96,7 +105,7 @@ flutter run --dart-define=SYNC_BASE_URL=https://bakibondhu.infinityfreeapp.com
 
 ### Test
 ```bash
-flutter test          # domain + widget + InfinityFree-client tests (29 total)
+flutter test          # domain + widget + InfinityFree-client + sync-contract tests
 flutter analyze       # must be clean
 ```
 
@@ -138,29 +147,84 @@ Screens of note: `dashboard/home_screen.dart` (total + customer list),
 
 ---
 
-## 5. The auth backend (PHP + MySQL on InfinityFree)
+## 5. The backend (PHP + MySQL on InfinityFree)
 
-**Live at:** `https://bakibondhu.infinityfreeapp.com`
-**Endpoints:**
+One PHP backend serves three concerns — **auth**, **cloud sync**, and the
+**admin** panel. **Live at:** `https://bakibondhu.infinityfreeapp.com`.
+
+### Auth endpoints
 - `GET /health` → `{"status":"ok",...}`
 - `POST /api/v1/auth/register` — body `{name, phone, password, business_name}` → 201
-- `POST /api/v1/auth/login` — body `{identifier, password}` → 200
+- `POST /api/v1/auth/login` — body `{identifier, password}` → 200 (a suspended
+  business is rejected 403 `account_suspended`)
 
 Response shape the app parses: `tokens.access_token` (+ optional
 `access_expires_in`, `role`, `business.id`/`business_id`); errors as
-`{"error":{"code","message"}}`.
+`{"error":{"code","message"}}`. Access tokens are **30-day** HS256 JWTs — there is
+no refresh flow, so `jwt_ttl_sec` in `config.php` is set long.
+
+### Sync endpoints (Bearer auth; tenant from the JWT `business_id`)
+- `POST /api/v1/sync/push` — `{device_id, changes:[{entity,local_id,op,data}]}` →
+  `{results:[{entity,local_id,server_id,sync_status,reason}]}`
+- `GET  /api/v1/sync/pull?since=<cursor>&device_id=<id>` →
+  `{customers:[…], transactions:[…], server_time, has_more}`
+
+Design (matches the app's `lib/sync/` contract, pinned by
+`test/sync/http_sync_api_test.dart`):
+- **Idempotent** on `(business_id, device_id, local_id)`; the **server id == the
+  client's `local_id`** (both UUIDs), so a device pulling back its own pushes is a
+  no-op — no client-side id remapping needed.
+- **Append-only** (`op:"create"` only). A transaction whose customer hasn't synced
+  yet returns `FAILED "unknown customer"` and retries next sync (customers push first).
+- **Cursor** = `updated_at DATETIME(6)` (UTC, µs); pull returns rows `> since AND
+  <= now` (snapshot taken before the read, so nothing is skipped).
+- The `.htaccess` forwards the `Authorization` header (Apache/CGI strips it; PHP
+  reads `$_SERVER['HTTP_AUTHORIZATION']`, also `REDIRECT_HTTP_AUTHORIZATION` on
+  rewritten paths — `bb_bearer_token` checks all).
+
+### Admin panel (super-admin over the whole platform)
+- **UI:** `/admin` — a dependency-free dashboard SPA (`php_backend/admin/index.html`)
+  that calls the API below with an admin-scoped Bearer token. Reachable in-app from
+  **Settings → About → Admin panel** (`kAdminPanelUrl`), which just opens `/admin`
+  in the browser.
+- **Auth:** separate `admins` table (bcrypt). `POST /api/v1/admin/login
+  {username,password}` issues a JWT with `scope=admin` (**8-hour** TTL). Guards and
+  handlers live in `admin_lib.php`.
+- **Endpoints** (all admin-scoped): `GET /admin/overview` (KPIs, total outstanding
+  credit, 14-day signups, recent activity), `GET /admin/businesses`, `GET
+  /admin/business?id=`, `POST /admin/action` (`suspend_business` /
+  `unsuspend_business` / `delete_business` / `delete_user` / `reset_password`),
+  `GET /admin/audit`.
+- Every mutation is written to `admin_audit`. Suspending a business makes its
+  users' **login and sync** return 403 (`bb_require_active_business` in `lib.php`).
+- **Bootstrap** the first admin once via `admin_setup.php?key=<key>` (choose
+  username/password in the browser; it refuses once an admin exists) — **then delete
+  it**. The committed key is a placeholder; deploy a fresh key since the repo is public.
 
 ### Deploy / update
-1. Edit `php_backend/config.php` (DB host/name/user/pass + `jwt_secret`).
+1. Edit `php_backend/config.php` (DB host/name/user/pass + `jwt_secret`;
+   `jwt_ttl_sec` = 2592000 for 30-day tokens).
 2. Upload files into the host's `htdocs` via FTP:
    ```bash
-   curl --user "<ftp_user>:<ftp_pass>" -T index.php   ftp://ftpupload.net/htdocs/index.php
-   # …repeat for lib.php, config.php, .htaccess, index.html
+   curl --user "<ftp_user>:<ftp_pass>" -T index.php ftp://ftpupload.net/htdocs/index.php
+   # …repeat for lib.php, admin_lib.php, config.php, .htaccess, index.html
+   curl --user "<ftp_user>:<ftp_pass>" -T admin/index.html ftp://ftpupload.net/htdocs/admin/index.html
    ```
-3. Create tables once by hitting `setup.php` (needed because InfinityFree blocks
-   **remote** MySQL): `https://<site>/setup.php?key=<jwt_secret>` — **then delete it**.
-4. `.htaccess` sets `DirectoryIndex index.html index.php`, so `/` serves the
-   landing page while `/health` and `/api/*` route to `index.php`.
+3. Create/upgrade tables once — InfinityFree blocks **remote** MySQL, so run schema
+   on the host: import `schema.sql` in phpMyAdmin (all `CREATE TABLE IF NOT EXISTS`,
+   safe to re-run), or hit a one-time guarded migration script and delete it. On a
+   pre-existing DB the `businesses.status` column needs
+   `ALTER TABLE businesses ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'active'`
+   (MySQL has no `ADD COLUMN IF NOT EXISTS` — guard with an `information_schema` check).
+4. `.htaccess` sets `DirectoryIndex index.html index.php` (so `/` serves the landing
+   page while `/health`, `/api/*` and `/admin/*` route to PHP) and forwards the
+   `Authorization` header for the token-authed endpoints.
+
+> **Testing endpoints from a shell** (not a browser) means solving the anti-bot
+> challenge first: fetch the page, extract the three 32-char hex blocks
+> (`grep -oE '[0-9a-f]{32}'`), `openssl enc -aes-128-cbc -d -K key -iv iv -nopad`
+> → the `__test` cookie, replay with `-b "__test=…"`. A browser does this
+> automatically, so the admin SPA's `fetch()` calls just work.
 
 ### ⚠️ InfinityFree constraints (important)
 - **Anti-bot "browser check".** Every request first gets a JavaScript
@@ -183,12 +247,13 @@ project memory. Rotate `jwt_secret` and the DB password for any real use.
 
 ---
 
-## 6. The sync backend (.NET + PostgreSQL) — prepared, not deployed
+## 6. The scale-up backend (.NET + PostgreSQL) — prepared, not deployed
 
-`Backend/` is a Clean-Architecture ASP.NET Core 9 API with JWT auth and
-PostgreSQL row-level-security tenant isolation. It is production-shaped and
-**ready to deploy** when real multi-device sync is needed; the PHP backend can’t
-run it (shared hosting).
+Sync already runs on the PHP backend (§5). `Backend/` is a heavier, production-
+shaped alternative for when shared hosting is outgrown: a Clean-Architecture
+ASP.NET Core 9 API with JWT auth and PostgreSQL row-level-security tenant
+isolation. It is **ready to deploy**; InfinityFree can’t run it. It speaks the same
+sync wire contract, so switching is just a `SYNC_BASE_URL` change.
 
 - Config via env: `ConnectionStrings__App`, `Jwt__Key`, `Jwt__Issuer`, `PORT`.
 - `Dockerfile` builds it and binds to `$PORT`. `render.yaml` is a Render blueprint.
@@ -211,14 +276,21 @@ run it (shared hosting).
   `…/releases/latest/download/BakiBondhu.apk`.
 
 ### Publish a new app version
-```bash
-flutter build apk --release --split-per-abi \
-  --dart-define=SYNC_BASE_URL=https://bakibondhu.infinityfreeapp.com
-gh release create vX.Y.Z \
-  build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-  --repo mrofiqul/bakibondhu-app --title "BakiBondhu vX.Y.Z" --notes "…"
-```
-The landing button auto-serves the newest release — no page change needed.
+1. Bump `version:` in `Android_App/pubspec.yaml` (e.g. `0.1.1+2`) and the About
+   label in `features/settings/settings_screen.dart`.
+2. Build and release (Flutter may not be on PATH — the dev box uses
+   `/c/src/flutter/bin/flutter`):
+   ```bash
+   flutter build apk --release \
+     --dart-define=SYNC_BASE_URL=https://bakibondhu.infinityfreeapp.com
+   gh release create vX.Y.Z build/app/outputs/flutter-apk/app-release.apk \
+     --repo mrofiqul/bakibondhu-app --title "BakiBondhu vX.Y.Z" --notes "…"
+   ```
+   This is a **universal** APK (~50 MB, installs on any device). For a leaner
+   ~18 MB download, add `--split-per-abi` and ship `app-arm64-v8a-release.apk`
+   instead. The GitHub asset must be named `BakiBondhu.apk`.
+3. The landing button and `…/releases/latest/download/BakiBondhu.apk` auto-serve
+   the newest release — no page change needed.
 
 ---
 
@@ -229,9 +301,19 @@ The landing button auto-serves the newest release — no page change needed.
 append-only, plus `collection_activities`, `promise_to_pay`, `sync_meta`.
 Balances/aging are computed in Dart from the ledger.
 
-**Auth backend (MySQL):** `businesses(id, name, timezone, currency, created_at)`,
-`users(id, business_id, name, phone UNIQUE, password_hash, role, created_at)`.
-Passwords are bcrypt; tokens are HS256 JWT (`sub`, `business_id`, `role`, `exp`).
+**Backend (MySQL):**
+- `businesses(id, name, timezone, currency, status, created_at)` — `status` is
+  `active|suspended` (admin panel).
+- `users(id, business_id, name, phone UNIQUE, password_hash, role, created_at)`.
+- `customers(id, business_id, device_id, local_id, name, phone, created_at, updated_at)`
+  and `transactions(…, customer_id, type, amount_paisa, due_date, note, updated_at)`
+  — the synced ledger; idempotent on `(business_id, device_id, local_id)`, and
+  `updated_at DATETIME(6)` is the pull cursor.
+- `admins(id, username UNIQUE, password_hash, created_at, last_login)` and
+  `admin_audit(id, admin_id, action, target, detail, at)`.
+
+Passwords are bcrypt; user tokens are 30-day HS256 JWTs (`sub`, `business_id`,
+`role`, `exp`); admin tokens add `scope=admin` (8h).
 
 ---
 
@@ -243,13 +325,19 @@ Passwords are bcrypt; tokens are HS256 JWT (`sub`, `business_id`, `role`, `exp`)
 | `400 Bad Request` (openresty) on the cookied retry | Keep-alive reuse — each request must use a fresh connection (already handled in `InfinityFreeClient`). |
 | Login returns HTML / `FormatException` | The browser-check page reached the app un-solved; check `InfinityFreeClient` detection (page < 4 KB, contains `toNumbers(`/`slowAES`). |
 | APK 404 on the site | InfinityFree deleted it — use the GitHub release URL. |
+| Sync returns `401` with a valid login | `Authorization` header not reaching PHP — confirm the `.htaccess` header pass-through is in effect on the host. |
+| Sync returns `403 account_suspended` | An admin suspended this business — unsuspend it from `/admin`. |
+| Admin `/admin` login fails after setup | The `admins` table is empty (bootstrap not run) or the wrong username/password; re-run `admin_setup.php`. |
 | Windows build: “Could not close incremental caches” | `kotlin.incremental=false` in `android/gradle.properties` (already set). |
 | Emulator won’t boot / black screen | Kill stale `qemu`/`emulator`, clear `*.lock`, cold-boot with `-gpu swiftshader_indirect`; a corrupt data partition needs `-wipe-data`. |
 
 ---
 
 ## 10. Roadmap
-- Deploy the .NET + Postgres backend (Render + Neon) and enable real multi-device
-  **sync** (push/pull already implemented app-side).
-- Refresh/rotate secrets; add refresh tokens.
+- **Sync is live** on the PHP backend. If usage outgrows InfinityFree, deploy the
+  prepared .NET + Postgres backend (Render + Neon) and repoint `SYNC_BASE_URL` — the
+  wire contract is the same.
+- Add **refresh tokens** (user tokens are 30-day, admin 8-hour, both non-refreshing)
+  and rotate secrets for any real deployment.
+- Sync **updates & deletes / conflict resolution** (v1 is append-only, create-only).
 - Web app (Flutter web) — the same domain rules apply.
