@@ -6,6 +6,7 @@ class S {
   // Home
   static const totalOwedLabel = 'মোট বাকি — আপনার পাওনা';
   static const totalSales = 'মোট বিক্রি';
+  static const todaysSales = 'আজকের বিক্রি';
   static const viewDailySales = 'দৈনিক বিক্রি দেখুন';
   static const newCustomer = 'নতুন কাস্টমার';
 
