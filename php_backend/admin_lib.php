@@ -159,7 +159,7 @@ function handle_admin_business_detail(array $cfg): void
     $users->execute([$id]);
 
     $customers = $db->prepare(
-        "SELECT c.id, c.name, c.phone,
+        "SELECT c.id, c.name, c.phone, c.address,
                 COALESCE(SUM(CASE WHEN t.type='credit' THEN t.amount_paisa
                                   WHEN t.type='payment' THEN -t.amount_paisa
                                   WHEN t.type='adjustment_debit' THEN t.amount_paisa

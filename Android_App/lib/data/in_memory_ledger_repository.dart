@@ -23,8 +23,9 @@ class InMemoryLedgerRepository implements LedgerRepository {
   static String _defaultId() => 'id-${DateTime.now().microsecondsSinceEpoch}-${_seq++}';
 
   @override
-  Future<Customer> addCustomer({required String name, String? phone}) async {
-    final c = Customer(id: _newId(), name: name, phone: phone);
+  Future<Customer> addCustomer(
+      {required String name, String? phone, String? address}) async {
+    final c = Customer(id: _newId(), name: name, phone: phone, address: address);
     _customers[c.id] = c;
     return c;
   }

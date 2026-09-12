@@ -43,8 +43,9 @@ class Customer {
   final String id;
   final String name;
   final String? phone;
+  final String? address;
 
-  const Customer({required this.id, required this.name, this.phone});
+  const Customer({required this.id, required this.name, this.phone, this.address});
 }
 
 /// A direct sale the owner records after a transaction — just an amount (and an

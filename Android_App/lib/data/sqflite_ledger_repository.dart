@@ -25,6 +25,7 @@ class SqfliteLedgerRepository implements LedgerRepository {
         id: r['id'] as String,
         name: r['name'] as String,
         phone: r['phone'] as String?,
+        address: r['address'] as String?,
       );
 
   TxnEntry _txnFromRow(Map<String, Object?> r) => TxnEntry(
@@ -71,12 +72,14 @@ class SqfliteLedgerRepository implements LedgerRepository {
   // ---- customers ------------------------------------------------------------
 
   @override
-  Future<Customer> addCustomer({required String name, String? phone}) async {
-    final c = Customer(id: _uuid.v4(), name: name, phone: phone);
+  Future<Customer> addCustomer(
+      {required String name, String? phone, String? address}) async {
+    final c = Customer(id: _uuid.v4(), name: name, phone: phone, address: address);
     await _db.insert('customers', {
       'id': c.id,
       'name': c.name,
       'phone': c.phone,
+      'address': c.address,
       'created_at': DateTime.now().toUtc().toIso8601String(),
       'sync_status': 'PENDING',
     });

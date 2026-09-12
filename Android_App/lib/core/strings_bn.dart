@@ -42,6 +42,10 @@ class S {
   static const nameLabel = 'নাম';
   static const nameRequired = 'নাম লিখুন';
   static const mobileLabel = 'মোবাইল নম্বর (ঐচ্ছিক)';
+  static const mobileLabelRequired = 'মোবাইল নম্বর';
+  static const mobileRequired = 'মোবাইল নম্বর দিন';
+  static const invalidMobile = 'সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা, 01…)';
+  static const addressLabelOptional = 'ঠিকানা (ঐচ্ছিক)';
   static const amountLabel = 'পরিমাণ';
   static const amountRequired = 'সঠিক পরিমাণ লিখুন';
   static const noteLabel = 'নোট (ঐচ্ছিক)';
@@ -109,8 +113,12 @@ class S {
   static const logOut = 'লগ আউট';
   static const passwordLabel = 'পাসওয়ার্ড';
   static const businessNameLabel = 'দোকান/ব্যবসার নাম';
+  static const businessRequired = 'দোকান/ব্যবসার নাম দিন';
   static const yourNameLabel = 'আপনার নাম';
   static const identifierLabel = 'মোবাইল নম্বর';
+  static const thanaLabel = 'থানা (ঐচ্ছিক)';
+  static const zilaLabel = 'জেলা (ঐচ্ছিক)';
+  static const passwordShort = 'কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন';
   static const toggleToLogin = 'অ্যাকাউন্ট আছে? লগ ইন করুন';
   static const toggleToRegister = 'নতুন? নিবন্ধন করুন';
   static const authFailed = 'ব্যর্থ হয়েছে';
