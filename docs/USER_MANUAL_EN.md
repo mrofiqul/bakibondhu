@@ -49,11 +49,16 @@ A welcome screen appears with three choices:
 ## 4. Home screen
 
 At the top: **Total credit — your receivable** (মোট বাকি — আপনার পাওনা), the total
-owed to you across all customers. Below is the customer list — whoever owes the
-most is on top.
+owed to you across all customers. Below it is a **📈 Today's sales** (আজকের বিক্রি)
+card showing how much you gave on credit today. Then the customer list — whoever
+owes the most is on top.
 
+- Tap the **Today's sales** card to open the **Daily sales** report (দৈনিক বিক্রি) —
+  each day's sales, plus the all-time **total sales** (মোট বিক্রি).
 - Bottom-right: **➕ New Customer** (নতুন কাস্টমার).
 - Top-right: **🔄 Sync** and **⚙️ Settings**.
+
+> Sales = the value of goods given on credit; money received is not counted as a sale.
 
 ---
 
