@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
+import 'package:bakibondhu/core/dialogs.dart';
 import 'package:bakibondhu/core/format.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/money.dart';
 
-/// Daily sales report: total sales (credit given) with a day-by-day breakdown,
-/// newest day first. Reached from the "মোট বিক্রি" card on Home.
+/// Sales report: total sales with a day/month/quarter/year breakdown, plus a
+/// button to record a sale. Sales are direct amounts the owner enters (not tied
+/// to a customer). Reached from the "আজকের বিক্রি" card on Home.
 class SalesReportScreen extends StatefulWidget {
   const SalesReportScreen({super.key});
 
@@ -17,12 +19,15 @@ class SalesReportScreen extends StatefulWidget {
 
 class _ReportData {
   final Money total;
-  final List<DailySales> days;
-  const _ReportData(this.total, this.days);
+  final List<SalesBucket> buckets;
+  const _ReportData(this.total, this.buckets);
 }
 
 class _SalesReportScreenState extends State<SalesReportScreen> {
+  SalesPeriod _period = SalesPeriod.day;
   _ReportData? _data;
+
+  LedgerRepository get _repo => AppScope.of(context);
 
   @override
   void didChangeDependencies() {
@@ -30,14 +35,41 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     _refresh();
   }
 
-  // Data held in state (not a swapped FutureBuilder future) so it repaints
-  // reliably — the same pattern as Home/Customer screens.
   Future<void> _refresh() async {
     final repo = AppScope.of(context);
-    final days = await repo.dailySales();
     final total = await repo.totalSales();
+    final buckets = await repo.salesBuckets(_period);
     if (!mounted) return;
-    setState(() => _data = _ReportData(total, days));
+    setState(() => _data = _ReportData(total, buckets));
+  }
+
+  void _setPeriod(SalesPeriod p) {
+    setState(() => _period = p);
+    _refresh();
+  }
+
+  Future<void> _addSale() async {
+    final input = await showAddSaleDialog(context);
+    if (input == null) return;
+    await _repo.addSale(amount: input.amount, note: input.note);
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text(S.saleSaved)));
+    }
+    await _refresh();
+  }
+
+  static String _bucketLabel(SalesBucket b, SalesPeriod p) {
+    switch (p) {
+      case SalesPeriod.day:
+        return dayLabel(b.start);
+      case SalesPeriod.month:
+        return '${bnMonth(b.start.month)} ${b.start.year}';
+      case SalesPeriod.quarter:
+        return '${bnMonth(b.start.month)}–${bnMonth(b.start.month + 2)} ${b.start.year}';
+      case SalesPeriod.year:
+        return '${b.start.year}';
+    }
   }
 
   @override
@@ -45,19 +77,56 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     final data = _data;
     return Scaffold(
       appBar: AppBar(title: const Text(S.salesReportTitle)),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addSale,
+        icon: const Icon(Icons.add),
+        label: const Text(S.addSale),
+      ),
       body: data == null
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                _TotalSalesCard(total: data.total, days: data.days.length),
-                if (data.days.isEmpty)
+                _TotalSalesCard(total: data.total),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: SegmentedButton<SalesPeriod>(
+                    segments: const [
+                      ButtonSegment(
+                          value: SalesPeriod.day, label: Text(S.periodDaily)),
+                      ButtonSegment(
+                          value: SalesPeriod.month, label: Text(S.periodMonthly)),
+                      ButtonSegment(
+                          value: SalesPeriod.quarter,
+                          label: Text(S.periodQuarterly)),
+                      ButtonSegment(
+                          value: SalesPeriod.year, label: Text(S.periodYearly)),
+                    ],
+                    selected: {_period},
+                    showSelectedIcon: false,
+                    onSelectionChanged: (s) => _setPeriod(s.first),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                if (data.buckets.isEmpty)
                   const Expanded(child: _EmptySales())
                 else
                   Expanded(
                     child: ListView.separated(
-                      itemCount: data.days.length,
+                      padding: const EdgeInsets.only(bottom: 88),
+                      itemCount: data.buckets.length,
                       separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, i) => _DayTile(row: data.days[i]),
+                      itemBuilder: (context, i) {
+                        final b = data.buckets[i];
+                        return ListTile(
+                          leading: const Icon(Icons.event_note, size: 20),
+                          title: Text(_bucketLabel(b, _period),
+                              style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(S.salesCount(b.count)),
+                          trailing: Text(b.total.format(),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                        );
+                      },
                     ),
                   ),
               ],
@@ -68,8 +137,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
 
 class _TotalSalesCard extends StatelessWidget {
   final Money total;
-  final int days;
-  const _TotalSalesCard({required this.total, required this.days});
+  const _TotalSalesCard({required this.total});
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +145,7 @@ class _TotalSalesCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
       decoration: BoxDecoration(
         color: scheme.secondaryContainer,
         borderRadius: BorderRadius.circular(16),
@@ -90,30 +158,11 @@ class _TotalSalesCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(total.format(),
               style: TextStyle(
-                fontSize: 34,
+                fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: scheme.onSecondaryContainer,
               )),
         ],
-      ),
-    );
-  }
-}
-
-class _DayTile extends StatelessWidget {
-  final DailySales row;
-  const _DayTile({required this.row});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.calendar_today, size: 20),
-      title: Text(dayLabel(row.day),
-          style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(S.salesCount(row.count)),
-      trailing: Text(
-        row.total.format(),
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
       ),
     );
   }

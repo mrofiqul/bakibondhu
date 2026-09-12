@@ -107,8 +107,10 @@ function handle_admin_overview(array $cfg): void
             'users'        => $count('users'),
             'customers'    => $count('customers'),
             'transactions' => $count('transactions'),
+            'sales_count'  => $count('sales'),
             'suspended'    => (int) $db->query("SELECT COUNT(*) FROM businesses WHERE status='suspended'")->fetchColumn(),
             'outstanding_paisa' => $outstanding,
+            'sales_paisa'  => (int) $db->query("SELECT COALESCE(SUM(amount_paisa),0) FROM sales")->fetchColumn(),
         ],
         'signups_14d' => $signups,
         'recent'      => $recent,
@@ -132,7 +134,8 @@ function handle_admin_businesses(array $cfg): void
                                           WHEN type='adjustment_debit' THEN amount_paisa
                                           WHEN type='adjustment_credit' THEN -amount_paisa
                                           ELSE 0 END),0)
-                 FROM transactions t WHERE t.business_id = b.id) AS outstanding_paisa
+                 FROM transactions t WHERE t.business_id = b.id) AS outstanding_paisa,
+                (SELECT COALESCE(SUM(amount_paisa),0) FROM sales s WHERE s.business_id = b.id) AS sales_paisa
          FROM businesses b
          ORDER BY b.created_at DESC")->fetchAll();
 
@@ -207,7 +210,7 @@ function handle_admin_action(array $cfg): void
             $name = $exists->fetchColumn();
             if ($name === false) bb_error(404, 'not_found', 'no such business');
             $db->beginTransaction();
-            foreach (['transactions','customers','users'] as $t) {
+            foreach (['transactions','customers','sales','users'] as $t) {
                 $db->prepare("DELETE FROM $t WHERE business_id = ?")->execute([$id]);
             }
             $db->prepare('DELETE FROM businesses WHERE id = ?')->execute([$id]);

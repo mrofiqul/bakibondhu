@@ -13,7 +13,7 @@ import 'package:sqflite/sqflite.dart';
 ///    `server_id` is filled once the record is confirmed by the server
 ///    (see sqflite_sync_store.dart). `sync_meta` holds the pull cursor.
 ///  - Balances/aging are COMPUTED from these rows in Dart, never stored.
-const int kLocalDbVersion = 3;
+const int kLocalDbVersion = 4;
 
 const List<String> kLocalSchema = [
   '''
@@ -78,6 +78,21 @@ const List<String> kLocalSchema = [
   ''',
   'CREATE INDEX IF NOT EXISTS idx_collect_customer ON collection_activities (customer_id);',
   'CREATE INDEX IF NOT EXISTS idx_promise_customer ON promise_to_pay (customer_id);',
+  // Direct sales (not tied to a customer): the owner records each sale's amount
+  // so daily/monthly/quarterly/yearly totals come from these rows only.
+  '''
+  CREATE TABLE IF NOT EXISTS sales (
+    id           TEXT PRIMARY KEY,
+    server_id    TEXT,
+    amount_paisa INTEGER NOT NULL CHECK (amount_paisa >= 0),
+    note         TEXT,
+    sold_at      TEXT NOT NULL,
+    sync_status  TEXT NOT NULL DEFAULT 'PENDING'
+  );
+  ''',
+  'CREATE INDEX IF NOT EXISTS idx_sales_soldat ON sales (sold_at);',
+  'CREATE INDEX IF NOT EXISTS idx_sales_sync ON sales (sync_status);',
+  'CREATE INDEX IF NOT EXISTS idx_sales_server ON sales (server_id);',
 ];
 
 /// Opens (and creates/migrates) the local database.
@@ -104,8 +119,15 @@ Future<Database> openLocalDatabase({String fileName = 'bakibondhu.db'}) async {
             'CREATE INDEX IF NOT EXISTS idx_txn_server ON transactions (server_id);');
       }
       if (oldVersion < 3) {
-        // Collection activities + promise-to-pay (the last two statements of the
-        // schema list, plus their indexes).
+        // Collection activities + promise-to-pay: their two CREATE TABLEs plus
+        // the two indexes that immediately follow them in the schema list.
+        await db.execute(kLocalSchema[7]); // collection_activities
+        await db.execute(kLocalSchema[8]); // promise_to_pay
+        await db.execute(kLocalSchema[9]); // idx_collect_customer
+        await db.execute(kLocalSchema[10]); // idx_promise_customer
+      }
+      if (oldVersion < 4) {
+        // The sales table + its three indexes (last four schema statements).
         for (final stmt in kLocalSchema.sublist(kLocalSchema.length - 4)) {
           await db.execute(stmt);
         }

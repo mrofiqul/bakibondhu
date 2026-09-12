@@ -47,6 +47,23 @@ class Customer {
   const Customer({required this.id, required this.name, this.phone});
 }
 
+/// A direct sale the owner records after a transaction — just an amount (and an
+/// optional note), with no customer. Sales totals (daily/monthly/quarterly/
+/// yearly) come from these rows only; customer credit is tracked separately.
+class Sale {
+  final String id;
+  final Money amount;
+  final String? note;
+  final DateTime soldAt;
+
+  const Sale({
+    required this.id,
+    required this.amount,
+    required this.soldAt,
+    this.note,
+  });
+}
+
 /// One append-only ledger entry. Never edited or deleted; a mistake is fixed by
 /// adding a reversing entry (see [reversalOfId]).
 class TxnEntry {

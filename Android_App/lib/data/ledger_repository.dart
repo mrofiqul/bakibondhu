@@ -10,12 +10,29 @@ class CustomerBalance {
   const CustomerBalance(this.customer, this.balance);
 }
 
-/// One day's sales total (credit given), for the daily sales report.
-class DailySales {
-  final DateTime day; // local date at midnight
-  final Money total; // sum of credit given that day
-  final int count; // number of credit entries that day
-  const DailySales({required this.day, required this.total, required this.count});
+/// How to bucket the sales report.
+enum SalesPeriod { day, month, quarter, year }
+
+/// The local start-of-bucket for a date under [period] (used to group sales).
+DateTime salesBucketStart(DateTime d, SalesPeriod period) {
+  switch (period) {
+    case SalesPeriod.day:
+      return DateTime(d.year, d.month, d.day);
+    case SalesPeriod.month:
+      return DateTime(d.year, d.month);
+    case SalesPeriod.quarter:
+      return DateTime(d.year, ((d.month - 1) ~/ 3) * 3 + 1);
+    case SalesPeriod.year:
+      return DateTime(d.year);
+  }
+}
+
+/// One period's sales total, for the sales report.
+class SalesBucket {
+  final DateTime start; // local start of the bucket (day/month/quarter/year)
+  final Money total; // sum of sales in the bucket
+  final int count; // number of sales in the bucket
+  const SalesBucket({required this.start, required this.total, required this.count});
 }
 
 /// The app's gateway to stored customers and transactions.
@@ -58,15 +75,24 @@ abstract class LedgerRepository {
   /// Home headline: total owed to the merchant (positive balances only).
   Future<Money> totalReceivable();
 
-  /// Total sales = the value of all goods given on credit (all-time). Payments
-  /// and adjustments are not sales; only `credit` entries count.
-  Future<Money> totalSales();
+  // ---- sales (direct, not tied to a customer) ----
 
-  /// Sales made today (the merchant's local date) — the Home headline figure.
+  /// Record a sale — an amount (and optional note) the owner enters after a
+  /// sale. Not linked to any customer.
+  Future<Sale> addSale({required Money amount, String? note, DateTime? at});
+
+  /// A sale's ledger, newest first.
+  Future<List<Sale>> sales();
+
+  /// Total sales made today (the merchant's local date) — the Home headline.
   Future<Money> todaysSales();
 
-  /// Sales grouped by local calendar day, newest day first (daily sales report).
-  Future<List<DailySales>> dailySales();
+  /// Total of all recorded sales (all-time).
+  Future<Money> totalSales();
+
+  /// Sales grouped into buckets of [period] (day/month/quarter/year), newest
+  /// first — powers the sales report.
+  Future<List<SalesBucket>> salesBuckets(SalesPeriod period);
 
   // ---- collections (spec §8.8/§8.9) ----
 

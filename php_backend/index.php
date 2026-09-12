@@ -170,7 +170,7 @@ function handle_sync_push(array $cfg): void
         $entity  = (string) ($ch['entity'] ?? '');
         $localId = (string) ($ch['local_id'] ?? '');
         $data    = is_array($ch['data'] ?? null) ? $ch['data'] : [];
-        if ($localId === '' || ($entity !== 'customer' && $entity !== 'transaction')) {
+        if ($localId === '' || !in_array($entity, ['customer', 'transaction', 'sale'], true)) {
             $results[] = bb_push_result($entity, $localId, 'FAILED', null, 'bad change');
             continue;
         }
@@ -178,6 +178,9 @@ function handle_sync_push(array $cfg): void
         try {
             if ($entity === 'customer') {
                 $serverId = bb_upsert_customer($db, $businessId, $deviceId, $localId, $data);
+                $results[] = bb_push_result($entity, $localId, 'SYNCED', $serverId, null);
+            } elseif ($entity === 'sale') {
+                $serverId = bb_upsert_sale($db, $businessId, $deviceId, $localId, $data);
                 $results[] = bb_push_result($entity, $localId, 'SYNCED', $serverId, null);
             } else {
                 $serverId = bb_upsert_transaction($db, $businessId, $deviceId, $localId, $data);
@@ -288,8 +291,32 @@ function bb_resolve_customer_id(PDO $db, string $businessId, string $deviceId, s
     return null;
 }
 
+// Insert a sale (idempotent; server id == client local_id). No customer.
+function bb_upsert_sale(PDO $db, string $businessId, string $deviceId, string $localId, array $data): string
+{
+    $existing = $db->prepare(
+        'SELECT id FROM sales WHERE business_id = ? AND device_id = ? AND local_id = ? LIMIT 1');
+    $existing->execute([$businessId, $deviceId, $localId]);
+    if ($row = $existing->fetch()) {
+        return (string) $row['id'];
+    }
+
+    $serverId = $localId;
+    $db->prepare(
+        'INSERT INTO sales (id, business_id, device_id, local_id, amount_paisa, note, sold_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
+       ->execute([
+           $serverId, $businessId, $deviceId, $localId,
+           (int) ($data['amount_paisa'] ?? 0),
+           isset($data['note']) && $data['note'] !== '' ? (string) $data['note'] : null,
+           isset($data['sold_at']) && $data['sold_at'] !== '' ? (string) $data['sold_at'] : gmdate('Y-m-d H:i:s'),
+           gmdate('Y-m-d H:i:s'),
+       ]);
+    return $serverId;
+}
+
 // GET /api/v1/sync/pull?since=<cursor>&device_id=<id> — everything changed after
-// the cursor. Reply: { customers:[…], transactions:[…], server_time, has_more }.
+// the cursor. Reply: { customers:[…], transactions:[…], sales:[…], server_time, has_more }.
 function handle_sync_pull(array $cfg): void
 {
     $claims     = bb_auth($cfg);
@@ -307,8 +334,9 @@ function handle_sync_pull(array $cfg): void
 
     $customers    = bb_pull_rows($db, 'customers', $businessId, $since, $serverTime, $limit);
     $transactions = bb_pull_rows($db, 'transactions', $businessId, $since, $serverTime, $limit);
+    $sales        = bb_pull_rows($db, 'sales', $businessId, $since, $serverTime, $limit);
 
-    $out = ['customers' => [], 'transactions' => []];
+    $out = ['customers' => [], 'transactions' => [], 'sales' => []];
     foreach ($customers as $r) {
         $out['customers'][] = [
             'id'         => $r['id'],
@@ -328,9 +356,18 @@ function handle_sync_pull(array $cfg): void
             'updated_at'   => bb_iso_utc($r['updated_at']),
         ];
     }
+    foreach ($sales as $r) {
+        $out['sales'][] = [
+            'id'           => $r['id'],
+            'amount_paisa' => (int) $r['amount_paisa'],
+            'note'         => $r['note'],
+            'sold_at'      => $r['sold_at'],
+            'updated_at'   => bb_iso_utc($r['updated_at']),
+        ];
+    }
 
     $out['server_time'] = $serverTime;
-    $out['has_more']    = (count($customers) >= $limit) || (count($transactions) >= $limit);
+    $out['has_more']    = (count($customers) >= $limit) || (count($transactions) >= $limit) || (count($sales) >= $limit);
     bb_json(200, $out);
 }
 

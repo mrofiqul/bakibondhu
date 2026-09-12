@@ -4,7 +4,7 @@
 enum SyncState { local, pending, synced, failed, conflict }
 
 /// Which entity a change refers to.
-enum EntityKind { customer, transaction }
+enum EntityKind { customer, transaction, sale }
 
 /// A locally-created change to push to the server. Carries a stable [localId]
 /// so the server can dedupe on (business_id, device_id, local_id).

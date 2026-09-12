@@ -7,14 +7,22 @@ class S {
   static const totalOwedLabel = 'মোট বাকি — আপনার পাওনা';
   static const totalSales = 'মোট বিক্রি';
   static const todaysSales = 'আজকের বিক্রি';
-  static const viewDailySales = 'দৈনিক বিক্রি দেখুন';
+  static const viewDailySales = 'বিক্রির হিসাব দেখুন';
   static const newCustomer = 'নতুন কাস্টমার';
 
   // Sales report
-  static const salesReportTitle = 'দৈনিক বিক্রি';
+  static const salesReportTitle = 'বিক্রির হিসাব';
   static const noSales = 'এখনো কোনো বিক্রি নেই';
   static const yesterday = 'গতকাল';
   static String salesCount(int n) => '$n টি বিক্রি';
+  static const addSale = 'বিক্রি যোগ করুন';
+  static const saleAmountLabel = 'বিক্রির পরিমাণ (৳)';
+  static const saleNoteLabel = 'বিবরণ (ঐচ্ছিক)';
+  static const saleSaved = 'বিক্রি যোগ হয়েছে';
+  static const periodDaily = 'দৈনিক';
+  static const periodMonthly = 'মাসিক';
+  static const periodQuarterly = 'ত্রৈমাসিক';
+  static const periodYearly = 'বার্ষিক';
   static const emptyTitle = 'এখনো কোনো কাস্টমার নেই';
   static const emptyPrompt = 'আপনার প্রথম কাস্টমার যোগ করে বাকির হিসাব শুরু করুন।';
   static String customerCount(int n) => '$n জন কাস্টমার';
