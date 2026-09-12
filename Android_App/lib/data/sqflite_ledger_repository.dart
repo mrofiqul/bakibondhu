@@ -184,6 +184,35 @@ class SqfliteLedgerRepository implements LedgerRepository {
     return totalOwed(byCustomer.values.map(customerBalance));
   }
 
+  @override
+  Future<Money> totalSales() async {
+    final rows = await _db.rawQuery(
+        "SELECT COALESCE(SUM(amount_paisa), 0) AS s FROM transactions WHERE type = 'credit'");
+    return Money((rows.first['s'] as int?) ?? 0);
+  }
+
+  @override
+  Future<List<DailySales>> dailySales() async {
+    // created_at is stored UTC; group by the merchant's LOCAL day.
+    final rows = await _db.query('transactions',
+        columns: ['amount_paisa', 'created_at'], where: "type = 'credit'");
+    final byDay = <DateTime, List<int>>{};
+    for (final r in rows) {
+      final local = DateTime.parse(r['created_at'] as String).toLocal();
+      final day = DateTime(local.year, local.month, local.day);
+      byDay.putIfAbsent(day, () => []).add(r['amount_paisa'] as int);
+    }
+    final list = [
+      for (final e in byDay.entries)
+        DailySales(
+          day: e.key,
+          total: Money(e.value.fold(0, (a, b) => a + b)),
+          count: e.value.length,
+        )
+    ]..sort((a, b) => b.day.compareTo(a.day)); // newest day first
+    return list;
+  }
+
   // ---- collections ----
 
   @override

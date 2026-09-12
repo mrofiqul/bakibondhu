@@ -55,6 +55,32 @@ void main() {
     final repo = newRepo();
     expect(await repo.customers(), isEmpty);
     expect(await repo.totalReceivable(), Money.zero);
+    expect(await repo.totalSales(), Money.zero);
+    expect(await repo.dailySales(), isEmpty);
+  });
+
+  test('total sales = credit only, grouped by day, newest first', () async {
+    final repo = newRepo();
+    final k = await repo.addCustomer(name: 'করিম');
+    final b = await repo.addCustomer(name: 'বকুল');
+
+    // Sep 5: two credits (৳1000 + ৳500)
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(1000), at: DateTime(2026, 9, 5, 10));
+    await repo.recordCredit(customerId: b.id, amount: Money.taka(500), at: DateTime(2026, 9, 5, 16));
+    // Sep 7: one credit (৳2000) + a payment that must NOT count as a sale
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(2000), at: DateTime(2026, 9, 7, 9));
+    await repo.recordPayment(customerId: k.id, amount: Money.taka(300), at: DateTime(2026, 9, 7, 12));
+
+    expect(await repo.totalSales(), Money.taka(3500)); // 1000+500+2000; payment excluded
+
+    final days = await repo.dailySales();
+    expect(days.length, 2);
+    expect(days.first.day, DateTime(2026, 9, 7)); // newest day first
+    expect(days.first.total, Money.taka(2000));
+    expect(days.first.count, 1);
+    expect(days[1].day, DateTime(2026, 9, 5));
+    expect(days[1].total, Money.taka(1500));
+    expect(days[1].count, 2);
   });
 
   test('records collection activities and promises, newest first', () async {

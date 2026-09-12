@@ -109,6 +109,29 @@ class InMemoryLedgerRepository implements LedgerRepository {
   Future<Money> totalReceivable() async =>
       totalOwed(_customers.keys.map((id) => customerBalance(_of(id))));
 
+  @override
+  Future<Money> totalSales() async => Money(_txns
+      .where((t) => t.type == TxnType.credit)
+      .fold(0, (sum, t) => sum + t.amount.paisa));
+
+  @override
+  Future<List<DailySales>> dailySales() async {
+    final byDay = <DateTime, List<int>>{};
+    for (final t in _txns.where((t) => t.type == TxnType.credit)) {
+      final local = t.createdAt.toLocal();
+      final day = DateTime(local.year, local.month, local.day);
+      byDay.putIfAbsent(day, () => []).add(t.amount.paisa);
+    }
+    return [
+      for (final e in byDay.entries)
+        DailySales(
+          day: e.key,
+          total: Money(e.value.fold(0, (a, b) => a + b)),
+          count: e.value.length,
+        )
+    ]..sort((a, b) => b.day.compareTo(a.day));
+  }
+
   // ---- collections ----
 
   final List<CollectionActivity> _activities = [];

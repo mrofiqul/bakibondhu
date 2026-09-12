@@ -5,7 +5,15 @@ class S {
 
   // Home
   static const totalOwedLabel = 'মোট বাকি — আপনার পাওনা';
+  static const totalSales = 'মোট বিক্রি';
+  static const viewDailySales = 'দৈনিক বিক্রি দেখুন';
   static const newCustomer = 'নতুন কাস্টমার';
+
+  // Sales report
+  static const salesReportTitle = 'দৈনিক বিক্রি';
+  static const noSales = 'এখনো কোনো বিক্রি নেই';
+  static const yesterday = 'গতকাল';
+  static String salesCount(int n) => '$n টি বিক্রি';
   static const emptyTitle = 'এখনো কোনো কাস্টমার নেই';
   static const emptyPrompt = 'আপনার প্রথম কাস্টমার যোগ করে বাকির হিসাব শুরু করুন।';
   static String customerCount(int n) => '$n জন কাস্টমার';
