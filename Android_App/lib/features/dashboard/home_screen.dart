@@ -12,6 +12,17 @@ import 'package:bakibondhu/features/reports/sales_report_screen.dart';
 import 'package:bakibondhu/features/settings/settings_screen.dart';
 import 'package:bakibondhu/features/sync/sync_center_screen.dart';
 
+/// How the Home customer list is ordered.
+enum CustomerSort { owed, name, recent }
+
+extension CustomerSortLabel on CustomerSort {
+  String get label => switch (this) {
+        CustomerSort.owed => S.sortMostOwed,
+        CustomerSort.name => S.sortByName,
+        CustomerSort.recent => S.sortRecent,
+      };
+}
+
 /// Screen 1 — Home ("money out there"): one big total, customers sorted by who
 /// owes most, and a button to add a customer (spec §8.2, Android UI/UX §5.4).
 class HomeScreen extends StatefulWidget {
@@ -40,6 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _query = '';
 
+  /// How the customer list is ordered.
+  CustomerSort _sort = CustomerSort.owed;
+
   LedgerRepository get _repo => AppScope.of(context);
 
   @override
@@ -57,6 +71,27 @@ class _HomeScreenState extends State<HomeScreen> {
       final phone = (r.customer.phone ?? '').toLowerCase();
       return name.contains(q) || phone.contains(q);
     }).toList();
+  }
+
+  /// A copy of [rows] ordered by the selected sort.
+  List<CustomerBalance> _sorted(List<CustomerBalance> rows) {
+    final out = [...rows];
+    switch (_sort) {
+      case CustomerSort.owed: // biggest owed first
+        out.sort((a, b) => b.balance.compareTo(a.balance));
+      case CustomerSort.name: // A–Z (Bangla + English)
+        out.sort((a, b) =>
+            a.customer.name.toLowerCase().compareTo(b.customer.name.toLowerCase()));
+      case CustomerSort.recent: // newest first; unknown dates sink to the bottom
+        out.sort((a, b) {
+          final da = a.customer.createdAt, db = b.customer.createdAt;
+          if (da == null && db == null) return 0;
+          if (da == null) return 1;
+          if (db == null) return -1;
+          return db.compareTo(da);
+        });
+    }
+    return out;
   }
 
   @override
@@ -128,6 +163,20 @@ class _HomeScreenState extends State<HomeScreen> {
             ? S.appName
             : '${S.appName} / ${_shopName!.trim()}'),
         actions: [
+          PopupMenuButton<CustomerSort>(
+            icon: const Icon(Icons.sort),
+            tooltip: S.sortBy,
+            initialValue: _sort,
+            onSelected: (s) => setState(() => _sort = s),
+            itemBuilder: (_) => [
+              for (final s in CustomerSort.values)
+                CheckedPopupMenuItem(
+                  value: s,
+                  checked: s == _sort,
+                  child: Text(s.label),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.sync),
             tooltip: S.syncCenter,
@@ -192,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Builder(
                   builder: (context) {
                     if (data.customers.isEmpty) return const _EmptyState();
-                    final rows = _filtered(data.customers);
+                    final rows = _sorted(_filtered(data.customers));
                     if (rows.isEmpty) return _NoSearchResults(query: _query);
                     return ListView.separated(
                       itemCount: rows.length,
