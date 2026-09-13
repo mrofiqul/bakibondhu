@@ -113,19 +113,34 @@ function bb_auth(array $cfg): array
     return $claims;
 }
 
-// Block access when an admin has suspended the business (403). The `status`
-// column may not exist on very old installs, so treat a missing column as active.
+// Block access when an admin has suspended the business, or when its
+// subscription has expired (403). The `status`/`expires_at` columns may not
+// exist on very old installs, so treat a missing column as active/unlimited.
 function bb_require_active_business(PDO $db, string $businessId): void
 {
     try {
-        $s = $db->prepare('SELECT status FROM businesses WHERE id = ? LIMIT 1');
+        $s = $db->prepare('SELECT status, expires_at FROM businesses WHERE id = ? LIMIT 1');
         $s->execute([$businessId]);
-        $status = $s->fetchColumn();
+        $row = $s->fetch();
     } catch (Throwable $e) {
-        return; // no status column yet → treat as active
+        // Older schema without expires_at → fall back to status-only check.
+        try {
+            $s = $db->prepare('SELECT status FROM businesses WHERE id = ? LIMIT 1');
+            $s->execute([$businessId]);
+            $row = ['status' => $s->fetchColumn(), 'expires_at' => null];
+        } catch (Throwable $e2) {
+            return; // no status column yet → treat as active
+        }
     }
-    if ($status === 'suspended') {
+    if (($row['status'] ?? null) === 'suspended') {
         bb_error(403, 'account_suspended', 'this account has been suspended; contact support');
+    }
+    // expires_at is a date; the shop stays active through the whole expiry day
+    // and is blocked from the following day. NULL = unlimited.
+    $expiresAt = $row['expires_at'] ?? null;
+    if ($expiresAt !== null && $expiresAt !== '' && $expiresAt < gmdate('Y-m-d')) {
+        bb_error(403, 'account_expired',
+            'আপনার সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে। অ্যাডমিনের সাথে যোগাযোগ করুন। (subscription expired; contact admin)');
     }
 }
 

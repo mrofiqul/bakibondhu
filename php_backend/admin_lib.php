@@ -40,6 +40,19 @@ function bb_admin_audit(PDO $db, string $adminId, string $action, ?string $targe
        ->execute([$adminId, $action, $target, $detail]);
 }
 
+// Number of shops whose subscription has expired. Tolerant of the older schema
+// (no expires_at column) → reports 0 so the overview never breaks.
+function bb_expired_count(PDO $db): int
+{
+    try {
+        return (int) $db->query(
+            "SELECT COUNT(*) FROM businesses WHERE expires_at IS NOT NULL AND expires_at < UTC_DATE()"
+        )->fetchColumn();
+    } catch (Throwable $e) {
+        return 0;
+    }
+}
+
 // ---- login ----------------------------------------------------------------
 
 function handle_admin_login(array $cfg): void
@@ -109,6 +122,7 @@ function handle_admin_overview(array $cfg): void
             'transactions' => $count('transactions'),
             'sales_count'  => $count('sales'),
             'suspended'    => (int) $db->query("SELECT COUNT(*) FROM businesses WHERE status='suspended'")->fetchColumn(),
+            'expired'      => bb_expired_count($db),
             'outstanding_paisa' => $outstanding,
             'sales_paisa'  => (int) $db->query("SELECT COALESCE(SUM(amount_paisa),0) FROM sales")->fetchColumn(),
         ],
@@ -125,7 +139,7 @@ function handle_admin_businesses(array $cfg): void
     $db = bb_db($cfg);
 
     $rows = $db->query(
-        "SELECT b.id, b.name, b.status, b.created_at,
+        "SELECT b.id, b.name, b.status, b.expires_at, b.created_at,
                 (SELECT COUNT(*) FROM users u      WHERE u.business_id = b.id) AS users,
                 (SELECT COUNT(*) FROM customers c  WHERE c.business_id = b.id) AS customers,
                 (SELECT COUNT(*) FROM transactions t WHERE t.business_id = b.id) AS transactions,
@@ -150,7 +164,7 @@ function handle_admin_business_detail(array $cfg): void
     if ($id === '') bb_error(400, 'validation_failed', 'id is required');
 
     $db = bb_db($cfg);
-    $bStmt = $db->prepare('SELECT id, name, status, created_at FROM businesses WHERE id = ? LIMIT 1');
+    $bStmt = $db->prepare('SELECT id, name, status, expires_at, created_at FROM businesses WHERE id = ? LIMIT 1');
     $bStmt->execute([$id]);
     $business = $bStmt->fetch();
     if (!$business) bb_error(404, 'not_found', 'no such business');
@@ -202,6 +216,31 @@ function handle_admin_action(array $cfg): void
             if ($n->rowCount() === 0) bb_error(404, 'not_found', 'no such business');
             bb_admin_audit($db, $adminId, $action, $id);
             bb_json(200, ['ok' => true, 'status' => $status]);
+        }
+
+        case 'set_expiry': {
+            // expires_at: 'YYYY-MM-DD' to set a date, or '' / null to make unlimited.
+            $raw = $in['expires_at'] ?? null;
+            $expires = null;
+            if (is_string($raw) && trim($raw) !== '') {
+                $raw = trim($raw);
+                $d = DateTime::createFromFormat('!Y-m-d', $raw);
+                $errors = DateTime::getLastErrors();
+                if (!$d || ($errors && ($errors['warning_count'] || $errors['error_count']))) {
+                    bb_error(400, 'validation_failed', 'expires_at must be YYYY-MM-DD');
+                }
+                $expires = $d->format('Y-m-d');
+            }
+            $n = $db->prepare('UPDATE businesses SET expires_at = ? WHERE id = ?');
+            $n->execute([$expires, $id]);
+            if ($n->rowCount() === 0) {
+                // rowCount is 0 when the value is unchanged too; confirm the shop exists.
+                $chk = $db->prepare('SELECT 1 FROM businesses WHERE id = ? LIMIT 1');
+                $chk->execute([$id]);
+                if (!$chk->fetchColumn()) bb_error(404, 'not_found', 'no such business');
+            }
+            bb_admin_audit($db, $adminId, 'set_expiry', $id, $expires ?? 'unlimited');
+            bb_json(200, ['ok' => true, 'expires_at' => $expires]);
         }
 
         case 'delete_business': {
