@@ -89,7 +89,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _addCustomer() async {
-    final input = await showAddCustomerDialog(context);
+    final input = await showAddCustomerDialog(
+      context,
+      phoneExists: (phone) async => (await _repo.customerByPhone(phone)) != null,
+    );
     if (input == null) return;
     await _repo.addCustomer(
         name: input.name, phone: input.phone, address: input.address);

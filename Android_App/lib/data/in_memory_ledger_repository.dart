@@ -37,6 +37,15 @@ class InMemoryLedgerRepository implements LedgerRepository {
   Future<Customer?> customer(String id) async => _customers[id];
 
   @override
+  Future<Customer?> customerByPhone(String phone) async {
+    if (phone.isEmpty) return null;
+    for (final c in _customers.values) {
+      if (c.phone == phone) return c;
+    }
+    return null;
+  }
+
+  @override
   Future<TxnEntry> recordCredit({
     required String customerId,
     required Money amount,

@@ -52,6 +52,16 @@ void main() {
     expect(await repo.totalReceivable(), Money.taka(5000)); // A's advance not netted in
   });
 
+  test('customerByPhone finds an existing number, for per-shop uniqueness', () async {
+    final repo = newRepo();
+    await repo.addCustomer(name: 'করিম', phone: '01712345678');
+    await repo.addCustomer(name: 'রহিম'); // no phone
+
+    expect((await repo.customerByPhone('01712345678'))?.name, 'করিম');
+    expect(await repo.customerByPhone('01799999999'), isNull); // not present
+    expect(await repo.customerByPhone(''), isNull); // empty never matches
+  });
+
   test('empty repository', () async {
     final repo = newRepo();
     expect(await repo.customers(), isEmpty);

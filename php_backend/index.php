@@ -205,7 +205,13 @@ function handle_sync_push(array $cfg): void
             }
         } catch (Throwable $e) {
             error_log('sync push item failed: ' . $e->getMessage());
-            $results[] = bb_push_result($entity, $localId, 'FAILED', null, 'server error');
+            // Duplicate customer phone within the shop → surface a clear reason
+            // (the client should have prevented it; this covers multi-device).
+            $dupPhone = $e->getMessage() === 'duplicate_phone'
+                || ($e instanceof PDOException && ($e->errorInfo[1] ?? 0) === 1062);
+            $results[] = bb_push_result($entity, $localId,
+                $dupPhone ? 'CONFLICT' : 'FAILED', null,
+                $dupPhone ? 'duplicate phone in this shop' : 'server error');
         }
     }
 
@@ -233,6 +239,20 @@ function bb_upsert_customer(PDO $db, string $businessId, string $deviceId, strin
         return (string) $row['id'];
     }
 
+    $phone = isset($data['phone']) && $data['phone'] !== '' ? (string) $data['phone'] : null;
+
+    // Customer mobile numbers are unique within a shop. The client enforces this
+    // too; this is the server backstop (e.g. two devices adding the same number).
+    // A different local_id already holding this phone in the shop is a conflict.
+    if ($phone !== null) {
+        $dup = $db->prepare(
+            'SELECT 1 FROM customers WHERE business_id = ? AND phone = ? LIMIT 1');
+        $dup->execute([$businessId, $phone]);
+        if ($dup->fetch()) {
+            throw new RuntimeException('duplicate_phone');
+        }
+    }
+
     // Use the client's local_id as the server id: local ids are UUIDs, so this
     // keeps the id stable across devices and makes a device's pull of its own
     // pushed rows a harmless no-op (no id remapping needed on the client).
@@ -243,7 +263,7 @@ function bb_upsert_customer(PDO $db, string $businessId, string $deviceId, strin
        ->execute([
            $serverId, $businessId, $deviceId, $localId,
            (string) ($data['name'] ?? ''),
-           isset($data['phone']) && $data['phone'] !== '' ? (string) $data['phone'] : null,
+           $phone,
            isset($data['address']) && $data['address'] !== '' ? (string) $data['address'] : null,
            gmdate('Y-m-d H:i:s'),
        ]);

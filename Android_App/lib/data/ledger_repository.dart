@@ -46,6 +46,10 @@ abstract class LedgerRepository {
   Future<List<Customer>> customers();
   Future<Customer?> customer(String id);
 
+  /// The existing customer with this (normalized) phone in this shop, or null.
+  /// Used to keep customer mobile numbers unique within a shop.
+  Future<Customer?> customerByPhone(String phone);
+
   /// Record a credit (baki given). Append-only.
   Future<TxnEntry> recordCredit({
     required String customerId,

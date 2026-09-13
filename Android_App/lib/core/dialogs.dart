@@ -6,9 +6,12 @@ import 'package:bakibondhu/core/validators.dart';
 import 'package:bakibondhu/domain/money.dart';
 
 /// Add-customer dialog: name and mobile number are required (mobile validated
-/// as a Bangladesh number), address is optional.
+/// as a Bangladesh number), address is optional. [phoneExists] checks whether
+/// another customer in this shop already uses the (normalized) mobile number,
+/// so numbers stay unique within a shop; a match is shown inline.
 Future<({String name, String phone, String? address})?> showAddCustomerDialog(
-    BuildContext context) {
+    BuildContext context,
+    {required Future<bool> Function(String normalizedPhone) phoneExists}) {
   final nameCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final addressCtrl = TextEditingController();
@@ -16,52 +19,80 @@ Future<({String name, String phone, String? address})?> showAddCustomerDialog(
 
   return showDialog<({String name, String phone, String? address})>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text(S.newCustomer),
-      content: Form(
-        key: formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: nameCtrl,
-              autofocus: true,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(labelText: S.nameLabel),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? S.nameRequired : null,
+    builder: (context) {
+      String? dupError; // set when the mobile number is already used in this shop
+      var checking = false;
+      return StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text(S.newCustomer),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameCtrl,
+                  autofocus: true,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(labelText: S.nameLabel),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? S.nameRequired : null,
+                ),
+                TextFormField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: S.mobileLabelRequired,
+                    errorText: dupError,
+                  ),
+                  // Clear the duplicate error as soon as the number changes.
+                  onChanged: (_) {
+                    if (dupError != null) setState(() => dupError = null);
+                  },
+                  validator: bdMobileValidator,
+                ),
+                TextFormField(
+                  controller: addressCtrl,
+                  decoration:
+                      const InputDecoration(labelText: S.addressLabelOptional),
+                ),
+              ],
             ),
-            TextFormField(
-              controller: phoneCtrl,
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(labelText: S.mobileLabelRequired),
-              validator: bdMobileValidator,
-            ),
-            TextFormField(
-              controller: addressCtrl,
-              decoration: const InputDecoration(labelText: S.addressLabelOptional),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(S.cancel)),
+            FilledButton(
+              onPressed: checking
+                  ? null
+                  : () async {
+                      if (!formKey.currentState!.validate()) return;
+                      final phone = normalizeBdMobile(phoneCtrl.text.trim());
+                      setState(() => checking = true);
+                      final taken = await phoneExists(phone);
+                      if (taken) {
+                        setState(() {
+                          dupError = S.duplicateCustomerPhone;
+                          checking = false;
+                        });
+                        return;
+                      }
+                      if (!context.mounted) return;
+                      final address = addressCtrl.text.trim();
+                      Navigator.pop(context, (
+                        name: nameCtrl.text.trim(),
+                        phone: phone,
+                        address: address.isEmpty ? null : address,
+                      ));
+                    },
+              child: const Text(S.add),
             ),
           ],
         ),
-      ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context), child: const Text(S.cancel)),
-        FilledButton(
-          onPressed: () {
-            if (!formKey.currentState!.validate()) return;
-            final address = addressCtrl.text.trim();
-            Navigator.pop(context, (
-              name: nameCtrl.text.trim(),
-              phone: normalizeBdMobile(phoneCtrl.text.trim()),
-              address: address.isEmpty ? null : address,
-            ));
-          },
-          child: const Text(S.add),
-        ),
-      ],
-    ),
+      );
+    },
   );
 }
 
