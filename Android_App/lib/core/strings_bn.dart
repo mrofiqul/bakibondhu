@@ -9,6 +9,8 @@ class S {
   static const todaysSales = 'আজকের বিক্রি';
   static const viewDailySales = 'বিক্রির হিসাব দেখুন';
   static const newCustomer = 'নতুন কাস্টমার';
+  static const searchCustomers = 'নাম বা মোবাইল দিয়ে খুঁজুন';
+  static String noSearchResults(String q) => '“$q” — এমন কোনো কাস্টমার পাওয়া যায়নি';
 
   // Trial / subscription reminder (Home banner)
   static const trialDismiss = 'বন্ধ করুন';

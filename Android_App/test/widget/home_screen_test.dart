@@ -46,4 +46,32 @@ void main() {
     // ৳45,000 appears in both the total card and the customer row.
     expect(find.textContaining('৳45,000'), findsWidgets);
   });
+
+  testWidgets('search filters the customer list by name and mobile', (tester) async {
+    final repo = InMemoryLedgerRepository();
+    await repo.addCustomer(name: 'করিম স্টোর', phone: '01712345678');
+    await repo.addCustomer(name: 'রহিম', phone: '01899990000');
+
+    await tester.pumpWidget(_app(repo));
+    await tester.pumpAndSettle();
+    expect(find.text('করিম স্টোর'), findsOneWidget);
+    expect(find.text('রহিম'), findsOneWidget);
+
+    // Filter by name → only করিম remains.
+    await tester.enterText(find.byType(TextField), 'করিম');
+    await tester.pumpAndSettle();
+    expect(find.text('করিম স্টোর'), findsOneWidget);
+    expect(find.text('রহিম'), findsNothing);
+
+    // Filter by mobile → only রহিম matches.
+    await tester.enterText(find.byType(TextField), '0189');
+    await tester.pumpAndSettle();
+    expect(find.text('রহিম'), findsOneWidget);
+    expect(find.text('করিম স্টোর'), findsNothing);
+
+    // No match → the no-results message shows.
+    await tester.enterText(find.byType(TextField), 'zzz');
+    await tester.pumpAndSettle();
+    expect(find.text(S.noSearchResults('zzz')), findsOneWidget);
+  });
 }

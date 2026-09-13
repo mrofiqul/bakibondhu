@@ -36,7 +36,28 @@ class _HomeScreenState extends State<HomeScreen> {
   /// there's no expiry (unlimited / offline / logged out) or it's dismissed.
   int? _expiryDaysLeft;
 
+  /// Live search query for the customer list (matches name or mobile).
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _query = '';
+
   LedgerRepository get _repo => AppScope.of(context);
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Customers matching the current search (name or mobile, case-insensitive).
+  List<CustomerBalance> _filtered(List<CustomerBalance> all) {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return all;
+    return all.where((r) {
+      final name = r.customer.name.toLowerCase();
+      final phone = (r.customer.phone ?? '').toLowerCase();
+      return name.contains(q) || phone.contains(q);
+    }).toList();
+  }
 
   @override
   void didChangeDependencies() {
@@ -158,29 +179,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   _refresh();
                 },
               ),
+              if (data.customers.isNotEmpty)
+                _SearchField(
+                  controller: _searchCtrl,
+                  onChanged: (v) => setState(() => _query = v),
+                  onClear: () => setState(() {
+                    _searchCtrl.clear();
+                    _query = '';
+                  }),
+                ),
               Expanded(
-                child: data.customers.isEmpty
-                    ? const _EmptyState()
-                    : ListView.separated(
-                        itemCount: data.customers.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (context, i) {
-                          final row = data.customers[i];
-                          return _CustomerTile(
-                            row: row,
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => CustomerDetailScreen(
-                                      customerId: row.customer.id),
-                                ),
-                              );
-                              _refresh(); // balance may have changed
-                            },
-                          );
-                        },
-                      ),
+                child: Builder(
+                  builder: (context) {
+                    if (data.customers.isEmpty) return const _EmptyState();
+                    final rows = _filtered(data.customers);
+                    if (rows.isEmpty) return _NoSearchResults(query: _query);
+                    return ListView.separated(
+                      itemCount: rows.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, i) {
+                        final row = rows[i];
+                        return _CustomerTile(
+                          row: row,
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CustomerDetailScreen(
+                                    customerId: row.customer.id),
+                              ),
+                            );
+                            _refresh(); // balance may have changed
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           );
@@ -228,6 +263,70 @@ class _TrialBanner extends StatelessWidget {
             onPressed: onDismiss,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Search box that filters the customer list by name or mobile number.
+class _SearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+  const _SearchField(
+      {required this.controller,
+      required this.onChanged,
+      required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: S.searchCustomers,
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: controller.text.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: S.cancel,
+                  onPressed: onClear,
+                ),
+          isDense: true,
+          filled: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NoSearchResults extends StatelessWidget {
+  final String query;
+  const _NoSearchResults({required this.query});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.search_off, size: 56, color: Colors.grey),
+            const SizedBox(height: 12),
+            Text(S.noSearchResults(query),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleSmall),
+          ],
+        ),
       ),
     );
   }
