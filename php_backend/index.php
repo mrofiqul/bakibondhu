@@ -106,18 +106,20 @@ function handle_register(array $cfg): void
     $userId     = bb_uuid();
     $now        = gmdate('Y-m-d H:i:s');
     $hash       = password_hash($password, PASSWORD_BCRYPT);
+    // New shops get a 30-day free trial; the admin can extend or clear it later.
+    $trialEnds  = gmdate('Y-m-d', time() + BB_TRIAL_DAYS * 86400);
 
     $db->beginTransaction();
-    $db->prepare('INSERT INTO businesses (id, name, timezone, currency, thana, zila, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    $db->prepare('INSERT INTO businesses (id, name, timezone, currency, thana, zila, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
        ->execute([$businessId, $business, 'Asia/Dhaka', 'BDT',
-                  $thana !== '' ? $thana : null, $zila !== '' ? $zila : null, $now]);
+                  $thana !== '' ? $thana : null, $zila !== '' ? $zila : null, $trialEnds, $now]);
     $db->prepare('INSERT INTO users (id, business_id, name, phone, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
        ->execute([$userId, $businessId, $name, $phone, $hash, 'owner', $now]);
     $db->commit();
 
     bb_json(201, [
         'user'     => ['id' => $userId, 'name' => $name, 'phone' => $phone],
-        'business' => ['id' => $businessId, 'name' => $business, 'timezone' => 'Asia/Dhaka', 'currency' => 'BDT'],
+        'business' => ['id' => $businessId, 'name' => $business, 'timezone' => 'Asia/Dhaka', 'currency' => 'BDT', 'expires_at' => $trialEnds],
         'role'     => 'owner',
         'tokens'   => bb_tokens($cfg, $userId, $businessId, 'owner'),
     ]);
