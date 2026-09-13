@@ -268,6 +268,22 @@ function handle_admin_action(array $cfg): void
             bb_json(200, ['ok' => true]);
         }
 
+        case 'delete_customer': {
+            // Removes a customer and all of its ledger transactions (cloud copy).
+            // Note: the app has no delete-sync, so a device that still holds this
+            // customer keeps it locally until reinstalled.
+            $c = $db->prepare('SELECT name FROM customers WHERE id = ? LIMIT 1');
+            $c->execute([$id]);
+            $name = $c->fetchColumn();
+            if ($name === false) bb_error(404, 'not_found', 'no such customer');
+            $db->beginTransaction();
+            $db->prepare('DELETE FROM transactions WHERE customer_id = ?')->execute([$id]);
+            $db->prepare('DELETE FROM customers WHERE id = ?')->execute([$id]);
+            $db->commit();
+            bb_admin_audit($db, $adminId, 'delete_customer', $id, (string) $name);
+            bb_json(200, ['ok' => true]);
+        }
+
         case 'reset_password': {
             $newPass = (string) ($in['password'] ?? '');
             if (strlen($newPass) < 6) bb_error(400, 'validation_failed', 'new password must be at least 6 characters');
