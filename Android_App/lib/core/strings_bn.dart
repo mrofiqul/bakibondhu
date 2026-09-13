@@ -103,8 +103,6 @@ class S {
   static const aboutSection = 'সম্পর্কে';
   static const savedMsg = 'সংরক্ষিত হয়েছে';
   static const notLoggedIn = 'লগ ইন করা নেই';
-  static const adminPanel = 'অ্যাডমিন প্যানেল';
-  static const adminPanelSubtitle = 'ওয়েব প্যানেল · লগইন প্রয়োজন';
 
   // Auth (login to sync)
   static const logIn = 'লগ ইন';
