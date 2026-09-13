@@ -55,8 +55,13 @@ Future<void> main() async {
     accessToken: () => session.token ?? '', // empty until logged in
     client: httpClient,
   );
-  final syncEngine =
-      SyncEngine(api: syncApi, store: syncStore, deviceId: deviceId);
+  final syncEngine = SyncEngine(
+    api: syncApi,
+    store: syncStore,
+    deviceId: deviceId,
+    // Keep the trial-ending reminder current if the admin changes the expiry.
+    onExpiryPulled: (expiresAt) => session.updateExpiresAt(expiresAt),
+  );
 
   runApp(BakiBondhuApp(
     repo: repo,

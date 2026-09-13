@@ -32,12 +32,41 @@ class _HomeScreenState extends State<HomeScreen> {
   _HomeData? _data;
   String? _shopName;
 
+  /// Days until the subscription ends (negative = already expired); null when
+  /// there's no expiry (unlimited / offline / logged out) or it's dismissed.
+  int? _expiryDaysLeft;
+
   LedgerRepository get _repo => AppScope.of(context);
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _refresh();
+  }
+
+  /// Whether to show the trial-ending reminder, and how urgent. Shows within a
+  /// week of expiry (and once expired), unless dismissed earlier today.
+  Future<int?> _computeExpiryBanner() async {
+    final expiresAt = AppScope.sessionOf(context).expiresAt;
+    if (expiresAt == null || expiresAt.isEmpty) return null;
+    final exp = DateTime.tryParse(expiresAt);
+    if (exp == null) return null;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final days = DateTime(exp.year, exp.month, exp.day).difference(today).inDays;
+    if (days > 7) return null; // only remind within the final week
+    final todayStr = today.toIso8601String().substring(0, 10);
+    final dismissedOn =
+        await AppScope.settingsOf(context).trialReminderDismissedOn();
+    if (dismissedOn == todayStr) return null;
+    return days;
+  }
+
+  Future<void> _dismissExpiryBanner() async {
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+    await AppScope.settingsOf(context).setTrialReminderDismissedOn(todayStr);
+    if (!mounted) return;
+    setState(() => _expiryDaysLeft = null);
   }
 
   /// Reloads customers + total from the repository and rebuilds. We store the
@@ -50,10 +79,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final customers = await repo.customersWithBalances();
     final total = await repo.totalReceivable();
     final todaySales = await repo.todaysSales();
+    final expiryDays = await _computeExpiryBanner();
     if (!mounted) return;
     setState(() {
       _shopName = shopName;
       _data = _HomeData(total, todaySales, customers);
+      _expiryDaysLeft = expiryDays;
     });
   }
 
@@ -107,6 +138,11 @@ class _HomeScreenState extends State<HomeScreen> {
           }
           return Column(
             children: [
+              if (_expiryDaysLeft != null)
+                _TrialBanner(
+                  daysLeft: _expiryDaysLeft!,
+                  onDismiss: _dismissExpiryBanner,
+                ),
               _TotalCard(total: data.total, count: data.customers.length),
               _SalesCard(
                 todaySales: data.todaySales,
@@ -146,6 +182,49 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Home reminder that a shop's subscription is about to end (or has ended).
+/// Amber while counting down, red once expired; dismissible for the day.
+class _TrialBanner extends StatelessWidget {
+  final int daysLeft;
+  final VoidCallback onDismiss;
+  const _TrialBanner({required this.daysLeft, required this.onDismiss});
+
+  @override
+  Widget build(BuildContext context) {
+    final expired = daysLeft < 0;
+    final Color bg = expired ? const Color(0xFFFBE9E7) : const Color(0xFFFDF1DD);
+    final Color fg = expired ? const Color(0xFFB3261E) : const Color(0xFF8A5A00);
+    final message = expired ? S.trialExpired : S.trialEndsInDays(daysLeft);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: fg.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(expired ? Icons.error_outline : Icons.access_time, color: fg, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(message,
+                style: TextStyle(color: fg, fontWeight: FontWeight.w600, height: 1.35)),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, color: fg, size: 20),
+            tooltip: S.trialDismiss,
+            visualDensity: VisualDensity.compact,
+            onPressed: onDismiss,
+          ),
+        ],
       ),
     );
   }

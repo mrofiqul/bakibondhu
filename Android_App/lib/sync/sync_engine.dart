@@ -12,7 +12,17 @@ class SyncEngine {
   final SyncStore store;
   final String deviceId;
 
-  SyncEngine({required this.api, required this.store, required this.deviceId});
+  /// Called after each successful pull with the server's current subscription
+  /// end (YYYY-MM-DD, or null = unlimited), so the app can keep the
+  /// trial-ending reminder current even if the admin changed it since login.
+  final void Function(String? expiresAt)? onExpiryPulled;
+
+  SyncEngine({
+    required this.api,
+    required this.store,
+    required this.deviceId,
+    this.onExpiryPulled,
+  });
 
   /// Uploads pending local changes and records each verdict.
   Future<SyncReport> push() async {
@@ -50,6 +60,7 @@ class SyncEngine {
     final data = await api.pull(since: since, deviceId: deviceId);
     await store.applyServerRecords(data.records);
     await store.setCursor(data.serverTime);
+    onExpiryPulled?.call(data.expiresAt);
     return data.records.length;
   }
 

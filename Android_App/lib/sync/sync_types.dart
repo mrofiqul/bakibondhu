@@ -60,10 +60,15 @@ class PullData {
   final String serverTime; // opaque cursor to pass as the next `since`
   final bool hasMore;
 
+  /// Current subscription end (YYYY-MM-DD) for this shop, or null = unlimited.
+  /// Lets the app keep the trial-ending reminder current after admin changes.
+  final String? expiresAt;
+
   const PullData({
     required this.records,
     required this.serverTime,
     this.hasMore = false,
+    this.expiresAt,
   });
 }
 
