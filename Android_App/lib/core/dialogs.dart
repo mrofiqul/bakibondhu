@@ -5,16 +5,21 @@ import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/validators.dart';
 import 'package:bakibondhu/domain/money.dart';
 
-/// Add-customer dialog: name and mobile number are required (mobile validated
-/// as a Bangladesh number), address is optional. [phoneExists] checks whether
-/// another customer in this shop already uses the (normalized) mobile number,
-/// so numbers stay unique within a shop; a match is shown inline.
+/// Add- or edit-customer dialog: name and mobile number are required (mobile
+/// validated as a Bangladesh number), address is optional. [phoneExists] checks
+/// whether another customer in this shop already uses the (normalized) mobile
+/// number, so numbers stay unique within a shop; a match is shown inline. Pass
+/// [initial] to prefill for editing (the caller's [phoneExists] should then
+/// exclude the customer being edited).
 Future<({String name, String phone, String? address})?> showAddCustomerDialog(
     BuildContext context,
-    {required Future<bool> Function(String normalizedPhone) phoneExists}) {
-  final nameCtrl = TextEditingController();
-  final phoneCtrl = TextEditingController();
-  final addressCtrl = TextEditingController();
+    {required Future<bool> Function(String normalizedPhone) phoneExists,
+    ({String name, String? phone, String? address})? initial,
+    String? title,
+    String? submitLabel}) {
+  final nameCtrl = TextEditingController(text: initial?.name ?? '');
+  final phoneCtrl = TextEditingController(text: initial?.phone ?? '');
+  final addressCtrl = TextEditingController(text: initial?.address ?? '');
   final formKey = GlobalKey<FormState>();
 
   return showDialog<({String name, String phone, String? address})>(
@@ -24,7 +29,7 @@ Future<({String name, String phone, String? address})?> showAddCustomerDialog(
       var checking = false;
       return StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text(S.newCustomer),
+          title: Text(title ?? S.newCustomer),
           content: Form(
             key: formKey,
             child: Column(
@@ -87,7 +92,7 @@ Future<({String name, String phone, String? address})?> showAddCustomerDialog(
                         address: address.isEmpty ? null : address,
                       ));
                     },
-              child: const Text(S.add),
+              child: Text(submitLabel ?? S.add),
             ),
           ],
         ),

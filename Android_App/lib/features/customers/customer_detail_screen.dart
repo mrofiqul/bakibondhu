@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
+import 'package:bakibondhu/core/dialogs.dart';
 import 'package:bakibondhu/core/format.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/theme.dart';
+import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/models.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/collections/collection_screen.dart';
@@ -62,6 +64,61 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   void _snack(String msg) => ScaffoldMessenger.of(context)
       .showSnackBar(SnackBar(content: Text(msg)));
 
+  Future<void> _editCustomer(_DetailData data) async {
+    final repo = AppScope.of(context);
+    final c = data.customer;
+    final input = await showAddCustomerDialog(
+      context,
+      title: S.editCustomer,
+      submitLabel: S.save,
+      initial: (name: c.name, phone: c.phone, address: c.address),
+      // Unique within the shop, but the customer keeps its own number.
+      phoneExists: (phone) async {
+        final other = await repo.customerByPhone(phone);
+        return other != null && other.id != c.id;
+      },
+    );
+    if (input == null) return;
+    await repo.updateCustomer(
+        id: c.id, name: input.name, phone: input.phone, address: input.address);
+    await _refresh();
+    if (mounted) _snack(S.customerUpdated);
+  }
+
+  Future<void> _deleteCustomer(_DetailData data) async {
+    // The ledger is append-only — a customer with history can't be deleted.
+    if (data.history.isNotEmpty) {
+      _snack(S.cannotDeleteHasTxns);
+      return;
+    }
+    final repo = AppScope.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(S.deleteCustomer),
+        content: Text(S.deleteCustomerConfirm(data.customer.name)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text(S.cancel)),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.owed),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(S.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await repo.deleteCustomer(data.customer.id);
+    } on CustomerHasTransactions {
+      if (mounted) _snack(S.cannotDeleteHasTxns);
+      return;
+    }
+    if (mounted) Navigator.pop(context); // back to Home (which refreshes)
+  }
+
   Future<void> _openReminder(_DetailData data) async {
     if (data.balance <= Money.zero) return _snack(S.nothingDue);
     final phone = data.customer.phone;
@@ -98,6 +155,29 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ),
             ),
           ),
+          if (data != null)
+            PopupMenuButton<String>(
+              onSelected: (v) {
+                if (v == 'edit') _editCustomer(data);
+                if (v == 'delete') _deleteCustomer(data);
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: ListTile(
+                      leading: Icon(Icons.edit_outlined),
+                      title: Text(S.editCustomer),
+                      contentPadding: EdgeInsets.zero),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: ListTile(
+                      leading: Icon(Icons.delete_outline, color: AppTheme.owed),
+                      title: Text(S.deleteCustomer),
+                      contentPadding: EdgeInsets.zero),
+                ),
+              ],
+            ),
         ],
       ),
       body: data == null

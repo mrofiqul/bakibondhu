@@ -13,6 +13,12 @@ class CustomerBalance {
 /// How to bucket the sales report.
 enum SalesPeriod { day, month, quarter, year }
 
+/// Thrown by [LedgerRepository.deleteCustomer] when the customer still has
+/// ledger transactions (the ledger is append-only, so those must go first).
+class CustomerHasTransactions implements Exception {
+  const CustomerHasTransactions();
+}
+
 /// The local start-of-bucket for a date under [period] (used to group sales).
 DateTime salesBucketStart(DateTime d, SalesPeriod period) {
   switch (period) {
@@ -49,6 +55,14 @@ abstract class LedgerRepository {
   /// The existing customer with this (normalized) phone in this shop, or null.
   /// Used to keep customer mobile numbers unique within a shop.
   Future<Customer?> customerByPhone(String phone);
+
+  /// Edit a customer's profile (name/phone/address). Re-queues it for sync.
+  Future<Customer> updateCustomer(
+      {required String id, required String name, String? phone, String? address});
+
+  /// Delete a customer. Throws [CustomerHasTransactions] if it still has any
+  /// ledger entries (delete those first — the ledger is append-only).
+  Future<void> deleteCustomer(String id);
 
   /// Record a credit (baki given). Append-only.
   Future<TxnEntry> recordCredit({

@@ -181,6 +181,7 @@ function handle_sync_push(array $cfg): void
     foreach ($changes as $ch) {
         $entity  = (string) ($ch['entity'] ?? '');
         $localId = (string) ($ch['local_id'] ?? '');
+        $op      = (string) ($ch['op'] ?? 'upsert');
         $data    = is_array($ch['data'] ?? null) ? $ch['data'] : [];
         if ($localId === '' || !in_array($entity, ['customer', 'transaction', 'sale'], true)) {
             $results[] = bb_push_result($entity, $localId, 'FAILED', null, 'bad change');
@@ -188,7 +189,12 @@ function handle_sync_push(array $cfg): void
         }
 
         try {
-            if ($entity === 'customer') {
+            if ($entity === 'customer' && $op === 'delete') {
+                // Idempotent: removing a customer (and its transactions) that is
+                // already gone still succeeds. Scoped to this business.
+                bb_delete_customer($db, $businessId, $localId);
+                $results[] = bb_push_result($entity, $localId, 'SYNCED', $localId, null);
+            } elseif ($entity === 'customer') {
                 $serverId = bb_upsert_customer($db, $businessId, $deviceId, $localId, $data);
                 $results[] = bb_push_result($entity, $localId, 'SYNCED', $serverId, null);
             } elseif ($entity === 'sale') {
@@ -232,42 +238,57 @@ function bb_push_result(string $entity, string $localId, string $status, ?string
 // Insert a customer (idempotent). Returns the server id (existing on replay).
 function bb_upsert_customer(PDO $db, string $businessId, string $deviceId, string $localId, array $data): string
 {
+    $phone   = isset($data['phone']) && $data['phone'] !== '' ? (string) $data['phone'] : null;
+    $name    = (string) ($data['name'] ?? '');
+    $address = isset($data['address']) && $data['address'] !== '' ? (string) $data['address'] : null;
+
     $existing = $db->prepare(
         'SELECT id FROM customers WHERE business_id = ? AND device_id = ? AND local_id = ? LIMIT 1');
     $existing->execute([$businessId, $deviceId, $localId]);
-    if ($row = $existing->fetch()) {
-        return (string) $row['id'];
-    }
-
-    $phone = isset($data['phone']) && $data['phone'] !== '' ? (string) $data['phone'] : null;
+    $serverId = ($row = $existing->fetch()) ? (string) $row['id'] : $localId;
 
     // Customer mobile numbers are unique within a shop. The client enforces this
     // too; this is the server backstop (e.g. two devices adding the same number).
-    // A different local_id already holding this phone in the shop is a conflict.
+    // Another customer (different id) already holding this phone is a conflict —
+    // exclude this customer's own id so editing name/address keeps working.
     if ($phone !== null) {
         $dup = $db->prepare(
-            'SELECT 1 FROM customers WHERE business_id = ? AND phone = ? LIMIT 1');
-        $dup->execute([$businessId, $phone]);
+            'SELECT 1 FROM customers WHERE business_id = ? AND phone = ? AND id <> ? LIMIT 1');
+        $dup->execute([$businessId, $phone, $serverId]);
         if ($dup->fetch()) {
             throw new RuntimeException('duplicate_phone');
         }
     }
 
-    // Use the client's local_id as the server id: local ids are UUIDs, so this
-    // keeps the id stable across devices and makes a device's pull of its own
-    // pushed rows a harmless no-op (no id remapping needed on the client).
-    $serverId = $localId;
+    if ($row) {
+        // Edit: update the profile and bump the pull cursor so other devices see it.
+        $db->prepare(
+            'UPDATE customers SET name = ?, phone = ?, address = ?, updated_at = UTC_TIMESTAMP(6)
+             WHERE id = ?')
+           ->execute([$name, $phone, $address, $serverId]);
+        return $serverId;
+    }
+
+    // New: use the client's local_id as the server id (UUIDs), so the id is
+    // stable across devices and a device's pull of its own pushed rows is a no-op.
     $db->prepare(
         'INSERT INTO customers (id, business_id, device_id, local_id, name, phone, address, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
        ->execute([
-           $serverId, $businessId, $deviceId, $localId,
-           (string) ($data['name'] ?? ''),
-           $phone,
-           isset($data['address']) && $data['address'] !== '' ? (string) $data['address'] : null,
+           $serverId, $businessId, $deviceId, $localId, $name, $phone, $address,
            gmdate('Y-m-d H:i:s'),
        ]);
     return $serverId;
+}
+
+// Delete a customer (and its transactions) within a business. Idempotent: a
+// missing customer is a no-op. The server id == the client local id.
+function bb_delete_customer(PDO $db, string $businessId, string $localId): void
+{
+    $db->prepare('DELETE FROM transactions WHERE business_id = ? AND customer_id = ?')
+       ->execute([$businessId, $localId]);
+    $db->prepare('DELETE FROM customers WHERE business_id = ? AND id = ?')
+       ->execute([$businessId, $localId]);
 }
 
 // Insert a transaction (idempotent). Resolves the client's customer_local_id to

@@ -1,7 +1,7 @@
 name: bakibondhu
 description: "BakiBondhu — a Bangla-first, offline-first collection ledger for Bangladeshi micro-merchants (Android field app)."
 publish_to: "none"
-version: 0.1.8+9
+version: 0.1.9+10
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
