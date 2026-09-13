@@ -27,13 +27,15 @@ class SqfliteSyncStore implements SyncStore {
 
     // Customers first so a transaction's customer resolves on the server.
     final custRows = await _db.query('customers',
-        columns: ['id', 'name', 'phone', 'address'],
+        columns: ['id', 'name', 'phone', 'address', 'deleted'],
         where: "sync_status <> 'SYNCED'",
         orderBy: 'created_at');
     for (final r in custRows) {
+      final isDelete = (r['deleted'] as int? ?? 0) == 1;
       changes.add(LocalChange(
         kind: EntityKind.customer,
         localId: r['id'] as String,
+        op: isDelete ? 'delete' : 'upsert',
         data: {'name': r['name'], 'phone': r['phone'], 'address': r['address']},
       ));
     }
@@ -86,6 +88,12 @@ class SqfliteSyncStore implements SyncStore {
 
   @override
   Future<void> markSynced(EntityKind kind, String localId, String serverId) async {
+    // A confirmed customer tombstone is hard-deleted now that the server has it.
+    if (kind == EntityKind.customer) {
+      final removed = await _db.delete('customers',
+          where: 'id = ? AND deleted = 1', whereArgs: [localId]);
+      if (removed > 0) return;
+    }
     await _db.update(
       _table(kind),
       {'server_id': serverId, 'sync_status': 'SYNCED'},

@@ -62,6 +62,41 @@ void main() {
     expect(await repo.customerByPhone(''), isNull); // empty never matches
   });
 
+  test('updateCustomer edits the profile; new number becomes findable', () async {
+    final repo = newRepo();
+    final k = await repo.addCustomer(name: 'করিম', phone: '01712345678');
+
+    await repo.updateCustomer(
+        id: k.id, name: 'করিম স্টোর', phone: '01799990000', address: 'ঢাকা');
+
+    final updated = await repo.customer(k.id);
+    expect(updated!.name, 'করিম স্টোর');
+    expect(updated.address, 'ঢাকা');
+    expect((await repo.customerByPhone('01799990000'))?.id, k.id); // new number
+    expect(await repo.customerByPhone('01712345678'), isNull); // old number freed
+  });
+
+  test('deleteCustomer removes a customer with no ledger entries', () async {
+    final repo = newRepo();
+    final k = await repo.addCustomer(name: 'রহিম', phone: '01712345678');
+
+    await repo.deleteCustomer(k.id);
+
+    expect(await repo.customer(k.id), isNull);
+    expect(await repo.customers(), isEmpty);
+    expect(await repo.customerByPhone('01712345678'), isNull); // number freed for reuse
+  });
+
+  test('deleteCustomer is blocked while the customer has transactions', () async {
+    final repo = newRepo();
+    final k = await repo.addCustomer(name: 'করিম');
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(5000));
+
+    expect(() => repo.deleteCustomer(k.id),
+        throwsA(isA<CustomerHasTransactions>()));
+    expect(await repo.customer(k.id), isNotNull); // still there
+  });
+
   test('empty repository', () async {
     final repo = newRepo();
     expect(await repo.customers(), isEmpty);

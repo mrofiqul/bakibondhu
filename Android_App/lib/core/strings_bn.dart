@@ -63,6 +63,16 @@ class S {
   static const save = 'সেভ করুন';
   static const add = 'যোগ করুন';
   static const cancel = 'বাতিল';
+  static const delete = 'মুছুন';
+
+  // Edit / delete customer
+  static const editCustomer = 'কাস্টমার এডিট করুন';
+  static const deleteCustomer = 'কাস্টমার মুছুন';
+  static const customerUpdated = 'কাস্টমারের তথ্য আপডেট হয়েছে';
+  static const cannotDeleteHasTxns =
+      'এই কাস্টমারের লেনদেন আছে — আগে হিসাব নিষ্পত্তি করুন, তারপর মুছুন।';
+  static String deleteCustomerConfirm(String name) =>
+      '“$name”-কে মুছে ফেলবেন? এটি আর ফেরানো যাবে না।';
 
   // Add transaction (Screen 3)
   static const dateLabel = 'তারিখ';

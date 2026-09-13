@@ -88,13 +88,14 @@ class SqfliteLedgerRepository implements LedgerRepository {
 
   @override
   Future<List<Customer>> customers() async {
-    final rows = await _db.query('customers', orderBy: 'name');
+    final rows = await _db.query('customers', where: 'deleted = 0', orderBy: 'name');
     return rows.map(_customerFromRow).toList();
   }
 
   @override
   Future<Customer?> customer(String id) async {
-    final rows = await _db.query('customers', where: 'id = ?', whereArgs: [id], limit: 1);
+    final rows = await _db.query('customers',
+        where: 'id = ? AND deleted = 0', whereArgs: [id], limit: 1);
     return rows.isEmpty ? null : _customerFromRow(rows.first);
   }
 
@@ -102,8 +103,40 @@ class SqfliteLedgerRepository implements LedgerRepository {
   Future<Customer?> customerByPhone(String phone) async {
     if (phone.isEmpty) return null;
     final rows = await _db.query('customers',
-        where: 'phone = ?', whereArgs: [phone], limit: 1);
+        where: 'phone = ? AND deleted = 0', whereArgs: [phone], limit: 1);
     return rows.isEmpty ? null : _customerFromRow(rows.first);
+  }
+
+  @override
+  Future<Customer> updateCustomer(
+      {required String id,
+      required String name,
+      String? phone,
+      String? address}) async {
+    await _db.update(
+      'customers',
+      {
+        'name': name,
+        'phone': phone,
+        'address': address,
+        // Re-queue for sync; the server upserts on the same (device, local) id.
+        'sync_status': 'PENDING',
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    return Customer(id: id, name: name, phone: phone, address: address);
+  }
+
+  @override
+  Future<void> deleteCustomer(String id) async {
+    final n = Sqflite.firstIntValue(await _db.rawQuery(
+        'SELECT COUNT(*) FROM transactions WHERE customer_id = ?', [id]));
+    if ((n ?? 0) > 0) throw const CustomerHasTransactions();
+    // Soft-delete: tombstone stays until the delete is pushed, then the sync
+    // store hard-deletes the row (see markSynced). Reads filter deleted = 0.
+    await _db.update('customers', {'deleted': 1, 'sync_status': 'PENDING'},
+        where: 'id = ?', whereArgs: [id]);
   }
 
   // ---- transactions (append-only) ------------------------------------------

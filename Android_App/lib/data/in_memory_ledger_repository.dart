@@ -46,6 +46,25 @@ class InMemoryLedgerRepository implements LedgerRepository {
   }
 
   @override
+  Future<Customer> updateCustomer(
+      {required String id,
+      required String name,
+      String? phone,
+      String? address}) async {
+    final c = Customer(id: id, name: name, phone: phone, address: address);
+    _customers[id] = c;
+    return c;
+  }
+
+  @override
+  Future<void> deleteCustomer(String id) async {
+    if (_txns.any((t) => t.customerId == id)) {
+      throw const CustomerHasTransactions();
+    }
+    _customers.remove(id);
+  }
+
+  @override
   Future<TxnEntry> recordCredit({
     required String customerId,
     required Money amount,
