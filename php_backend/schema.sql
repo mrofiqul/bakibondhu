@@ -10,11 +10,13 @@ CREATE TABLE IF NOT EXISTS businesses (
     status     VARCHAR(16)  NOT NULL DEFAULT 'active',  -- active|suspended (admin panel)
     thana      VARCHAR(100) NULL,   -- shop location (optional, from registration)
     zila       VARCHAR(100) NULL,
+    expires_at DATE         NULL,   -- subscription expiry (admin-managed); NULL = unlimited
     created_at DATETIME     NOT NULL,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 -- Existing installs: ALTER TABLE businesses ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'active';
 -- Existing installs: ALTER TABLE businesses ADD COLUMN thana VARCHAR(100) NULL, ADD COLUMN zila VARCHAR(100) NULL;
+-- Existing installs: ALTER TABLE businesses ADD COLUMN expires_at DATE NULL;
 
 CREATE TABLE IF NOT EXISTS users (
     id            CHAR(36)     NOT NULL,
