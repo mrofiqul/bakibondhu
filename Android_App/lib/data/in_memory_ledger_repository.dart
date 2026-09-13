@@ -22,10 +22,18 @@ class InMemoryLedgerRepository implements LedgerRepository {
   static int _seq = 0;
   static String _defaultId() => 'id-${DateTime.now().microsecondsSinceEpoch}-${_seq++}';
 
+  int _addSeq = 0;
+
   @override
   Future<Customer> addCustomer(
       {required String name, String? phone, String? address}) async {
-    final c = Customer(id: _newId(), name: name, phone: phone, address: address);
+    final c = Customer(
+        id: _newId(),
+        name: name,
+        phone: phone,
+        address: address,
+        // Strictly increasing so "recently added" order is deterministic.
+        createdAt: DateTime(2026).add(Duration(seconds: _addSeq++)));
     _customers[c.id] = c;
     return c;
   }
@@ -51,7 +59,12 @@ class InMemoryLedgerRepository implements LedgerRepository {
       required String name,
       String? phone,
       String? address}) async {
-    final c = Customer(id: id, name: name, phone: phone, address: address);
+    final c = Customer(
+        id: id,
+        name: name,
+        phone: phone,
+        address: address,
+        createdAt: _customers[id]?.createdAt);
     _customers[id] = c;
     return c;
   }

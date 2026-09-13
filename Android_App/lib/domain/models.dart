@@ -45,7 +45,16 @@ class Customer {
   final String? phone;
   final String? address;
 
-  const Customer({required this.id, required this.name, this.phone, this.address});
+  /// When the customer was first added (used to sort "recently added").
+  /// Optional: null when the source didn't carry it.
+  final DateTime? createdAt;
+
+  const Customer(
+      {required this.id,
+      required this.name,
+      this.phone,
+      this.address,
+      this.createdAt});
 }
 
 /// A direct sale the owner records after a transaction — just an amount (and an

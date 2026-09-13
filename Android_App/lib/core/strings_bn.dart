@@ -11,6 +11,10 @@ class S {
   static const newCustomer = 'নতুন কাস্টমার';
   static const searchCustomers = 'নাম বা মোবাইল দিয়ে খুঁজুন';
   static String noSearchResults(String q) => '“$q” — এমন কোনো কাস্টমার পাওয়া যায়নি';
+  static const sortBy = 'সাজান';
+  static const sortMostOwed = 'সর্বোচ্চ বাকি';
+  static const sortByName = 'নাম (ক–হ)';
+  static const sortRecent = 'নতুন আগে';
 
   // Trial / subscription reminder (Home banner)
   static const trialDismiss = 'বন্ধ করুন';

@@ -47,6 +47,43 @@ void main() {
     expect(find.textContaining('৳45,000'), findsWidgets);
   });
 
+  testWidgets('sort reorders the customer list (owed / name / recent)', (tester) async {
+    final repo = InMemoryLedgerRepository();
+    // Added in this order; give each a distinct balance.
+    final g = await repo.addCustomer(name: 'গফুর'); // 1st added
+    final o = await repo.addCustomer(name: 'অভি'); //  2nd added
+    final b = await repo.addCustomer(name: 'বকুল'); // 3rd added
+    await repo.recordCredit(customerId: g.id, amount: Money.taka(100));
+    await repo.recordCredit(customerId: o.id, amount: Money.taka(900));
+    await repo.recordCredit(customerId: b.id, amount: Money.taka(500));
+
+    await tester.pumpWidget(_app(repo));
+    await tester.pumpAndSettle();
+
+    double y(String name) => tester.getTopLeft(find.text(name)).dy;
+
+    // Default = most owed first: অভি(900) > বকুল(500) > গফুর(100)
+    expect(y('অভি'), lessThan(y('বকুল')));
+    expect(y('বকুল'), lessThan(y('গফুর')));
+
+    Future<void> pickSort(String label) async {
+      await tester.tap(find.byIcon(Icons.sort));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label).last);
+      await tester.pumpAndSettle();
+    }
+
+    // Name A–Z (Bangla code points): অ < গ < ব
+    await pickSort(S.sortByName);
+    expect(y('অভি'), lessThan(y('গফুর')));
+    expect(y('গফুর'), lessThan(y('বকুল')));
+
+    // Recently added (newest first): বকুল > অভি > গফুর
+    await pickSort(S.sortRecent);
+    expect(y('বকুল'), lessThan(y('অভি')));
+    expect(y('অভি'), lessThan(y('গফুর')));
+  });
+
   testWidgets('search filters the customer list by name and mobile', (tester) async {
     final repo = InMemoryLedgerRepository();
     await repo.addCustomer(name: 'করিম স্টোর', phone: '01712345678');

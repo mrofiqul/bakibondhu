@@ -26,6 +26,7 @@ class SqfliteLedgerRepository implements LedgerRepository {
         name: r['name'] as String,
         phone: r['phone'] as String?,
         address: r['address'] as String?,
+        createdAt: DateTime.tryParse((r['created_at'] as String?) ?? ''),
       );
 
   TxnEntry _txnFromRow(Map<String, Object?> r) => TxnEntry(
