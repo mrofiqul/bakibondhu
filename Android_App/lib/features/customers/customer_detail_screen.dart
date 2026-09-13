@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/dialogs.dart';
@@ -7,6 +9,7 @@ import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/theme.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/models.dart';
+import 'package:bakibondhu/features/customers/history_export.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/collections/collection_screen.dart';
 import 'package:bakibondhu/features/reminders/reminder_preview_screen.dart';
@@ -63,6 +66,86 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
   void _snack(String msg) => ScaffoldMessenger.of(context)
       .showSnackBar(SnackBar(content: Text(msg)));
+
+  Future<void> _exportHistory(_DetailData data) async {
+    if (data.history.isEmpty) {
+      _snack(S.nothingToExport);
+      return;
+    }
+    final shopName = await AppScope.settingsOf(context).shopName();
+    if (!mounted) return;
+    final statement = buildHistoryStatement(
+      customer: data.customer,
+      history: data.history,
+      balance: data.balance,
+      shopName: (shopName == null || shopName.trim().isEmpty)
+          ? S.shopNamePlaceholder
+          : shopName.trim(),
+    );
+    if (!mounted) return;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('${data.customer.name} · ${S.historyExportTitle}',
+                  style: Theme.of(ctx).textTheme.titleMedium),
+              const SizedBox(height: 10),
+              Flexible(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(ctx).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(statement,
+                        style: const TextStyle(fontSize: 13, height: 1.5)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.copy),
+                      label: const Text(S.copyText),
+                      onPressed: () async {
+                        await Clipboard.setData(ClipboardData(text: statement));
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        _snack(S.copied);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.share),
+                      label: const Text(S.shareText),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Share.share(statement,
+                            subject:
+                                '${data.customer.name} · ${S.historyExportTitle}');
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Future<void> _editCustomer(_DetailData data) async {
     final repo = AppScope.of(context);
@@ -158,10 +241,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           if (data != null)
             PopupMenuButton<String>(
               onSelected: (v) {
+                if (v == 'export') _exportHistory(data);
                 if (v == 'edit') _editCustomer(data);
                 if (v == 'delete') _deleteCustomer(data);
               },
               itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'export',
+                  child: ListTile(
+                      leading: Icon(Icons.ios_share),
+                      title: Text(S.exportHistory),
+                      contentPadding: EdgeInsets.zero),
+                ),
                 const PopupMenuItem(
                   value: 'edit',
                   child: ListTile(

@@ -1,7 +1,7 @@
 name: bakibondhu
 description: "BakiBondhu — a Bangla-first, offline-first collection ledger for Bangladeshi micro-merchants (Android field app)."
 publish_to: "none"
-version: 0.1.11+12
+version: 0.1.12+13
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -19,6 +19,9 @@ dependencies:
 
   # Launch the OS SMS composer / WhatsApp for merchant-triggered reminders (§9, §34).
   url_launcher: ^6.3.0
+
+  # OS share sheet — export a customer's transaction statement to any app.
+  share_plus: ^9.0.0
 
   # Small persisted settings (shop name, onboarding flag).
   shared_preferences: ^2.3.0

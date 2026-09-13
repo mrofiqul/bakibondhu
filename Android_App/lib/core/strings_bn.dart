@@ -74,6 +74,22 @@ class S {
   // Edit / delete customer
   static const editCustomer = 'কাস্টমার এডিট করুন';
   static const deleteCustomer = 'কাস্টমার মুছুন';
+
+  // Transaction history export
+  static const exportHistory = 'লেনদেন এক্সপোর্ট করুন';
+  static const historyExportTitle = 'লেনদেনের হিসাব';
+  static const shopLabel = 'দোকান';
+  static const customerLabel = 'কাস্টমার';
+  static const runningDue = 'চলতি বাকি';
+  static const totalTransactions = 'মোট লেনদেন';
+  static const currentBalanceLabel = 'বর্তমান হিসাব';
+  static const madeWithApp = 'বাকিবন্ধু অ্যাপ দিয়ে তৈরি';
+  static const adjustmentUp = 'সমন্বয় (বৃদ্ধি)';
+  static const adjustmentDown = 'সমন্বয় (হ্রাস)';
+  static const copyText = 'কপি করুন';
+  static const shareText = 'শেয়ার করুন';
+  static const copied = 'কপি হয়েছে';
+  static const nothingToExport = 'এক্সপোর্ট করার মতো লেনদেন নেই';
   static const customerUpdated = 'কাস্টমারের তথ্য আপডেট হয়েছে';
   static const cannotDeleteHasTxns =
       'এই কাস্টমারের লেনদেন আছে — আগে হিসাব নিষ্পত্তি করুন, তারপর মুছুন।';
