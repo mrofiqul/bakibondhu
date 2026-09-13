@@ -164,11 +164,11 @@ There's a separate **web admin panel** for the platform administrator — a
 bird's-eye view of all shops (totals, outstanding credit, signups) with management
 actions (suspend/delete a shop, reset a password).
 
-- Open **⚙️ Settings → About → Admin panel** to launch it in your browser.
+- It opens only in a **web browser**: **https://bakibondhu.infinityfreeapp.com/admin**
 - It requires an **admin username and password** to log in.
 
-> ℹ️ Ordinary shopkeepers don't need this — it's a tool for whoever runs the
-> platform. Without an admin account you can't log in here.
+> ℹ️ Ordinary shopkeepers don't need this, and it is **not inside the app** — it's a
+> web-only tool for whoever runs the platform. Without an admin account you can't log in.
 
 ---
 
