@@ -137,6 +137,10 @@ let _mem=null,_who='';
 function taka(paisa){ const t=(paisa||0)/100;
   return '৳'+t.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:2}); }
 function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+// A JS string literal, safe to embed inside a double-quoted on* attribute:
+// JSON.stringify wraps it in double quotes, so HTML-encode those (&quot;) or
+// they close the attribute early and truncate the handler.
+function jarg(s){ return esc(JSON.stringify(s==null?'':String(s))); }
 function when(s){ if(!s)return '—'; const d=new Date(s.replace(' ','T')); return isNaN(d)?esc(s):d.toLocaleString(); }
 function fmtDate(s){ const d=new Date(s+'T00:00:00'); return isNaN(d)?esc(s):d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); }
 function daysLeft(s){ const t=new Date(); t.setHours(0,0,0,0); const d=new Date(s+'T00:00:00');
@@ -239,11 +243,11 @@ async function loadShops(){
         <td class="num">${taka(b.sales_paisa)}</td>
         <td><div class="row-actions">
           <button onclick="openShop('${b.id}')">View</button>
-          <button onclick="setExpiry('${b.id}',${JSON.stringify(b.name)},${JSON.stringify(b.expires_at||'')})">Set expiry</button>
+          <button onclick="setExpiry('${b.id}',${jarg(b.name)},${jarg(b.expires_at||'')})">Set expiry</button>
           ${b.status==='active'
-            ? `<button onclick="act('suspend_business','${b.id}','Suspend '+${JSON.stringify(b.name)}+'? Its users cannot log in or sync until you unsuspend.')">Suspend</button>`
+            ? `<button onclick="act('suspend_business','${b.id}','Suspend '+${jarg(b.name)}+'? Its users cannot log in or sync until you unsuspend.')">Suspend</button>`
             : `<button onclick="act('unsuspend_business','${b.id}')">Unsuspend</button>`}
-          <button class="danger" onclick="act('delete_business','${b.id}','Permanently DELETE '+${JSON.stringify(b.name)}+' and ALL its data? This cannot be undone.')">Delete</button>
+          <button class="danger" onclick="act('delete_business','${b.id}','Permanently DELETE '+${jarg(b.name)}+' and ALL its data? This cannot be undone.')">Delete</button>
         </div></td></tr>`).join('')
       : '<tr><td colspan="9" class="muted">No shops yet.</td></tr>';
     el.innerHTML=`<div class="card"><h3>All shops (${d.businesses.length})</h3><div class="scroll"><table>
@@ -260,12 +264,12 @@ async function openShop(id){
     const users=d.users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.phone)}</td><td>${esc(u.role)}</td>
       <td><div class="row-actions">
         <button onclick="resetPw('${u.id}','${esc(u.phone)}')">Reset password</button>
-        <button class="danger" onclick="act('delete_user','${u.id}','Delete user '+${JSON.stringify(u.phone)}+'?',()=>openShop('${id}'))">Delete</button>
+        <button class="danger" onclick="act('delete_user','${u.id}','Delete user '+${jarg(u.phone)}+'?',()=>openShop('${id}'))">Delete</button>
       </div></td></tr>`).join('') || '<tr><td colspan="4" class="muted">No users.</td></tr>';
     const custs=d.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone||'—')}</td>
       <td>${esc(c.address||'—')}</td>
       <td class="num">${c.txn_count}</td><td class="num">${taka(c.balance_paisa)}</td>
-      <td><div class="row-actions"><button class="danger" onclick="act('delete_customer','${c.id}','Delete customer '+${JSON.stringify(c.name)}+' and its '+${c.txn_count}+' transaction(s)? This cannot be undone.',()=>openShop('${id}'))">Delete</button></div></td></tr>`).join('')
+      <td><div class="row-actions"><button class="danger" onclick="act('delete_customer','${c.id}','Delete customer '+${jarg(c.name)}+' and its '+${c.txn_count}+' transaction(s)? This cannot be undone.',()=>openShop('${id}'))">Delete</button></div></td></tr>`).join('')
       || '<tr><td colspan="6" class="muted">No customers.</td></tr>';
     modal(`${esc(b.name)} <span class="pill ${esc(b.status)}">${esc(b.status)}</span> ${expiryBadge(b.expires_at)}`, `
       <h3 style="margin-bottom:8px">Users</h3>
@@ -278,7 +282,7 @@ async function openShop(id){
       <div class="row-actions" style="justify-content:flex-start">
         <span class="muted" style="align-self:center">${b.sales_count||0} sale record(s)</span>
         ${(b.sales_count||0) > 0
-          ? `<button class="danger" onclick="act('clear_sales','${id}','Delete ALL '+${b.sales_count}+' sale record(s) for '+${JSON.stringify(b.name)}+'? This cannot be undone.',()=>openShop('${id}'))">Clear all sales</button>`
+          ? `<button class="danger" onclick="act('clear_sales','${id}','Delete ALL '+${b.sales_count}+' sale record(s) for '+${jarg(b.name)}+'? This cannot be undone.',()=>openShop('${id}'))">Clear all sales</button>`
           : ''}
       </div>`);
   }catch(err){ toast(err.message); }
