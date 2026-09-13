@@ -2,6 +2,10 @@
 // BakiBondhu PHP backend — shared helpers: DB, JSON I/O, UUID, JWT (HS256).
 // Vanilla PHP, no external dependencies (works on basic shared hosting).
 
+// Free-trial length for a newly registered shop (days). The admin can extend
+// or clear a shop's expiry from the panel afterwards.
+const BB_TRIAL_DAYS = 30;
+
 function bb_db(array $cfg): PDO
 {
     $dsn = "mysql:host={$cfg['db_host']};dbname={$cfg['db_name']};charset=utf8mb4";
