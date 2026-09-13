@@ -168,6 +168,9 @@ function handle_admin_business_detail(array $cfg): void
     $bStmt->execute([$id]);
     $business = $bStmt->fetch();
     if (!$business) bb_error(404, 'not_found', 'no such business');
+    $sc = $db->prepare('SELECT COUNT(*) FROM sales WHERE business_id = ?');
+    $sc->execute([$id]);
+    $business['sales_count'] = (int) $sc->fetchColumn();
 
     $users = $db->prepare('SELECT id, name, phone, role, created_at FROM users WHERE business_id = ? ORDER BY created_at');
     $users->execute([$id]);
@@ -266,6 +269,20 @@ function handle_admin_action(array $cfg): void
             $db->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
             bb_admin_audit($db, $adminId, 'delete_user', $id, (string) $phone);
             bb_json(200, ['ok' => true]);
+        }
+
+        case 'clear_sales': {
+            // Removes ALL direct-sales rows for a business (cloud copy). id is
+            // the business id. Upsert-only sync caveat applies (see below).
+            $b = $db->prepare('SELECT name FROM businesses WHERE id = ? LIMIT 1');
+            $b->execute([$id]);
+            $name = $b->fetchColumn();
+            if ($name === false) bb_error(404, 'not_found', 'no such business');
+            $n = $db->prepare('DELETE FROM sales WHERE business_id = ?');
+            $n->execute([$id]);
+            bb_admin_audit($db, $adminId, 'clear_sales', $id,
+                (string) $name . ' (' . $n->rowCount() . ' sales)');
+            bb_json(200, ['ok' => true, 'deleted' => $n->rowCount()]);
         }
 
         case 'delete_customer': {
