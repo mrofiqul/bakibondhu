@@ -6,6 +6,7 @@ import 'package:bakibondhu/data/settings_store.dart';
 class SharedPrefsSettingsStore implements SettingsStore {
   static const _kShopName = 'shop_name';
   static const _kOnboarded = 'onboarding_complete';
+  static const _kTrialDismissedOn = 'trial_reminder_dismissed_on';
 
   final SharedPreferences _prefs;
   SharedPrefsSettingsStore(this._prefs);
@@ -29,4 +30,12 @@ class SharedPrefsSettingsStore implements SettingsStore {
   @override
   Future<void> setOnboardingComplete(bool value) async =>
       _prefs.setBool(_kOnboarded, value);
+
+  @override
+  Future<String?> trialReminderDismissedOn() async =>
+      _prefs.getString(_kTrialDismissedOn);
+
+  @override
+  Future<void> setTrialReminderDismissedOn(String date) async =>
+      _prefs.setString(_kTrialDismissedOn, date);
 }

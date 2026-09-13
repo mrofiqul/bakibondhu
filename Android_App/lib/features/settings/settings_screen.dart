@@ -80,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 8),
           const ListTile(
             leading: Icon(Icons.info_outline),
-            title: Text('${S.appName} · v0.1.6'),
+            title: Text('${S.appName} · v0.1.7'),
             subtitle: Text('Bangla-first · offline-first'),
           ),
         ],

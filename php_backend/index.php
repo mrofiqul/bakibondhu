@@ -136,7 +136,10 @@ function handle_login(array $cfg): void
     }
 
     $db = bb_db($cfg);
-    $stmt = $db->prepare('SELECT id, business_id, role, password_hash FROM users WHERE phone = ? LIMIT 1');
+    $stmt = $db->prepare(
+        'SELECT u.id, u.business_id, u.role, u.password_hash, b.expires_at
+         FROM users u JOIN businesses b ON b.id = u.business_id
+         WHERE u.phone = ? LIMIT 1');
     $stmt->execute([$identifier]);
     $user = $stmt->fetch();
 
@@ -148,6 +151,7 @@ function handle_login(array $cfg): void
     bb_json(200, [
         'role'        => $user['role'],
         'business_id' => $user['business_id'],
+        'expires_at'  => $user['expires_at'],  // subscription end (YYYY-MM-DD) or null=unlimited
         'tokens'      => bb_tokens($cfg, $user['id'], $user['business_id'], $user['role']),
     ]);
 }
@@ -378,6 +382,11 @@ function handle_sync_pull(array $cfg): void
 
     $out['server_time'] = $serverTime;
     $out['has_more']    = (count($customers) >= $limit) || (count($transactions) >= $limit) || (count($sales) >= $limit);
+    // Current subscription end so the app can show a trial-ending reminder; the
+    // admin may have changed it since login. null = unlimited.
+    $exp = $db->prepare('SELECT expires_at FROM businesses WHERE id = ? LIMIT 1');
+    $exp->execute([$businessId]);
+    $out['expires_at'] = $exp->fetchColumn() ?: null;
     bb_json(200, $out);
 }
 

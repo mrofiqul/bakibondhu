@@ -10,6 +10,16 @@ class S {
   static const viewDailySales = 'বিক্রির হিসাব দেখুন';
   static const newCustomer = 'নতুন কাস্টমার';
 
+  // Trial / subscription reminder (Home banner)
+  static const trialDismiss = 'বন্ধ করুন';
+  static String trialEndsInDays(int days) => days <= 0
+      ? 'আপনার মেয়াদ আজই শেষ হচ্ছে। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'
+      : (days == 1
+          ? 'আপনার মেয়াদ আগামীকাল শেষ হচ্ছে। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'
+          : 'আপনার মেয়াদ শেষ হতে $days দিন বাকি। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।');
+  static const trialExpired =
+      'আপনার মেয়াদ শেষ হয়ে গেছে। সিঙ্ক চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।';
+
   // Sales report
   static const salesReportTitle = 'বিক্রির হিসাব';
   static const noSales = 'এখনো কোনো বিক্রি নেই';

@@ -112,6 +112,7 @@ class HttpSyncApi implements SyncApi {
       records: records,
       serverTime: decoded['server_time'] as String,
       hasMore: (decoded['has_more'] as bool?) ?? false,
+      expiresAt: decoded['expires_at'] as String?,
     );
   }
 

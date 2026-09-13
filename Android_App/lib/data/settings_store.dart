@@ -6,12 +6,18 @@ abstract class SettingsStore {
   Future<void> setShopName(String? name);
   Future<bool> onboardingComplete();
   Future<void> setOnboardingComplete(bool value);
+
+  /// The date (YYYY-MM-DD) on which the user last dismissed the trial-ending
+  /// reminder, so it stays hidden for that day and reappears the next.
+  Future<String?> trialReminderDismissedOn();
+  Future<void> setTrialReminderDismissedOn(String date);
 }
 
 /// In-memory settings for tests.
 class InMemorySettingsStore implements SettingsStore {
   String? _shopName;
   bool _onboarded = false;
+  String? _trialDismissedOn;
 
   InMemorySettingsStore({String? shopName, bool onboarded = false})
       : _shopName = shopName,
@@ -29,4 +35,11 @@ class InMemorySettingsStore implements SettingsStore {
 
   @override
   Future<void> setOnboardingComplete(bool value) async => _onboarded = value;
+
+  @override
+  Future<String?> trialReminderDismissedOn() async => _trialDismissedOn;
+
+  @override
+  Future<void> setTrialReminderDismissedOn(String date) async =>
+      _trialDismissedOn = date;
 }

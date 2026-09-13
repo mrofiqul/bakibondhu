@@ -9,11 +9,16 @@ class AuthResult {
   final String? role;
   final String? businessId;
 
+  /// Subscription end date (YYYY-MM-DD) for this shop, or null = unlimited.
+  /// Drives the in-app trial-ending reminder.
+  final String? expiresAt;
+
   const AuthResult({
     required this.accessToken,
     this.expiresIn = 0,
     this.role,
     this.businessId,
+    this.expiresAt,
   });
 }
 
@@ -79,6 +84,8 @@ class AuthApi {
         expiresIn: (tokens['access_expires_in'] as num?)?.toInt() ?? 0,
         role: decoded['role'] as String?,
         businessId: (business?['id'] ?? decoded['business_id']) as String?,
+        // register nests it under business; login returns it at top level.
+        expiresAt: (business?['expires_at'] ?? decoded['expires_at']) as String?,
       );
     }
 
