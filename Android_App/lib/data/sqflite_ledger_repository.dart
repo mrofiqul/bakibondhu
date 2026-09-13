@@ -98,6 +98,14 @@ class SqfliteLedgerRepository implements LedgerRepository {
     return rows.isEmpty ? null : _customerFromRow(rows.first);
   }
 
+  @override
+  Future<Customer?> customerByPhone(String phone) async {
+    if (phone.isEmpty) return null;
+    final rows = await _db.query('customers',
+        where: 'phone = ?', whereArgs: [phone], limit: 1);
+    return rows.isEmpty ? null : _customerFromRow(rows.first);
+  }
+
   // ---- transactions (append-only) ------------------------------------------
 
   @override

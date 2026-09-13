@@ -47,8 +47,12 @@ CREATE TABLE IF NOT EXISTS customers (
     updated_at  DATETIME(6)  NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_cust_idem (business_id, device_id, local_id),
+    -- Customer mobile numbers are unique within a shop. phone is NULLable and
+    -- MySQL allows many NULLs in a unique index, so phone-less customers are ok.
+    UNIQUE KEY uq_cust_phone (business_id, phone),
     KEY idx_cust_business_updated (business_id, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Existing installs: ALTER TABLE customers ADD UNIQUE KEY uq_cust_phone (business_id, phone);
 
 CREATE TABLE IF NOT EXISTS transactions (
     id           CHAR(36)     NOT NULL,   -- server id

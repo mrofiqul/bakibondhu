@@ -55,6 +55,7 @@ class S {
   static const mobileLabelRequired = 'মোবাইল নম্বর';
   static const mobileRequired = 'মোবাইল নম্বর দিন';
   static const invalidMobile = 'সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা, 01…)';
+  static const duplicateCustomerPhone = 'এই মোবাইল নম্বরে একজন কাস্টমার আগে থেকেই আছে';
   static const addressLabelOptional = 'ঠিকানা (ঐচ্ছিক)';
   static const amountLabel = 'পরিমাণ';
   static const amountRequired = 'সঠিক পরিমাণ লিখুন';
