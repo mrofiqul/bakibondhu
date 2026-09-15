@@ -5,11 +5,25 @@ import 'package:bakibondhu/core/bd_geo.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/features/auth/login_screen.dart';
 
-/// Widget tests for the cascading zila → thana dropdowns on the register form.
-/// The build() of LoginScreen is pure (AppScope is only touched on submit), so
-/// a bare MaterialApp is enough. Run with `flutter test`.
+/// Widget tests for the cascading bivag → zila → thana dropdowns on the register
+/// form. The build() of LoginScreen is pure (AppScope is only touched on submit),
+/// so a bare MaterialApp is enough. Run with `flutter test`.
 void main() {
   group('bd_geo data', () {
+    test('8 bivags cover all 64 zilas exactly once', () {
+      expect(kBdBivags.length, 8);
+      final seen = <String>[];
+      for (final b in kBdBivags) {
+        final zilas = kBdZilasByBivag[b];
+        expect(zilas, isNotNull, reason: 'no zila list for $b');
+        expect(zilas!, isNotEmpty, reason: '$b has no zilas');
+        seen.addAll(zilas);
+      }
+      expect(seen.length, 64);
+      expect(seen.toSet().length, 64, reason: 'a zila is listed under two bivags');
+      expect(seen.toSet(), kBdZilas.toSet());
+    });
+
     test('all 64 zilas each have at least one thana, with no duplicates', () {
       expect(kBdZilas.length, 64);
       for (final z in kBdZilas) {
@@ -37,8 +51,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Finder zilaField() => find.byType(DropdownButtonFormField<String>).at(0);
-  Finder thanaField() => find.byType(DropdownButtonFormField<String>).at(1);
+  Finder bivagField() => find.byType(DropdownButtonFormField<String>).at(0);
+  Finder zilaField() => find.byType(DropdownButtonFormField<String>).at(1);
+  Finder thanaField() => find.byType(DropdownButtonFormField<String>).at(2);
 
   Future<void> openAndPick(WidgetTester tester, Finder field, String option) async {
     await tester.tap(field);
@@ -47,55 +62,69 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('zila is shown before thana', (tester) async {
+  testWidgets('bivag, then zila, then thana — in that vertical order', (tester) async {
     await pumpRegister(tester);
-    // Both dropdowns exist, and the zila field sits above the thana field.
-    expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
-    expect(tester.getTopLeft(zilaField()).dy,
-        lessThan(tester.getTopLeft(thanaField()).dy));
+    expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(3));
+    expect(tester.getTopLeft(bivagField()).dy, lessThan(tester.getTopLeft(zilaField()).dy));
+    expect(tester.getTopLeft(zilaField()).dy, lessThan(tester.getTopLeft(thanaField()).dy));
+  });
+
+  testWidgets('zila is disabled until a bivag is chosen', (tester) async {
+    await pumpRegister(tester);
+    expect(find.text(S.selectBivagFirst), findsOneWidget); // helper under zila
+
+    await openAndPick(tester, bivagField(), kBdBivags.first);
+    expect(find.text(S.selectBivagFirst), findsNothing);
   });
 
   testWidgets('thana is disabled until a zila is chosen', (tester) async {
     await pumpRegister(tester);
-    // The "pick a district first" helper is shown up front.
+    await openAndPick(tester, bivagField(), kBdBivags.first);
+    // Bivag chosen but zila not yet → thana still shows its "pick a zila" helper.
     expect(find.text(S.selectZilaFirst), findsOneWidget);
 
-    // Pick the first district; the helper disappears (thana now enabled).
-    await openAndPick(tester, zilaField(), kBdZilas.first);
+    await openAndPick(tester, zilaField(), kBdZilasByBivag[kBdBivags.first]!.first);
     expect(find.text(S.selectZilaFirst), findsNothing);
   });
 
-  testWidgets('thana options come from the selected zila', (tester) async {
+  testWidgets('zila options come from the bivag; thana from the zila', (tester) async {
     await pumpRegister(tester);
 
-    final zila1 = kBdZilas.first;
-    final thana1 = kBdThanasByZila[zila1]!.first;
-    await openAndPick(tester, zilaField(), zila1);
-    await openAndPick(tester, thanaField(), thana1);
-    // The chosen thana is now displayed on the (closed) thana field.
-    expect(find.text(thana1), findsOneWidget);
+    final bivag = kBdBivags.first;
+    final zila = kBdZilasByBivag[bivag]!.first;
+    final thana = kBdThanasByZila[zila]!.first;
+
+    await openAndPick(tester, bivagField(), bivag);
+    await openAndPick(tester, zilaField(), zila);
+    expect(find.text(zila), findsOneWidget); // shown on the closed zila field
+    await openAndPick(tester, thanaField(), thana);
+    expect(find.text(thana), findsOneWidget);
   });
 
-  testWidgets('changing zila resets the thana selection', (tester) async {
+  testWidgets('changing bivag resets zila and thana', (tester) async {
     await pumpRegister(tester);
 
-    final zila1 = kBdZilas.first;
+    final bivag1 = kBdBivags.first;
+    final zila1 = kBdZilasByBivag[bivag1]!.first;
     final thana1 = kBdThanasByZila[zila1]!.first;
+    await openAndPick(tester, bivagField(), bivag1);
     await openAndPick(tester, zilaField(), zila1);
     await openAndPick(tester, thanaField(), thana1);
+    expect(find.text(zila1), findsOneWidget);
     expect(find.text(thana1), findsOneWidget);
 
-    // Switch to a different zila whose thana list does NOT contain thana1.
-    final zila2 = kBdZilas.firstWhere(
-        (z) => z != zila1 && !kBdThanasByZila[z]!.contains(thana1));
-    await openAndPick(tester, zilaField(), zila2);
+    // Switch to a bivag whose zila list does NOT contain zila1.
+    final bivag2 = kBdBivags.firstWhere(
+        (b) => b != bivag1 && !kBdZilasByBivag[b]!.contains(zila1));
+    await openAndPick(tester, bivagField(), bivag2);
 
-    // Old thana is cleared and no longer displayed.
+    // Old zila and thana are cleared.
+    expect(find.text(zila1), findsNothing);
     expect(find.text(thana1), findsNothing);
-    // The thana dropdown now offers the new zila's options.
-    final thana2 = kBdThanasByZila[zila2]!.first;
-    await tester.tap(thanaField());
+    // The zila dropdown now offers the new bivag's districts.
+    final zila2 = kBdZilasByBivag[bivag2]!.first;
+    await tester.tap(zilaField());
     await tester.pumpAndSettle();
-    expect(find.text(thana2), findsWidgets);
+    expect(find.text(zila2), findsWidgets);
   });
 }
