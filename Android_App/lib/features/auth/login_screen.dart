@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
+import 'package:bakibondhu/core/bd_geo.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/validators.dart';
 import 'package:bakibondhu/data/auth_api.dart';
@@ -23,8 +24,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _phone = TextEditingController();
   final _business = TextEditingController();
   final _password = TextEditingController();
-  final _thana = TextEditingController();
-  final _zila = TextEditingController();
+  // Location is chosen from cascading dropdowns: pick a zila (district) first,
+  // then a thana/upazila within it. Both are optional.
+  String? _zila;
+  String? _thana;
 
   late bool _registering = widget.startInRegister;
   bool _busy = false;
@@ -36,8 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _phone.dispose();
     _business.dispose();
     _password.dispose();
-    _thana.dispose();
-    _zila.dispose();
     super.dispose();
   }
 
@@ -58,8 +59,8 @@ class _LoginScreenState extends State<LoginScreen> {
               phone: phone,
               password: _password.text,
               businessName: _business.text.trim(),
-              thana: _thana.text.trim().isEmpty ? null : _thana.text.trim(),
-              zila: _zila.text.trim().isEmpty ? null : _zila.text.trim(),
+              thana: _thana,
+              zila: _zila,
             )
           : await api.login(
               identifier: phone,
@@ -121,14 +122,36 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: (v) => (v == null || v.length < 6) ? S.passwordShort : null,
               ),
               if (_registering) ...[
-                TextFormField(
-                  controller: _thana,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: S.thanaLabel),
-                ),
-                TextFormField(
-                  controller: _zila,
+                // Zila (district) first; thana/upazila is derived from it.
+                DropdownButtonFormField<String>(
+                  initialValue: _zila,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: S.zilaLabel),
+                  hint: const Text(S.selectZilaHint),
+                  items: [
+                    for (final z in kBdZilas)
+                      DropdownMenuItem(value: z, child: Text(z)),
+                  ],
+                  onChanged: (v) => setState(() {
+                    _zila = v;
+                    _thana = null; // reset thana when the district changes
+                  }),
+                ),
+                DropdownButtonFormField<String>(
+                  initialValue: _thana,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: S.thanaLabel,
+                    // Nudge the user to pick a district first.
+                    helperText: _zila == null ? S.selectZilaFirst : null,
+                  ),
+                  hint: const Text(S.selectThanaHint),
+                  items: [
+                    for (final t in (kBdThanasByZila[_zila] ?? const <String>[]))
+                      DropdownMenuItem(value: t, child: Text(t)),
+                  ],
+                  // Disabled until a zila is chosen.
+                  onChanged: _zila == null ? null : (v) => setState(() => _thana = v),
                 ),
               ],
               const SizedBox(height: 16),
