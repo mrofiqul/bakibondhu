@@ -71,10 +71,23 @@ class InMemoryLedgerRepository implements LedgerRepository {
 
   @override
   Future<void> deleteCustomer(String id) async {
-    if (_txns.any((t) => t.customerId == id)) {
-      throw const CustomerHasTransactions();
+    // Removable once settled (no outstanding due); deleting also drops history.
+    if (customerBalance(_of(id)).isPositive) {
+      throw const CustomerHasOutstandingDue();
     }
+    _txns.removeWhere((t) => t.customerId == id);
+    _activities.removeWhere((a) => a.customerId == id);
+    _promises.removeWhere((p) => p.customerId == id);
     _customers.remove(id);
+  }
+
+  @override
+  Future<void> clearAllData() async {
+    _customers.clear();
+    _txns.clear();
+    _sales.clear();
+    _activities.clear();
+    _promises.clear();
   }
 
   @override

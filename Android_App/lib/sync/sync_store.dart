@@ -14,6 +14,11 @@ abstract class SyncStore {
   Future<String?> cursor();
   Future<void> setCursor(String value);
 
+  /// Clear the pull cursor so the next pull re-fetches the account's data from
+  /// scratch. Paired with [LedgerRepository.clearAllData] when a different shop
+  /// signs in on the same device.
+  Future<void> reset();
+
   /// Counts by sync state, for the Sync Center.
   Future<SyncStatusCounts> status();
 
@@ -67,6 +72,15 @@ class InMemorySyncStore implements SyncStore {
 
   @override
   Future<void> setCursor(String value) async => _cursor = value;
+
+  @override
+  Future<void> reset() async {
+    _cursor = null;
+    _pending.clear();
+    statuses.clear();
+    serverIds.clear();
+    applied.clear();
+  }
 
   @override
   Future<SyncStatusCounts> status() async {

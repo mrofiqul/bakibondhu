@@ -131,13 +131,35 @@ class SqfliteLedgerRepository implements LedgerRepository {
 
   @override
   Future<void> deleteCustomer(String id) async {
-    final n = Sqflite.firstIntValue(await _db.rawQuery(
-        'SELECT COUNT(*) FROM transactions WHERE customer_id = ?', [id]));
-    if ((n ?? 0) > 0) throw const CustomerHasTransactions();
-    // Soft-delete: tombstone stays until the delete is pushed, then the sync
-    // store hard-deletes the row (see markSynced). Reads filter deleted = 0.
+    // Removable once settled (no outstanding due); a customer who still owes
+    // money must be settled first.
+    if ((await balanceOf(id)).isPositive) {
+      throw const CustomerHasOutstandingDue();
+    }
+    // Deleting a settled customer also drops their ledger history. Remove the
+    // dependent rows locally now (the server delete removes them too), then
+    // soft-delete the customer: the tombstone stays until the delete is pushed,
+    // after which the sync store hard-deletes the row (see markSynced). Reads
+    // filter deleted = 0.
+    await _db.delete('transactions', where: 'customer_id = ?', whereArgs: [id]);
+    await _db.delete('collection_activities', where: 'customer_id = ?', whereArgs: [id]);
+    await _db.delete('promise_to_pay', where: 'customer_id = ?', whereArgs: [id]);
     await _db.update('customers', {'deleted': 1, 'sync_status': 'PENDING'},
         where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<void> clearAllData() async {
+    // Order respects the FK children → parent (customers).
+    for (final table in const [
+      'transactions',
+      'collection_activities',
+      'promise_to_pay',
+      'sales',
+      'customers',
+    ]) {
+      await _db.delete(table);
+    }
   }
 
   // ---- transactions (append-only) ------------------------------------------

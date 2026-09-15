@@ -13,10 +13,10 @@ class CustomerBalance {
 /// How to bucket the sales report.
 enum SalesPeriod { day, month, quarter, year }
 
-/// Thrown by [LedgerRepository.deleteCustomer] when the customer still has
-/// ledger transactions (the ledger is append-only, so those must go first).
-class CustomerHasTransactions implements Exception {
-  const CustomerHasTransactions();
+/// Thrown by [LedgerRepository.deleteCustomer] when the customer still has an
+/// outstanding due (a positive balance). Settle the balance first, then delete.
+class CustomerHasOutstandingDue implements Exception {
+  const CustomerHasOutstandingDue();
 }
 
 /// The local start-of-bucket for a date under [period] (used to group sales).
@@ -60,8 +60,9 @@ abstract class LedgerRepository {
   Future<Customer> updateCustomer(
       {required String id, required String name, String? phone, String? address});
 
-  /// Delete a customer. Throws [CustomerHasTransactions] if it still has any
-  /// ledger entries (delete those first — the ledger is append-only).
+  /// Delete a customer. Allowed once the balance is settled (no outstanding
+  /// due); this also removes the customer's ledger history. Throws
+  /// [CustomerHasOutstandingDue] if the customer still owes money.
   Future<void> deleteCustomer(String id);
 
   /// Record a credit (baki given). Append-only.
@@ -137,4 +138,10 @@ abstract class LedgerRepository {
 
   /// A customer's promises, newest first.
   Future<List<PromiseToPay>> promisesOf(String customerId);
+
+  /// Wipe every locally-stored record (customers, transactions, sales,
+  /// collection activities, promises). Used when a different shop signs in on
+  /// the same device, so one shop never sees another's data. The cloud copy is
+  /// untouched — a fresh pull re-populates the newly signed-in shop's data.
+  Future<void> clearAllData();
 }

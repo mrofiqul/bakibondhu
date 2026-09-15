@@ -222,6 +222,11 @@ class SqfliteSyncStore implements SyncStore {
     );
   }
 
+  @override
+  Future<void> reset() async {
+    await _db.delete('sync_meta', where: 'key = ?', whereArgs: [_cursorKey]);
+  }
+
   // ---- status / conflicts ---------------------------------------------------
 
   @override

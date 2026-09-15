@@ -87,14 +87,42 @@ void main() {
     expect(await repo.customerByPhone('01712345678'), isNull); // number freed for reuse
   });
 
-  test('deleteCustomer is blocked while the customer has transactions', () async {
+  test('deleteCustomer is blocked while the customer still owes money', () async {
     final repo = newRepo();
     final k = await repo.addCustomer(name: 'করিম');
     await repo.recordCredit(customerId: k.id, amount: Money.taka(5000));
 
     expect(() => repo.deleteCustomer(k.id),
-        throwsA(isA<CustomerHasTransactions>()));
+        throwsA(isA<CustomerHasOutstandingDue>()));
     expect(await repo.customer(k.id), isNotNull); // still there
+  });
+
+  test('deleteCustomer is allowed once the balance is settled (পরিশোধিত)',
+      () async {
+    final repo = newRepo();
+    final k = await repo.addCustomer(name: 'করিম');
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(5000));
+    await repo.recordPayment(customerId: k.id, amount: Money.taka(5000)); // net zero
+
+    await repo.deleteCustomer(k.id); // no throw — settled customers are removable
+
+    expect(await repo.customer(k.id), isNull);
+    expect(await repo.transactionsOf(k.id), isEmpty); // history removed too
+  });
+
+  test('clearAllData wipes every local record (shop isolation on login)',
+      () async {
+    final repo = newRepo();
+    final k = await repo.addCustomer(name: 'রহিম');
+    await repo.recordCredit(customerId: k.id, amount: Money.taka(1000));
+    await repo.addSale(amount: Money.taka(500));
+
+    await repo.clearAllData();
+
+    expect(await repo.customers(), isEmpty);
+    expect(await repo.transactionsOf(k.id), isEmpty);
+    expect(await repo.sales(), isEmpty);
+    expect(await repo.totalReceivable(), Money.zero);
   });
 
   test('empty repository', () async {

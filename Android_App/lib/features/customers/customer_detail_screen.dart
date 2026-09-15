@@ -169,9 +169,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   Future<void> _deleteCustomer(_DetailData data) async {
-    // The ledger is append-only — a customer with history can't be deleted.
-    if (data.history.isNotEmpty) {
-      _snack(S.cannotDeleteHasTxns);
+    // A customer who still owes money can't be deleted — settle up first. Once
+    // the balance is settled (পরিশোধিত), deleting removes them and their history.
+    if (data.balance.isPositive) {
+      _snack(S.cannotDeleteHasDue);
       return;
     }
     final repo = AppScope.of(context);
@@ -195,8 +196,8 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     if (ok != true) return;
     try {
       await repo.deleteCustomer(data.customer.id);
-    } on CustomerHasTransactions {
-      if (mounted) _snack(S.cannotDeleteHasTxns);
+    } on CustomerHasOutstandingDue {
+      if (mounted) _snack(S.cannotDeleteHasDue);
       return;
     }
     if (mounted) Navigator.pop(context); // back to Home (which refreshes)
