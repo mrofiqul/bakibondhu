@@ -11,6 +11,13 @@ abstract class SettingsStore {
   /// reminder, so it stays hidden for that day and reappears the next.
   Future<String?> trialReminderDismissedOn();
   Future<void> setTrialReminderDismissedOn(String date);
+
+  /// The business (shop) id whose data currently lives in the local database.
+  /// Used to isolate shops on a shared device: if a different shop logs in, the
+  /// previous shop's local data is cleared before syncing the new one. Null
+  /// means the local data isn't yet tied to any account (fresh/offline).
+  Future<String?> dataOwnerBusinessId();
+  Future<void> setDataOwnerBusinessId(String? businessId);
 }
 
 /// In-memory settings for tests.
@@ -42,4 +49,13 @@ class InMemorySettingsStore implements SettingsStore {
   @override
   Future<void> setTrialReminderDismissedOn(String date) async =>
       _trialDismissedOn = date;
+
+  String? _dataOwner;
+
+  @override
+  Future<String?> dataOwnerBusinessId() async => _dataOwner;
+
+  @override
+  Future<void> setDataOwnerBusinessId(String? businessId) async =>
+      _dataOwner = businessId;
 }

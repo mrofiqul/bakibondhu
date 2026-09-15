@@ -91,10 +91,10 @@ class S {
   static const copied = 'কপি হয়েছে';
   static const nothingToExport = 'এক্সপোর্ট করার মতো লেনদেন নেই';
   static const customerUpdated = 'কাস্টমারের তথ্য আপডেট হয়েছে';
-  static const cannotDeleteHasTxns =
-      'এই কাস্টমারের লেনদেন আছে — আগে হিসাব নিষ্পত্তি করুন, তারপর মুছুন।';
+  static const cannotDeleteHasDue =
+      'এই কাস্টমারের বাকি আছে — আগে বাকি পরিশোধ করুন, তারপর মুছুন।';
   static String deleteCustomerConfirm(String name) =>
-      '“$name”-কে মুছে ফেলবেন? এটি আর ফেরানো যাবে না।';
+      '“$name”-কে ও তার সব লেনদেনের হিসাব মুছে ফেলবেন? এটি আর ফেরানো যাবে না।';
 
   // Add transaction (Screen 3)
   static const dateLabel = 'তারিখ';

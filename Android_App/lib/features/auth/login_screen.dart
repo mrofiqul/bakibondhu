@@ -53,6 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final api = AppScope.authApiOf(context);
     final session = AppScope.sessionOf(context);
     final settings = AppScope.settingsOf(context);
+    final repo = AppScope.of(context);
+    final syncStore = AppScope.syncStoreOf(context);
+    final syncEngine = AppScope.syncEngineOf(context);
     try {
       final phone = normalizeBdMobile(_phone.text.trim());
       final result = _registering
@@ -68,13 +71,36 @@ class _LoginScreenState extends State<LoginScreen> {
               identifier: phone,
               password: _password.text,
             );
+
+      // Shop isolation on a shared device: if the shop signing in differs from
+      // the one whose data is on this device, wipe that data and re-pull the new
+      // shop's from the cloud — so an owner only ever sees their own customers.
+      // On register we keep any offline-added data (it becomes this new shop's,
+      // and is pushed up); only a genuine account switch clears it.
+      final prevOwner = await settings.dataOwnerBusinessId();
+      final newBiz = result.businessId;
+      final switchingAccount = _registering
+          ? (prevOwner != null && prevOwner != newBiz)
+          : (prevOwner != newBiz);
+      if (switchingAccount) {
+        await repo.clearAllData();
+        await syncStore.reset();
+      }
       await session.save(result);
+      await settings.setDataOwnerBusinessId(newBiz);
       // Mark setup complete so the landing screen doesn't reappear; on register,
       // reuse the business name as the shop name for reminder signatures.
       if (_registering && _business.text.trim().isNotEmpty) {
         await settings.setShopName(_business.text.trim());
       }
       await settings.setOnboardingComplete(true);
+      // Pull this shop's data now so the home list reflects the account right
+      // away (especially after a wipe). Best-effort — the Sync Center can retry.
+      if (syncEngine != null) {
+        try {
+          await syncEngine.syncNow();
+        } catch (_) {/* offline or failed: user can Sync Now later */}
+      }
       if (mounted) Navigator.pop(context, true);
     } on AuthException catch (e) {
       setState(() => _error = '${S.authFailed} (${e.status})');

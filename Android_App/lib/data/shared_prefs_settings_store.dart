@@ -7,6 +7,7 @@ class SharedPrefsSettingsStore implements SettingsStore {
   static const _kShopName = 'shop_name';
   static const _kOnboarded = 'onboarding_complete';
   static const _kTrialDismissedOn = 'trial_reminder_dismissed_on';
+  static const _kDataOwner = 'data_owner_business_id';
 
   final SharedPreferences _prefs;
   SharedPrefsSettingsStore(this._prefs);
@@ -38,4 +39,17 @@ class SharedPrefsSettingsStore implements SettingsStore {
   @override
   Future<void> setTrialReminderDismissedOn(String date) async =>
       _prefs.setString(_kTrialDismissedOn, date);
+
+  @override
+  Future<String?> dataOwnerBusinessId() async =>
+      _prefs.getString(_kDataOwner);
+
+  @override
+  Future<void> setDataOwnerBusinessId(String? businessId) async {
+    if (businessId == null || businessId.isEmpty) {
+      await _prefs.remove(_kDataOwner);
+    } else {
+      await _prefs.setString(_kDataOwner, businessId);
+    }
+  }
 }
