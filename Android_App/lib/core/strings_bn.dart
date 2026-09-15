@@ -157,10 +157,13 @@ class S {
   static const businessRequired = 'দোকান/ব্যবসার নাম দিন';
   static const yourNameLabel = 'আপনার নাম';
   static const identifierLabel = 'মোবাইল নম্বর';
+  static const bivagLabel = 'বিভাগ (ঐচ্ছিক)';
   static const thanaLabel = 'থানা/উপজেলা (ঐচ্ছিক)';
   static const zilaLabel = 'জেলা (ঐচ্ছিক)';
+  static const selectBivagHint = 'বিভাগ নির্বাচন করুন';
   static const selectZilaHint = 'জেলা নির্বাচন করুন';
   static const selectThanaHint = 'থানা/উপজেলা নির্বাচন করুন';
+  static const selectBivagFirst = 'আগে বিভাগ নির্বাচন করুন';
   static const selectZilaFirst = 'আগে জেলা নির্বাচন করুন';
   static const passwordShort = 'কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন';
   static const toggleToLogin = 'অ্যাকাউন্ট আছে? লগ ইন করুন';

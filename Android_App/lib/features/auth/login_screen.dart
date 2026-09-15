@@ -24,8 +24,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _phone = TextEditingController();
   final _business = TextEditingController();
   final _password = TextEditingController();
-  // Location is chosen from cascading dropdowns: pick a zila (district) first,
-  // then a thana/upazila within it. Both are optional.
+  // Location is chosen from cascading dropdowns: pick a bivag (division) first,
+  // then a zila (district) within it, then a thana/upazila within that. All
+  // optional.
+  String? _bivag;
   String? _zila;
   String? _thana;
 
@@ -122,20 +124,41 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: (v) => (v == null || v.length < 6) ? S.passwordShort : null,
               ),
               if (_registering) ...[
-                // Zila (district) first; thana/upazila is derived from it.
+                // Bivag (division) first; zila is derived from it, thana from zila.
+                DropdownButtonFormField<String>(
+                  initialValue: _bivag,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: S.bivagLabel),
+                  hint: const Text(S.selectBivagHint),
+                  items: [
+                    for (final b in kBdBivags)
+                      DropdownMenuItem(value: b, child: Text(b)),
+                  ],
+                  onChanged: (v) => setState(() {
+                    _bivag = v;
+                    _zila = null; // reset district + thana when the division changes
+                    _thana = null;
+                  }),
+                ),
                 DropdownButtonFormField<String>(
                   initialValue: _zila,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: S.zilaLabel),
+                  decoration: InputDecoration(
+                    labelText: S.zilaLabel,
+                    helperText: _bivag == null ? S.selectBivagFirst : null,
+                  ),
                   hint: const Text(S.selectZilaHint),
                   items: [
-                    for (final z in kBdZilas)
+                    for (final z in (kBdZilasByBivag[_bivag] ?? const <String>[]))
                       DropdownMenuItem(value: z, child: Text(z)),
                   ],
-                  onChanged: (v) => setState(() {
-                    _zila = v;
-                    _thana = null; // reset thana when the district changes
-                  }),
+                  // Disabled until a bivag is chosen.
+                  onChanged: _bivag == null
+                      ? null
+                      : (v) => setState(() {
+                            _zila = v;
+                            _thana = null; // reset thana when the district changes
+                          }),
                 ),
                 DropdownButtonFormField<String>(
                   initialValue: _thana,

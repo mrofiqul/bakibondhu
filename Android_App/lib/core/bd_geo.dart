@@ -1,10 +1,35 @@
-// GENERATED — do not edit by hand. Bangladesh districts (zila) and their
-// thanas/upazilas, in Bangla. Rural upazilas from the bd_geo_code open
-// dataset (github.com/nuhil/bangladesh-geocode); metropolitan-city police
-// thanas (Dhaka, Chattogram, Khulna, Rajshahi, Sylhet, Barishal) merged in
-// from the Metropolitan Police lists. Regenerate via scratchpad/gen_bd_geo.py.
+// GENERATED — do not edit by hand. Bangladesh administrative geography in
+// Bangla: bivag (division) -> zila (district) -> thana/upazila. Divisions,
+// districts and rural upazilas from the bd_geo_code open dataset
+// (github.com/nuhil/bangladesh-geocode); metropolitan-city police thanas
+// (Dhaka, Chattogram, Khulna, Rajshahi, Sylhet, Barishal) merged in from the
+// Metropolitan Police lists. Regenerate via scratchpad/gen_bd_geo.py.
 
-/// All 64 districts (zila) in Bangla, sorted.
+/// All 8 divisions (bivag) in Bangla, sorted.
+const List<String> kBdBivags = <String>[
+  'খুলনা',
+  'চট্টগ্রাম',
+  'ঢাকা',
+  'বরিশাল',
+  'ময়মনসিংহ',
+  'রংপুর',
+  'রাজশাহী',
+  'সিলেট',
+];
+
+/// Bivag (Bangla) -> its zila/district list (Bangla), sorted.
+const Map<String, List<String>> kBdZilasByBivag = <String, List<String>>{
+  'খুলনা': <String>['কুষ্টিয়া', 'খুলনা', 'চুয়াডাঙ্গা', 'ঝিনাইদহ', 'নড়াইল', 'বাগেরহাট', 'মাগুরা', 'মেহেরপুর', 'যশোর', 'সাতক্ষীরা'],
+  'চট্টগ্রাম': <String>['কক্সবাজার', 'কুমিল্লা', 'খাগড়াছড়ি', 'চট্টগ্রাম', 'চাঁদপুর', 'নোয়াখালী', 'ফেনী', 'বান্দরবান', 'ব্রাহ্মণবাড়িয়া', 'রাঙ্গামাটি', 'লক্ষ্মীপুর'],
+  'ঢাকা': <String>['কিশোরগঞ্জ', 'গাজীপুর', 'গোপালগঞ্জ', 'টাঙ্গাইল', 'ঢাকা', 'নরসিংদী', 'নারায়ণগঞ্জ', 'ফরিদপুর', 'মাদারীপুর', 'মানিকগঞ্জ', 'মুন্সিগঞ্জ', 'রাজবাড়ী', 'শরীয়তপুর'],
+  'বরিশাল': <String>['ঝালকাঠি', 'পটুয়াখালী', 'পিরোজপুর', 'বরগুনা', 'বরিশাল', 'ভোলা'],
+  'ময়মনসিংহ': <String>['জামালপুর', 'নেত্রকোণা', 'ময়মনসিংহ', 'শেরপুর'],
+  'রংপুর': <String>['কুড়িগ্রাম', 'গাইবান্ধা', 'ঠাকুরগাঁও', 'দিনাজপুর', 'নীলফামারী', 'পঞ্চগড়', 'রংপুর', 'লালমনিরহাট'],
+  'রাজশাহী': <String>['চাঁপাইনবাবগঞ্জ', 'জয়পুরহাট', 'নওগাঁ', 'নাটোর', 'পাবনা', 'বগুড়া', 'রাজশাহী', 'সিরাজগঞ্জ'],
+  'সিলেট': <String>['মৌলভীবাজার', 'সিলেট', 'সুনামগঞ্জ', 'হবিগঞ্জ'],
+};
+
+/// All 64 districts (zila) in Bangla, sorted (flat list).
 const List<String> kBdZilas = <String>[
   'কক্সবাজার',
   'কিশোরগঞ্জ',
