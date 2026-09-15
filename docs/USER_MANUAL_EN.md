@@ -41,8 +41,11 @@ A welcome screen appears with three choices:
 | **Continue offline** (অ্যাকাউন্ট ছাড়া চালিয়ে যান) | Use it on this phone only, without an account. |
 
 **Creating an account:** enter your **name, shop name, mobile number, and a
-password (at least 6 characters)** — all four are required. **Thana** (থানা) and
-**Zila** (জেলা) are optional. The mobile must be a **Bangladesh 11-digit number**
+password (at least 6 characters)** — all four are required. You can also record your
+location: pick your **Division** (বিভাগ), then your **District** (জেলা), then your
+**Thana/Upazila** (থানা/উপজেলা) from the drop-down lists — each list fills in from the
+one above it (choose a division to unlock its districts, a district to unlock its
+thanas). Location is optional. The mobile must be a **Bangladesh 11-digit number**
 (e.g. `01712345678`).
 
 > 💡 Everything works without an account too. Signing in lets you **sync to the
@@ -57,8 +60,13 @@ When you're logged in, the title bar shows **বাকিবন্ধু / your 
 
 Below it: **Total credit — your receivable** (মোট বাকি — আপনার পাওনা), the total
 owed to you across all customers. Then a **📈 Today's sales** (আজকের বিক্রি) card
-showing how much you've **recorded in sales today**. Then the customer list —
-whoever owes the most is on top.
+showing how much you've **recorded in sales today**. Then the customer list — by
+default whoever owes the most is on top.
+
+- Use the **search box** (নাম বা মোবাইল দিয়ে খুঁজুন) to find a customer by name or
+  mobile number.
+- Use the **sort** menu (top-right) to order the list by **most owed**, **name**, or
+  **recently added**.
 
 - Bottom-right: **➕ New Customer** (নতুন কাস্টমার).
 - Top-right: **🔄 Sync** and **⚙️ Settings**.
@@ -99,6 +107,19 @@ Tap a customer to open their account (current balance and full history).
 
 The **Current due** figure updates instantly; when fully paid it shows **Settled**
 (পরিশোধিত).
+
+### Editing, exporting, or removing a customer
+
+On a customer's account screen, tap the **⋮ menu** (top-right):
+
+- **Edit** (কাস্টমার এডিট করুন) — change the name, mobile number, or address.
+- **Export history** (লেনদেন এক্সপোর্ট করুন) — build a text statement of all their
+  transactions with the running balance, then **copy** it or **share** it (SMS,
+  WhatsApp, etc.).
+- **Delete** (কাস্টমার মুছুন) — remove the customer. You can delete a customer only
+  once their balance is **settled** (পরিশোধিত); a customer who still owes money must
+  clear the due first. Deleting also removes their transaction history and cannot be
+  undone.
 
 ---
 
@@ -152,6 +173,12 @@ your phone or move to a new one, your records come back.
   you're back online.
 - On a **new phone**, log in with the same account and tap **Sync Now** — your old
   records download.
+
+> ⚠️ **One shop per phone.** Each account's records are kept separate. If a
+> **different shop** signs in on this phone, the previous shop's records are cleared
+> from the phone and the new shop's are downloaded from the cloud — so every owner
+> only ever sees their own customers. Always **sync first** before letting someone
+> sign in with a different account on your phone.
 
 > The app works fully without syncing; sync is only for backing up your ledger and
 > moving between phones.
