@@ -19,7 +19,8 @@ BakiBondhu/
 │   ├── lib/
 │   │   ├── main.dart       Composition root (wires storage, auth, sync)
 │   │   ├── app.dart        Root widget + entry routing (landing vs home)
-│   │   ├── core/           Theme, Bangla strings, formatting, AppScope, dialogs
+│   │   ├── core/           Theme, Bangla strings, formatting, validators,
+│   │   │                   BD geography (bd_geo: bivag/zila/thana), AppScope, dialogs
 │   │   ├── domain/         Pure business rules (money, balance, allocation, aging)
 │   │   ├── data/           Repositories (sqflite), auth API, session, InfinityFree client
 │   │   ├── sync/           Sync engine, types, HTTP sync API, local sync store
@@ -111,11 +112,15 @@ flutter analyze       # must be clean
 
 ### Build a release APK
 ```bash
-flutter build apk --release --split-per-abi \
+flutter build apk --release --target-platform android-arm64,android-arm \
   --dart-define=SYNC_BASE_URL=https://bakibondhu.infinityfreeapp.com
-# outputs: build/app/outputs/flutter-apk/app-{arm64-v8a,armeabi-v7a,x86_64}-release.apk
+# outputs: build/app/outputs/flutter-apk/app-release.apk (~34 MB)
 ```
-`app-arm64-v8a-release.apk` is the one for modern phones.
+`--target-platform android-arm64,android-arm` drops the emulator-only **x86_64**
+native libraries, so the single APK is ~34 MB (not ~54 MB) and still runs on every
+real phone (arm64-v8a + armeabi-v7a). This release APK will **not** run on an
+x86_64 emulator — for emulator testing use a plain `flutter build apk --debug` (all
+ABIs) or `flutter run`.
 
 ---
 
@@ -276,39 +281,50 @@ sync wire contract, so switching is just a `SYNC_BASE_URL` change.
   `…/releases/latest/download/BakiBondhu.apk`.
 
 ### Publish a new app version
-1. Bump `version:` in `Android_App/pubspec.yaml` (e.g. `0.1.1+2`) and the About
-   label in `features/settings/settings_screen.dart`.
+1. Bump `version:` in `Android_App/pubspec.yaml` (e.g. `0.1.16+17`), the About
+   label in `features/settings/settings_screen.dart`, and the download caption
+   (version + ~size) in `php_backend/index.html`.
 2. Build and release (Flutter may not be on PATH — the dev box uses
    `/c/src/flutter/bin/flutter`):
    ```bash
-   flutter build apk --release \
+   flutter build apk --release --target-platform android-arm64,android-arm \
      --dart-define=SYNC_BASE_URL=https://bakibondhu.infinityfreeapp.com
-   gh release create vX.Y.Z build/app/outputs/flutter-apk/app-release.apk \
+   cp build/app/outputs/flutter-apk/app-release.apk \
+     D:/BakiBondhu/Installer/BakiBondhu.apk
+   gh release create vX.Y.Z Installer/BakiBondhu.apk \
      --repo mrofiqul/bakibondhu-app --title "BakiBondhu vX.Y.Z" --notes "…"
    ```
-   This is a **universal** APK (~50 MB, installs on any device). For a leaner
-   ~18 MB download, add `--split-per-abi` and ship `app-arm64-v8a-release.apk`
-   instead. The GitHub asset must be named `BakiBondhu.apk`.
-3. The landing button and `…/releases/latest/download/BakiBondhu.apk` auto-serve
-   the newest release — no page change needed.
+   This ARM-focused APK is ~34 MB and installs on any real phone. The GitHub asset
+   **must** be named `BakiBondhu.apk`.
+3. Deploy the updated `php_backend/index.html` via FTP so the caption shows the new
+   version/size. The download button and `…/releases/latest/download/BakiBondhu.apk`
+   already auto-serve the newest release, so the link itself needs no change.
 
 ---
 
 ## 8. Data model (essentials)
 
-**Local (SQLite):** `customers(id, name, phone, …)`,
+**Local (SQLite):** `customers(id, name, phone, address, deleted, sync_status, …)`
+— `deleted` is a soft-delete tombstone kept until the delete syncs —
 `transactions(id, customer_id, type, amount_paisa, due_date, created_at, …)`
-append-only, plus `collection_activities`, `promise_to_pay`, `sync_meta`.
-Balances/aging are computed in Dart from the ledger.
+append-only, plus `sales`, `collection_activities`, `promise_to_pay`, `sync_meta`.
+Balances/aging are computed in Dart from the ledger. The local DB is
+**single-tenant** (one shop per device, no `business_id` locally); when a *different*
+shop signs in, `LedgerRepository.clearAllData()` + `SyncStore.reset()` wipe it and it
+re-pulls from the cloud (tracked by `SettingsStore.dataOwnerBusinessId`). A customer
+can be deleted only once their balance is **settled** (no outstanding due), which also
+removes their ledger rows locally and on the server.
 
 **Backend (MySQL):**
-- `businesses(id, name, timezone, currency, status, created_at)` — `status` is
-  `active|suspended` (admin panel).
+- `businesses(id, name, timezone, currency, status, thana, zila, expires_at, created_at)`
+  — `status` is `active|suspended`; `expires_at DATE NULL` is the subscription end
+  (NULL = unlimited), enforced at login/sync (`403 account_expired`). New signups get
+  a 30-day trial.
 - `users(id, business_id, name, phone UNIQUE, password_hash, role, created_at)`.
-- `customers(id, business_id, device_id, local_id, name, phone, created_at, updated_at)`
+- `customers(id, business_id, device_id, local_id, name, phone, address, created_at, updated_at)`
   and `transactions(…, customer_id, type, amount_paisa, due_date, note, updated_at)`
-  — the synced ledger; idempotent on `(business_id, device_id, local_id)`, and
-  `updated_at DATETIME(6)` is the pull cursor.
+  — the synced ledger; `phone` is UNIQUE per business; idempotent on
+  `(business_id, device_id, local_id)`, and `updated_at DATETIME(6)` is the pull cursor.
 - `admins(id, username UNIQUE, password_hash, created_at, last_login)` and
   `admin_audit(id, admin_id, action, target, detail, at)`.
 
@@ -339,5 +355,8 @@ Passwords are bcrypt; user tokens are 30-day HS256 JWTs (`sub`, `business_id`,
   wire contract is the same.
 - Add **refresh tokens** (user tokens are 30-day, admin 8-hour, both non-refreshing)
   and rotate secrets for any real deployment.
-- Sync **updates & deletes / conflict resolution** (v1 is append-only, create-only).
+- Customer **edits and deletes now sync** (server upsert + `op='delete'` tombstone;
+  delete allowed once settled). Still to do: transaction-level edits, richer
+  **conflict-resolution** UI, and pushing deletes down to *other* devices via server
+  tombstones (today a delete reaches other devices only on reinstall).
 - Web app (Flutter web) — the same domain rules apply.
