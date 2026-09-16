@@ -106,8 +106,9 @@ function handle_register(array $cfg): void
     $userId     = bb_uuid();
     $now        = gmdate('Y-m-d H:i:s');
     $hash       = password_hash($password, PASSWORD_BCRYPT);
-    // New shops get a 30-day free trial; the admin can extend or clear it later.
-    $trialEnds  = gmdate('Y-m-d', time() + BB_TRIAL_DAYS * 86400);
+    // New shops get a 30-day free trial (reckoned in Bangladesh time so the end
+    // date matches the merchant's calendar); the admin can extend or clear it later.
+    $trialEnds  = bb_date_in_days_bd(BB_TRIAL_DAYS);
 
     $db->beginTransaction();
     $db->prepare('INSERT INTO businesses (id, name, timezone, currency, thana, zila, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
