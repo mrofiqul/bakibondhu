@@ -89,6 +89,35 @@ CREATE TABLE IF NOT EXISTS sales (
     KEY idx_sales_business_updated (business_id, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Collection activities & promise-to-pay (used by the web app; the Android app
+-- still keeps these local-only). Scoped to a business + customer.
+CREATE TABLE IF NOT EXISTS collection_activities (
+    id             CHAR(36)     NOT NULL,
+    business_id    CHAR(36)     NOT NULL,
+    customer_id    CHAR(36)     NOT NULL,
+    method         VARCHAR(16)  NOT NULL,   -- phone|visit|message|other
+    status         VARCHAR(32)  NOT NULL,   -- contacted|promise_to_pay|paid|…
+    note           TEXT         NULL,
+    next_follow_up DATE         NULL,
+    contacted_at   DATETIME(6)  NOT NULL,
+    created_at     DATETIME     NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_ca_bc (business_id, customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS promise_to_pay (
+    id             CHAR(36)     NOT NULL,
+    business_id    CHAR(36)     NOT NULL,
+    customer_id    CHAR(36)     NOT NULL,
+    amount_paisa   BIGINT       NOT NULL,
+    promise_date   DATE         NOT NULL,
+    follow_up_date DATE         NULL,
+    status         VARCHAR(16)  NOT NULL DEFAULT 'open',  -- open|fulfilled|partial|broken
+    created_at     DATETIME     NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_pp_bc (business_id, customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ---- Admin panel (super-admin over the whole platform) --------------------
 
 -- Platform admins (separate from per-business users). Password bcrypt-hashed.

@@ -47,6 +47,17 @@ try {
         handle_sync_pull($cfg);
     }
 
+    // --- Collections & promises (used by the web app; server-backed) ---
+    if ($path === '/api/v1/collections' && $method === 'GET') {
+        handle_collections_list($cfg);
+    }
+    if ($path === '/api/v1/collections' && $method === 'POST') {
+        handle_collection_add($cfg);
+    }
+    if ($path === '/api/v1/promises' && $method === 'POST') {
+        handle_promise_add($cfg);
+    }
+
     // --- Admin panel (super-admin; see admin_lib.php) ---
     if ($path === '/api/v1/admin/login' && $method === 'POST') {
         handle_admin_login($cfg);
@@ -246,7 +257,15 @@ function bb_upsert_customer(PDO $db, string $businessId, string $deviceId, strin
     $existing = $db->prepare(
         'SELECT id FROM customers WHERE business_id = ? AND device_id = ? AND local_id = ? LIMIT 1');
     $existing->execute([$businessId, $deviceId, $localId]);
-    $serverId = ($row = $existing->fetch()) ? (string) $row['id'] : $localId;
+    $row = $existing->fetch();
+    if (!$row) {
+        // Fall back to the server id: a customer created on another device (e.g.
+        // the phone) can be edited from the web without a primary-key clash.
+        $byId = $db->prepare('SELECT id FROM customers WHERE business_id = ? AND id = ? LIMIT 1');
+        $byId->execute([$businessId, $localId]);
+        $row = $byId->fetch();
+    }
+    $serverId = $row ? (string) $row['id'] : $localId;
 
     // Customer mobile numbers are unique within a shop. The client enforces this
     // too; this is the server backstop (e.g. two devices adding the same number).
@@ -398,6 +417,7 @@ function handle_sync_pull(array $cfg): void
             'name'       => $r['name'],
             'phone'      => $r['phone'],
             'address'    => $r['address'],
+            'created_at' => isset($r['created_at']) ? (string) $r['created_at'] : null,
             'updated_at' => bb_iso_utc($r['updated_at']),
         ];
     }
@@ -453,4 +473,110 @@ function bb_pull_rows(PDO $db, string $table, string $businessId, ?string $since
 function bb_iso_utc(string $mysqlDateTime): string
 {
     return str_replace(' ', 'T', $mysqlDateTime) . 'Z';
+}
+
+// ---- Collections & promises -------------------------------------------------
+// Server-backed for the web app. (The Android app keeps these local-only for now;
+// unifying them into sync is a later step.) All scoped to the caller's business.
+
+function bb_customer_in_business(PDO $db, string $businessId, string $customerId): bool
+{
+    $st = $db->prepare('SELECT 1 FROM customers WHERE business_id = ? AND id = ? LIMIT 1');
+    $st->execute([$businessId, $customerId]);
+    return (bool) $st->fetchColumn();
+}
+
+// GET /api/v1/collections?customer_id=… — a customer's activities + promises.
+function handle_collections_list(array $cfg): void
+{
+    $claims     = bb_auth($cfg);
+    $businessId = (string) $claims['business_id'];
+    $customerId = trim((string) ($_GET['customer_id'] ?? ''));
+    if ($customerId === '') bb_error(400, 'validation_failed', 'customer_id is required');
+    $db = bb_db($cfg);
+    bb_require_active_business($db, $businessId);
+
+    $a = $db->prepare(
+        'SELECT id, method, status, note, next_follow_up, contacted_at
+         FROM collection_activities WHERE business_id = ? AND customer_id = ?
+         ORDER BY contacted_at DESC');
+    $a->execute([$businessId, $customerId]);
+    $p = $db->prepare(
+        'SELECT id, amount_paisa, promise_date, follow_up_date, status
+         FROM promise_to_pay WHERE business_id = ? AND customer_id = ?
+         ORDER BY created_at DESC');
+    $p->execute([$businessId, $customerId]);
+
+    $activities = [];
+    foreach ($a as $r) {
+        $activities[] = [
+            'id' => $r['id'], 'method' => $r['method'], 'status' => $r['status'],
+            'note' => $r['note'], 'next_follow_up' => $r['next_follow_up'],
+            'contacted_at' => $r['contacted_at'],
+        ];
+    }
+    $promises = [];
+    foreach ($p as $r) {
+        $promises[] = [
+            'id' => $r['id'], 'amount_paisa' => (int) $r['amount_paisa'],
+            'promise_date' => $r['promise_date'], 'follow_up_date' => $r['follow_up_date'],
+            'status' => $r['status'],
+        ];
+    }
+    bb_json(200, ['activities' => $activities, 'promises' => $promises]);
+}
+
+// POST /api/v1/collections — record a collection activity.
+function handle_collection_add(array $cfg): void
+{
+    $claims     = bb_auth($cfg);
+    $businessId = (string) $claims['business_id'];
+    $in = bb_body();
+    $customerId = trim((string) ($in['customer_id'] ?? ''));
+    $method     = trim((string) ($in['method'] ?? ''));
+    $status     = trim((string) ($in['status'] ?? ''));
+    if ($customerId === '' || $method === '' || $status === '') {
+        bb_error(400, 'validation_failed', 'customer_id, method and status are required');
+    }
+    $db = bb_db($cfg);
+    bb_require_active_business($db, $businessId);
+    if (!bb_customer_in_business($db, $businessId, $customerId)) {
+        bb_error(404, 'not_found', 'no such customer');
+    }
+    $id   = bb_uuid();
+    $note = isset($in['note']) && $in['note'] !== '' ? (string) $in['note'] : null;
+    $next = isset($in['next_follow_up']) && $in['next_follow_up'] !== '' ? (string) $in['next_follow_up'] : null;
+    $db->prepare(
+        'INSERT INTO collection_activities
+           (id, business_id, customer_id, method, status, note, next_follow_up, contacted_at, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6), ?)')
+       ->execute([$id, $businessId, $customerId, $method, $status, $note, $next, gmdate('Y-m-d H:i:s')]);
+    bb_json(201, ['ok' => true, 'id' => $id]);
+}
+
+// POST /api/v1/promises — record a promise to pay.
+function handle_promise_add(array $cfg): void
+{
+    $claims     = bb_auth($cfg);
+    $businessId = (string) $claims['business_id'];
+    $in = bb_body();
+    $customerId  = trim((string) ($in['customer_id'] ?? ''));
+    $amount      = (int) ($in['amount_paisa'] ?? 0);
+    $promiseDate = trim((string) ($in['promise_date'] ?? ''));
+    if ($customerId === '' || $amount <= 0 || $promiseDate === '') {
+        bb_error(400, 'validation_failed', 'customer_id, amount_paisa and promise_date are required');
+    }
+    $db = bb_db($cfg);
+    bb_require_active_business($db, $businessId);
+    if (!bb_customer_in_business($db, $businessId, $customerId)) {
+        bb_error(404, 'not_found', 'no such customer');
+    }
+    $id     = bb_uuid();
+    $follow = isset($in['follow_up_date']) && $in['follow_up_date'] !== '' ? (string) $in['follow_up_date'] : null;
+    $db->prepare(
+        'INSERT INTO promise_to_pay
+           (id, business_id, customer_id, amount_paisa, promise_date, follow_up_date, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+       ->execute([$id, $businessId, $customerId, $amount, $promiseDate, $follow, 'open', gmdate('Y-m-d H:i:s')]);
+    bb_json(201, ['ok' => true, 'id' => $id]);
 }
