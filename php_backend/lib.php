@@ -6,6 +6,24 @@
 // or clear a shop's expiry from the panel afterwards.
 const BB_TRIAL_DAYS = 30;
 
+// The app runs on Bangladesh time. Trials and subscription expiry are reckoned
+// against the local (Asia/Dhaka) calendar date, so a merchant's end date matches
+// their own calendar rather than UTC.
+const BB_APP_TZ = 'Asia/Dhaka';
+
+/** Today's date (Y-m-d) in the app's timezone (Bangladesh). */
+function bb_today_bd(): string
+{
+    return (new DateTimeImmutable('now', new DateTimeZone(BB_APP_TZ)))->format('Y-m-d');
+}
+
+/** The date (Y-m-d) $days from now in the app's timezone (Bangladesh). */
+function bb_date_in_days_bd(int $days): string
+{
+    return (new DateTimeImmutable('now', new DateTimeZone(BB_APP_TZ)))
+        ->modify("+{$days} days")->format('Y-m-d');
+}
+
 function bb_db(array $cfg): PDO
 {
     $dsn = "mysql:host={$cfg['db_host']};dbname={$cfg['db_name']};charset=utf8mb4";
@@ -140,9 +158,9 @@ function bb_require_active_business(PDO $db, string $businessId): void
         bb_error(403, 'account_suspended', 'this account has been suspended; contact support');
     }
     // expires_at is a date; the shop stays active through the whole expiry day
-    // and is blocked from the following day. NULL = unlimited.
+    // (in Bangladesh time) and is blocked from the following day. NULL = unlimited.
     $expiresAt = $row['expires_at'] ?? null;
-    if ($expiresAt !== null && $expiresAt !== '' && $expiresAt < gmdate('Y-m-d')) {
+    if ($expiresAt !== null && $expiresAt !== '' && $expiresAt < bb_today_bd()) {
         bb_error(403, 'account_expired',
             'আপনার সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে। অ্যাডমিনের সাথে যোগাযোগ করুন। (subscription expired; contact admin)');
     }

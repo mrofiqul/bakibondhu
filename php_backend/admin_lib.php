@@ -45,9 +45,11 @@ function bb_admin_audit(PDO $db, string $adminId, string $action, ?string $targe
 function bb_expired_count(PDO $db): int
 {
     try {
-        return (int) $db->query(
-            "SELECT COUNT(*) FROM businesses WHERE expires_at IS NOT NULL AND expires_at < UTC_DATE()"
-        )->fetchColumn();
+        // Bangladesh-time "today" (matches the login/sync expiry check in lib.php).
+        $st = $db->prepare(
+            "SELECT COUNT(*) FROM businesses WHERE expires_at IS NOT NULL AND expires_at < ?");
+        $st->execute([bb_today_bd()]);
+        return (int) $st->fetchColumn();
     } catch (Throwable $e) {
         return 0;
     }
