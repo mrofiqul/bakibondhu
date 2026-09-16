@@ -254,7 +254,7 @@ function handle_admin_action(array $cfg): void
             $name = $exists->fetchColumn();
             if ($name === false) bb_error(404, 'not_found', 'no such business');
             $db->beginTransaction();
-            foreach (['transactions','customers','sales','users'] as $t) {
+            foreach (['transactions','customers','sales','users','collection_activities','promise_to_pay'] as $t) {
                 $db->prepare("DELETE FROM $t WHERE business_id = ?")->execute([$id]);
             }
             $db->prepare('DELETE FROM businesses WHERE id = ?')->execute([$id]);
