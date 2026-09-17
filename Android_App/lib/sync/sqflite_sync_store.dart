@@ -17,6 +17,8 @@ class SqfliteSyncStore implements SyncStore {
         EntityKind.customer => 'customers',
         EntityKind.transaction => 'transactions',
         EntityKind.sale => 'sales',
+        EntityKind.collection => 'collection_activities',
+        EntityKind.promise => 'promise_to_pay',
       };
 
   // ---- outbox ---------------------------------------------------------------
@@ -83,6 +85,42 @@ class SqfliteSyncStore implements SyncStore {
         },
       ));
     }
+
+    // Collections + promises reference a customer, so push them after customers.
+    final colRows = await _db.query('collection_activities',
+        columns: ['id', 'customer_id', 'method', 'status', 'note', 'next_follow_up', 'contacted_at'],
+        where: "sync_status <> 'SYNCED'", orderBy: 'created_at');
+    for (final r in colRows) {
+      changes.add(LocalChange(
+        kind: EntityKind.collection,
+        localId: r['id'] as String,
+        data: {
+          'customer_local_id': r['customer_id'],
+          'method': r['method'],
+          'status': r['status'],
+          'note': r['note'],
+          'next_follow_up': r['next_follow_up'],
+          'contacted_at': r['contacted_at'],
+        },
+      ));
+    }
+
+    final promRows = await _db.query('promise_to_pay',
+        columns: ['id', 'customer_id', 'promised_amount_paisa', 'promise_date', 'follow_up_date', 'status'],
+        where: "sync_status <> 'SYNCED'", orderBy: 'created_at');
+    for (final r in promRows) {
+      changes.add(LocalChange(
+        kind: EntityKind.promise,
+        localId: r['id'] as String,
+        data: {
+          'customer_local_id': r['customer_id'],
+          'amount_paisa': r['promised_amount_paisa'],
+          'promise_date': r['promise_date'],
+          'follow_up_date': r['follow_up_date'],
+          'status': r['status'],
+        },
+      ));
+    }
     return changes;
   }
 
@@ -130,9 +168,57 @@ class SqfliteSyncStore implements SyncStore {
             await _upsertTransaction(txn, r);
           case EntityKind.sale:
             await _upsertSale(txn, r);
+          case EntityKind.collection:
+            await _upsertCollection(txn, r);
+          case EntityKind.promise:
+            await _upsertPromise(txn, r);
         }
       }
     });
+  }
+
+  Future<void> _upsertCollection(DatabaseExecutor txn, ServerRecord r) async {
+    final values = {
+      'customer_id': r.data['customer_id'],
+      'method': r.data['method'],
+      'status': r.data['status'],
+      'note': r.data['note'],
+      'next_follow_up': r.data['next_follow_up'],
+      'contacted_at': (r.data['contacted_at'] as String?) ??
+          r.updatedAt.toUtc().toIso8601String(),
+      'sync_status': 'SYNCED',
+    };
+    final updated = await txn.update('collection_activities', values,
+        where: 'server_id = ?', whereArgs: [r.id]);
+    if (updated == 0) {
+      await txn.insert('collection_activities', {
+        'id': r.id,
+        'server_id': r.id,
+        'created_at': r.updatedAt.toUtc().toIso8601String(),
+        ...values,
+      });
+    }
+  }
+
+  Future<void> _upsertPromise(DatabaseExecutor txn, ServerRecord r) async {
+    final values = {
+      'customer_id': r.data['customer_id'],
+      'promised_amount_paisa': _amountPaisa(r.data),
+      'promise_date': r.data['promise_date'],
+      'follow_up_date': r.data['follow_up_date'],
+      'status': (r.data['status'] as String?) ?? 'open',
+      'sync_status': 'SYNCED',
+    };
+    final updated = await txn.update('promise_to_pay', values,
+        where: 'server_id = ?', whereArgs: [r.id]);
+    if (updated == 0) {
+      await txn.insert('promise_to_pay', {
+        'id': r.id,
+        'server_id': r.id,
+        'created_at': r.updatedAt.toUtc().toIso8601String(),
+        ...values,
+      });
+    }
   }
 
   Future<void> _upsertSale(DatabaseExecutor txn, ServerRecord r) async {
@@ -238,6 +324,10 @@ class SqfliteSyncStore implements SyncStore {
         SELECT sync_status FROM transactions
         UNION ALL
         SELECT sync_status FROM sales
+        UNION ALL
+        SELECT sync_status FROM collection_activities
+        UNION ALL
+        SELECT sync_status FROM promise_to_pay
       ) GROUP BY sync_status
     ''');
     var pending = 0, failed = 0, conflict = 0, synced = 0;

@@ -28,11 +28,15 @@ class HttpSyncApi implements SyncApi {
         EntityKind.customer => 'customer',
         EntityKind.transaction => 'transaction',
         EntityKind.sale => 'sale',
+        EntityKind.collection => 'collection',
+        EntityKind.promise => 'promise',
       };
 
   static EntityKind _kindFrom(String s) => switch (s) {
         'customer' => EntityKind.customer,
         'sale' => EntityKind.sale,
+        'collection' => EntityKind.collection,
+        'promise' => EntityKind.promise,
         _ => EntityKind.transaction,
       };
 
@@ -40,6 +44,8 @@ class HttpSyncApi implements SyncApi {
         EntityKind.customer => 'customers',
         EntityKind.transaction => 'transactions',
         EntityKind.sale => 'sales',
+        EntityKind.collection => 'collections',
+        EntityKind.promise => 'promises',
       };
 
   static SyncState _stateFrom(String s) => switch (s.toUpperCase()) {
