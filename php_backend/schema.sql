@@ -89,11 +89,14 @@ CREATE TABLE IF NOT EXISTS sales (
     KEY idx_sales_business_updated (business_id, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Collection activities & promise-to-pay (used by the web app; the Android app
--- still keeps these local-only). Scoped to a business + customer.
+-- Collection activities & promise-to-pay. Shared by the web app AND the Android
+-- app via offline sync (device_id/local_id idempotency + updated_at pull cursor,
+-- like customers/transactions/sales). Scoped to a business + customer.
 CREATE TABLE IF NOT EXISTS collection_activities (
-    id             CHAR(36)     NOT NULL,
+    id             CHAR(36)     NOT NULL,   -- server id (== client local_id)
     business_id    CHAR(36)     NOT NULL,
+    device_id      VARCHAR(64)  NOT NULL,   -- 'web' for REST-created rows
+    local_id       CHAR(36)     NOT NULL,
     customer_id    CHAR(36)     NOT NULL,
     method         VARCHAR(16)  NOT NULL,   -- phone|visit|message|other
     status         VARCHAR(32)  NOT NULL,   -- contacted|promise_to_pay|paid|…
@@ -101,21 +104,29 @@ CREATE TABLE IF NOT EXISTS collection_activities (
     next_follow_up DATE         NULL,
     contacted_at   DATETIME(6)  NOT NULL,
     created_at     DATETIME     NOT NULL,
+    updated_at     DATETIME(6)  NOT NULL,   -- pull cursor
     PRIMARY KEY (id),
-    KEY idx_ca_bc (business_id, customer_id)
+    UNIQUE KEY uq_collection_activities_idem (business_id, device_id, local_id),
+    KEY idx_ca_bc (business_id, customer_id),
+    KEY idx_collection_activities_bu (business_id, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS promise_to_pay (
-    id             CHAR(36)     NOT NULL,
+    id             CHAR(36)     NOT NULL,   -- server id (== client local_id)
     business_id    CHAR(36)     NOT NULL,
+    device_id      VARCHAR(64)  NOT NULL,   -- 'web' for REST-created rows
+    local_id       CHAR(36)     NOT NULL,
     customer_id    CHAR(36)     NOT NULL,
     amount_paisa   BIGINT       NOT NULL,
     promise_date   DATE         NOT NULL,
     follow_up_date DATE         NULL,
     status         VARCHAR(16)  NOT NULL DEFAULT 'open',  -- open|fulfilled|partial|broken
     created_at     DATETIME     NOT NULL,
+    updated_at     DATETIME(6)  NOT NULL,   -- pull cursor
     PRIMARY KEY (id),
-    KEY idx_pp_bc (business_id, customer_id)
+    UNIQUE KEY uq_promise_to_pay_idem (business_id, device_id, local_id),
+    KEY idx_pp_bc (business_id, customer_id),
+    KEY idx_promise_to_pay_bu (business_id, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---- Admin panel (super-admin over the whole platform) --------------------

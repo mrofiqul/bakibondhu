@@ -195,7 +195,7 @@ function handle_sync_push(array $cfg): void
         $localId = (string) ($ch['local_id'] ?? '');
         $op      = (string) ($ch['op'] ?? 'upsert');
         $data    = is_array($ch['data'] ?? null) ? $ch['data'] : [];
-        if ($localId === '' || !in_array($entity, ['customer', 'transaction', 'sale'], true)) {
+        if ($localId === '' || !in_array($entity, ['customer', 'transaction', 'sale', 'collection', 'promise'], true)) {
             $results[] = bb_push_result($entity, $localId, 'FAILED', null, 'bad change');
             continue;
         }
@@ -212,6 +212,15 @@ function handle_sync_push(array $cfg): void
             } elseif ($entity === 'sale') {
                 $serverId = bb_upsert_sale($db, $businessId, $deviceId, $localId, $data);
                 $results[] = bb_push_result($entity, $localId, 'SYNCED', $serverId, null);
+            } elseif ($entity === 'collection' || $entity === 'promise') {
+                $serverId = $entity === 'collection'
+                    ? bb_upsert_collection_sync($db, $businessId, $deviceId, $localId, $data)
+                    : bb_upsert_promise_sync($db, $businessId, $deviceId, $localId, $data);
+                if ($serverId === null) {
+                    $results[] = bb_push_result($entity, $localId, 'FAILED', null, 'unknown customer');
+                } else {
+                    $results[] = bb_push_result($entity, $localId, 'SYNCED', $serverId, null);
+                }
             } else {
                 $serverId = bb_upsert_transaction($db, $businessId, $deviceId, $localId, $data);
                 if ($serverId === null) {
@@ -389,8 +398,68 @@ function bb_upsert_sale(PDO $db, string $businessId, string $deviceId, string $l
     return $serverId;
 }
 
+// Normalize an ISO-8601 timestamp to a MySQL DATETIME string. Null/'' -> null.
+function bb_mysql_dt($iso): ?string
+{
+    $s = trim((string) ($iso ?? ''));
+    if ($s === '') return null;
+    return substr(rtrim(str_replace('T', ' ', $s), 'Z'), 0, 26);
+}
+// Keep just the Y-m-d date part (for DATE columns). Null/'' -> null.
+function bb_date_only($v): ?string
+{
+    $s = trim((string) ($v ?? ''));
+    return $s === '' ? null : substr($s, 0, 10);
+}
+
+// Insert a collection activity from sync push (idempotent on business+device+
+// local). Resolves the client's customer id; null if that customer isn't synced.
+function bb_upsert_collection_sync(PDO $db, string $businessId, string $deviceId, string $localId, array $data): ?string
+{
+    $existing = $db->prepare('SELECT id FROM collection_activities WHERE business_id = ? AND device_id = ? AND local_id = ? LIMIT 1');
+    $existing->execute([$businessId, $deviceId, $localId]);
+    if ($row = $existing->fetch()) return (string) $row['id'];
+
+    $customerId = bb_resolve_customer_id($db, $businessId, $deviceId, (string) ($data['customer_local_id'] ?? ''));
+    if ($customerId === null) return null;
+
+    $db->prepare(
+        'INSERT INTO collection_activities
+           (id, business_id, device_id, local_id, customer_id, method, status, note, next_follow_up, contacted_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
+       ->execute([$localId, $businessId, $deviceId, $localId, $customerId,
+           (string) ($data['method'] ?? 'other'), (string) ($data['status'] ?? 'contacted'),
+           ($data['note'] ?? '') !== '' ? (string) $data['note'] : null,
+           bb_date_only($data['next_follow_up'] ?? null),
+           bb_mysql_dt($data['contacted_at'] ?? null) ?? gmdate('Y-m-d H:i:s'),
+           gmdate('Y-m-d H:i:s')]);
+    return $localId;
+}
+
+// Insert a promise-to-pay from sync push (idempotent). Null if customer unknown.
+function bb_upsert_promise_sync(PDO $db, string $businessId, string $deviceId, string $localId, array $data): ?string
+{
+    $existing = $db->prepare('SELECT id FROM promise_to_pay WHERE business_id = ? AND device_id = ? AND local_id = ? LIMIT 1');
+    $existing->execute([$businessId, $deviceId, $localId]);
+    if ($row = $existing->fetch()) return (string) $row['id'];
+
+    $customerId = bb_resolve_customer_id($db, $businessId, $deviceId, (string) ($data['customer_local_id'] ?? ''));
+    if ($customerId === null) return null;
+
+    $db->prepare(
+        'INSERT INTO promise_to_pay
+           (id, business_id, device_id, local_id, customer_id, amount_paisa, promise_date, follow_up_date, status, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
+       ->execute([$localId, $businessId, $deviceId, $localId, $customerId,
+           (int) ($data['amount_paisa'] ?? 0), bb_date_only($data['promise_date'] ?? null),
+           bb_date_only($data['follow_up_date'] ?? null), (string) ($data['status'] ?? 'open'),
+           gmdate('Y-m-d H:i:s')]);
+    return $localId;
+}
+
 // GET /api/v1/sync/pull?since=<cursor>&device_id=<id> — everything changed after
-// the cursor. Reply: { customers:[…], transactions:[…], sales:[…], server_time, has_more }.
+// the cursor. Reply: { customers:[…], transactions:[…], sales:[…], collections:[…],
+// promises:[…], server_time, has_more }.
 function handle_sync_pull(array $cfg): void
 {
     $claims     = bb_auth($cfg);
@@ -409,8 +478,10 @@ function handle_sync_pull(array $cfg): void
     $customers    = bb_pull_rows($db, 'customers', $businessId, $since, $serverTime, $limit);
     $transactions = bb_pull_rows($db, 'transactions', $businessId, $since, $serverTime, $limit);
     $sales        = bb_pull_rows($db, 'sales', $businessId, $since, $serverTime, $limit);
+    $collections  = bb_pull_rows($db, 'collection_activities', $businessId, $since, $serverTime, $limit);
+    $promises     = bb_pull_rows($db, 'promise_to_pay', $businessId, $since, $serverTime, $limit);
 
-    $out = ['customers' => [], 'transactions' => [], 'sales' => []];
+    $out = ['customers' => [], 'transactions' => [], 'sales' => [], 'collections' => [], 'promises' => []];
     foreach ($customers as $r) {
         $out['customers'][] = [
             'id'         => $r['id'],
@@ -441,9 +512,33 @@ function handle_sync_pull(array $cfg): void
             'updated_at'   => bb_iso_utc($r['updated_at']),
         ];
     }
+    foreach ($collections as $r) {
+        $out['collections'][] = [
+            'id'             => $r['id'],
+            'customer_id'    => $r['customer_id'],
+            'method'         => $r['method'],
+            'status'         => $r['status'],
+            'note'           => $r['note'],
+            'next_follow_up' => $r['next_follow_up'],
+            'contacted_at'   => $r['contacted_at'],
+            'updated_at'     => bb_iso_utc($r['updated_at']),
+        ];
+    }
+    foreach ($promises as $r) {
+        $out['promises'][] = [
+            'id'             => $r['id'],
+            'customer_id'    => $r['customer_id'],
+            'amount_paisa'   => (int) $r['amount_paisa'],
+            'promise_date'   => $r['promise_date'],
+            'follow_up_date' => $r['follow_up_date'],
+            'status'         => $r['status'],
+            'updated_at'     => bb_iso_utc($r['updated_at']),
+        ];
+    }
 
     $out['server_time'] = $serverTime;
-    $out['has_more']    = (count($customers) >= $limit) || (count($transactions) >= $limit) || (count($sales) >= $limit);
+    $out['has_more']    = (count($customers) >= $limit) || (count($transactions) >= $limit) || (count($sales) >= $limit)
+        || (count($collections) >= $limit) || (count($promises) >= $limit);
     // Current subscription end so the app can show a trial-ending reminder; the
     // admin may have changed it since login. null = unlimited.
     $exp = $db->prepare('SELECT expires_at FROM businesses WHERE id = ? LIMIT 1');
@@ -548,9 +643,9 @@ function handle_collection_add(array $cfg): void
     $next = isset($in['next_follow_up']) && $in['next_follow_up'] !== '' ? (string) $in['next_follow_up'] : null;
     $db->prepare(
         'INSERT INTO collection_activities
-           (id, business_id, customer_id, method, status, note, next_follow_up, contacted_at, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6), ?)')
-       ->execute([$id, $businessId, $customerId, $method, $status, $note, $next, gmdate('Y-m-d H:i:s')]);
+           (id, business_id, device_id, local_id, customer_id, method, status, note, next_follow_up, contacted_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6), ?, UTC_TIMESTAMP(6))')
+       ->execute([$id, $businessId, 'web', $id, $customerId, $method, $status, $note, $next, gmdate('Y-m-d H:i:s')]);
     bb_json(201, ['ok' => true, 'id' => $id]);
 }
 
@@ -575,8 +670,8 @@ function handle_promise_add(array $cfg): void
     $follow = isset($in['follow_up_date']) && $in['follow_up_date'] !== '' ? (string) $in['follow_up_date'] : null;
     $db->prepare(
         'INSERT INTO promise_to_pay
-           (id, business_id, customer_id, amount_paisa, promise_date, follow_up_date, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-       ->execute([$id, $businessId, $customerId, $amount, $promiseDate, $follow, 'open', gmdate('Y-m-d H:i:s')]);
+           (id, business_id, device_id, local_id, customer_id, amount_paisa, promise_date, follow_up_date, status, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(6))')
+       ->execute([$id, $businessId, 'web', $id, $customerId, $amount, $promiseDate, $follow, 'open', gmdate('Y-m-d H:i:s')]);
     bb_json(201, ['ok' => true, 'id' => $id]);
 }

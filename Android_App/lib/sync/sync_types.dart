@@ -3,8 +3,9 @@
 /// Lifecycle of a locally-created record (spec §17).
 enum SyncState { local, pending, synced, failed, conflict }
 
-/// Which entity a change refers to.
-enum EntityKind { customer, transaction, sale }
+/// Which entity a change refers to. Order matters for pull-apply: parents
+/// (customer) before children (transaction, collection, promise) so FKs hold.
+enum EntityKind { customer, transaction, sale, collection, promise }
 
 /// A locally-created change to push to the server. Carries a stable [localId]
 /// so the server can dedupe on (business_id, device_id, local_id).
