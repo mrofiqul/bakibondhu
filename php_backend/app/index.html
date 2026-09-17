@@ -332,7 +332,8 @@ function renderSettings(){
   m.appendChild(el('<div class="sechead">দোকানের নাম</div>'));
   m.appendChild(el('<div style="display:flex;gap:8px"><input class="in" id="set_shop" value="'+esc(S.shopName)+'" placeholder="দোকানের নাম"><button class="go" id="set_save" style="width:auto;margin:0;padding:12px 18px">সেভ</button></div>'));
   m.appendChild(el('<div class="s" style="color:var(--muted);font-size:13px;margin-top:6px">রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।</div>'));
-  m.appendChild(el('<div class="setrow" style="margin-top:20px"><span>সংস্করণ</span><span style="color:var(--muted)">'+VERSION+'</span></div>'));
+  m.appendChild(el('<a class="setrow" href="/app/guide/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;margin-top:20px"><span>📘 সাহায্য / Help</span><span style="color:var(--muted)">↗</span></a>'));
+  m.appendChild(el('<div class="setrow"><span>সংস্করণ</span><span style="color:var(--muted)">'+VERSION+'</span></div>'));
   var out=el('<button class="go danger" id="set_out" style="margin-top:24px">লগ আউট</button>'); m.appendChild(out);
   app.appendChild(m);
   document.getElementById("set_save").onclick=function(){ S.shopName=(document.getElementById("set_shop").value||"").trim(); localStorage.setItem(LS.shop,S.shopName); toast("সেভ হয়েছে"); };
