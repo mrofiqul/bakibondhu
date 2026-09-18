@@ -77,6 +77,9 @@ try {
     if ($path === '/api/v1/admin/audit' && $method === 'GET') {
         handle_admin_audit_log($cfg);
     }
+    if ($path === '/api/v1/admin/export/customers.xlsx' && $method === 'GET') {
+        handle_admin_export_customers($cfg);
+    }
 
     bb_error(404, 'not_found', 'no such endpoint');
 } catch (Throwable $e) {

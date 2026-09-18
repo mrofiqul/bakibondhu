@@ -8,6 +8,7 @@ import 'package:bakibondhu/core/theme.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/customers/customer_detail_screen.dart';
+import 'package:bakibondhu/features/customers/customer_report_export.dart';
 import 'package:bakibondhu/features/reports/sales_report_screen.dart';
 import 'package:bakibondhu/features/settings/settings_screen.dart';
 import 'package:bakibondhu/features/sync/sync_center_screen.dart';
@@ -155,6 +156,21 @@ class _HomeScreenState extends State<HomeScreen> {
     await _refresh();
   }
 
+  Future<void> _exportExcel() async {
+    final rows = _data?.customers ?? const <CustomerBalance>[];
+    final messenger = ScaffoldMessenger.of(context);
+    if (rows.isEmpty) {
+      messenger.showSnackBar(const SnackBar(content: Text(S.exportNoCustomers)));
+      return;
+    }
+    messenger.showSnackBar(const SnackBar(content: Text(S.exportPreparing)));
+    try {
+      await exportCustomerReport(rows: rows, shopName: _shopName ?? '');
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text(S.exportFailed)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,6 +192,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(s.label),
                 ),
             ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.grid_on),
+            tooltip: S.exportExcelTooltip,
+            onPressed: _exportExcel,
           ),
           IconButton(
             icon: const Icon(Icons.sync),

@@ -20,8 +20,12 @@ dependencies:
   # Launch the OS SMS composer / WhatsApp for merchant-triggered reminders (§9, §34).
   url_launcher: ^6.3.0
 
-  # OS share sheet — export a customer's transaction statement to any app.
+  # OS share sheet — export a customer's transaction statement, or the whole
+  # customer report (.xlsx), to any app.
   share_plus: ^9.0.0
+
+  # App temp directory to stage the generated .xlsx before sharing it.
+  path_provider: ^2.1.0
 
   # Small persisted settings (shop name, onboarding flag).
   shared_preferences: ^2.3.0

@@ -330,3 +330,94 @@ function handle_admin_audit_log(array $cfg): void
          ORDER BY a.at DESC LIMIT 50")->fetchAll();
     bb_json(200, ['audit' => $rows]);
 }
+
+// GET /api/v1/admin/export/customers.xlsx
+// Every customer across every shop, grouped by shop owner, as a real .xlsx:
+//   sheet 1 "সারসংক্ষেপ" = one row per shop (owner, #customers, total due),
+//   sheet 2 "সব কাস্টমার" = every customer with Shop + Owner columns, sorted by
+//   shop so it reads as grouped-by-owner and can be filtered/pivoted in Excel.
+function handle_admin_export_customers(array $cfg): void
+{
+    $claims = bb_admin_auth($cfg);
+    require_once __DIR__ . '/xlsx.php';
+    $db = bb_db($cfg);
+
+    $rows = $db->query(
+        "SELECT b.id AS bid, b.name AS shop, b.status, b.expires_at,
+                (SELECT u.name  FROM users u WHERE u.business_id=b.id ORDER BY (u.role='owner') DESC, u.created_at LIMIT 1) AS owner_name,
+                (SELECT u.phone FROM users u WHERE u.business_id=b.id ORDER BY (u.role='owner') DESC, u.created_at LIMIT 1) AS owner_phone,
+                c.id AS cid, c.name AS cname, c.phone AS cphone, c.address,
+                COALESCE(SUM(CASE WHEN t.type='credit'            THEN t.amount_paisa
+                                  WHEN t.type='payment'           THEN -t.amount_paisa
+                                  WHEN t.type='adjustment_debit'  THEN t.amount_paisa
+                                  WHEN t.type='adjustment_credit' THEN -t.amount_paisa
+                                  ELSE 0 END),0) AS balance_paisa,
+                COUNT(t.id) AS txn_count
+         FROM businesses b
+         LEFT JOIN customers c    ON c.business_id = b.id
+         LEFT JOIN transactions t ON t.customer_id = c.id
+         GROUP BY b.id, c.id
+         ORDER BY b.name ASC, balance_paisa DESC")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Group rows by shop.
+    $shops = [];
+    foreach ($rows as $r) {
+        $bid = $r['bid'];
+        if (!isset($shops[$bid])) {
+            $shops[$bid] = [
+                'shop' => $r['shop'], 'owner' => $r['owner_name'], 'phone' => $r['owner_phone'],
+                'status' => $r['status'], 'expires' => $r['expires_at'], 'customers' => [],
+            ];
+        }
+        if ($r['cid'] !== null) $shops[$bid]['customers'][] = $r;
+    }
+
+    $taka = static fn($p) => round(((int) $p) / 100, 2);
+    $statusBn = static fn($bal) => $bal > 0 ? 'বাকি' : ($bal < 0 ? 'জমা' : 'পরিশোধিত');
+    $today = date('d/m/Y');
+
+    // Sheet 1 — summary.
+    $sum = [];
+    $sum[] = ['বাকিবন্ধু — কাস্টমার রিপোর্ট (সব দোকান)'];
+    $sum[] = ['তারিখ: ' . $today];
+    $sum[] = [];
+    $sum[] = ['ক্রমিক', 'দোকান', 'মালিক', 'মালিকের মোবাইল', 'কাস্টমার', 'মোট বাকি (৳)', 'স্ট্যাটাস', 'মেয়াদ'];
+    $i = 0; $grandDue = 0; $grandCust = 0;
+    foreach ($shops as $s) {
+        $i++;
+        $due = 0;
+        foreach ($s['customers'] as $c) if ((int) $c['balance_paisa'] > 0) $due += (int) $c['balance_paisa'];
+        $grandDue += $due; $grandCust += count($s['customers']);
+        $sum[] = [$i, $s['shop'], $s['owner'] ?: '', $s['phone'] ?: '', count($s['customers']),
+                  $taka($due), $s['status'], $s['expires'] ?: 'unlimited'];
+    }
+    $sum[] = [];
+    $sum[] = ['', 'সর্বমোট', '', '', $grandCust, $taka($grandDue)];
+    $sheets = [['name' => 'সারসংক্ষেপ', 'rows' => $sum, 'cols' => [7, 26, 20, 16, 12, 14, 11, 12]]];
+
+    // Sheet 2 — every customer, grouped (sorted) by shop.
+    $all = [];
+    $all[] = ['ক্রমিক', 'দোকান', 'মালিক', 'মালিকের মোবাইল', 'কাস্টমার', 'মোবাইল', 'ঠিকানা', 'বাকি (৳)', 'লেনদেন', 'স্ট্যাটাস'];
+    $j = 0;
+    foreach ($shops as $s) {
+        foreach ($s['customers'] as $c) {
+            $j++;
+            $bal = (int) $c['balance_paisa'];
+            $all[] = [$j, $s['shop'], $s['owner'] ?: '', $s['phone'] ?: '', $c['cname'],
+                      $c['cphone'] ?: '', $c['address'] ?: '', $taka($bal), (int) $c['txn_count'], $statusBn($bal)];
+        }
+    }
+    $sheets[] = ['name' => 'সব কাস্টমার', 'rows' => $all, 'cols' => [7, 22, 18, 16, 22, 15, 20, 13, 9, 11]];
+
+    $bytes = bb_xlsx_build($sheets);
+    bb_admin_audit($db, (string) ($claims['sub'] ?? ''), 'export_customers', null,
+                   count($shops) . ' shops / ' . $grandCust . ' customers');
+
+    http_response_code(200);
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="bakibondhu-customers-' . date('Y-m-d') . '.xlsx"');
+    header('Content-Length: ' . strlen($bytes));
+    header('Cache-Control: no-store');
+    echo $bytes;
+    exit;
+}

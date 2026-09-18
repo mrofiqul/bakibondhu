@@ -332,10 +332,13 @@ function renderSettings(){
   m.appendChild(el('<div class="sechead">দোকানের নাম</div>'));
   m.appendChild(el('<div style="display:flex;gap:8px"><input class="in" id="set_shop" value="'+esc(S.shopName)+'" placeholder="দোকানের নাম"><button class="go" id="set_save" style="width:auto;margin:0;padding:12px 18px">সেভ</button></div>'));
   m.appendChild(el('<div class="s" style="color:var(--muted);font-size:13px;margin-top:6px">রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।</div>'));
-  m.appendChild(el('<a class="setrow" href="/app/guide/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;margin-top:20px"><span>📘 সাহায্য / Help</span><span style="color:var(--muted)">↗</span></a>'));
+  var xrow=el('<button class="setrow" id="set_xlsx" style="width:100%;margin-top:20px;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>📊 এক্সেল এক্সপোর্ট — সব কাস্টমার</span><span style="color:var(--muted)">⬇</span></button>');
+  m.appendChild(xrow);
+  m.appendChild(el('<a class="setrow" href="/app/guide/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span>📘 সাহায্য / Help</span><span style="color:var(--muted)">↗</span></a>'));
   m.appendChild(el('<div class="setrow"><span>সংস্করণ</span><span style="color:var(--muted)">'+VERSION+'</span></div>'));
   var out=el('<button class="go danger" id="set_out" style="margin-top:24px">লগ আউট</button>'); m.appendChild(out);
   app.appendChild(m);
+  document.getElementById("set_xlsx").onclick=exportCustomersXlsx;
   document.getElementById("set_save").onclick=function(){ S.shopName=(document.getElementById("set_shop").value||"").trim(); localStorage.setItem(LS.shop,S.shopName); toast("সেভ হয়েছে"); };
   out.onclick=function(){ if(confirm("লগ আউট করবেন?")) logout(); };
 }
@@ -446,6 +449,49 @@ function exportSheet(c,bal){
   var mask=openSheet(sh); sh.querySelector("#x_cancel").onclick=function(){mask.remove();};
   sh.querySelector("#x_copy").onclick=function(){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){toast("কপি হয়েছে");}).catch(function(){ var ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");toast("কপি হয়েছে");}catch(e){toast("কপি করা যায়নি");} ta.remove(); }); };
   sh.querySelector("#x_share").onclick=function(){ if(navigator.share){ navigator.share({text:text}).catch(function(){}); } else { var d=(c.phone||"").replace(/\D/g,""); var wa=d.indexOf("0")===0?("88"+d):d; window.open("https://wa.me/"+wa+"?text="+encodeURIComponent(text),"_blank"); } };
+}
+
+// ---------- Excel (.xlsx) export of all customers ----------
+// SheetJS is loaded on demand (only when the shop owner exports), so it never
+// weighs on the initial page load. The web app is online-only, so the CDN
+// fetch is always available at export time.
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise(function(res,rej){
+    var s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload=function(){ window.XLSX?res(window.XLSX):rej(new Error("XLSX")); };
+    s.onerror=function(){ rej(new Error("XLSX load failed")); };
+    document.head.appendChild(s);
+  });
+}
+function exportCustomersXlsx(){
+  if(!S.customers.length){ toast("এক্সপোর্ট করার মতো কাস্টমার নেই"); return; }
+  toast("এক্সেল তৈরি হচ্ছে…");
+  loadXLSX().then(function(XLSX){
+    var rows=S.customers.map(function(c){ return {c:c,bal:balanceOf(c.id)}; });
+    rows.sort(function(a,b){ return b.bal-a.bal; });
+    var aoa=[];
+    aoa.push([S.shopName||"বাকিবন্ধু"]);
+    aoa.push(["কাস্টমার রিপোর্ট","তারিখ: "+fullBnDate(new Date())]);
+    aoa.push([]);
+    aoa.push(["ক্রমিক","নাম","মোবাইল","ঠিকানা","বাকি (৳)","লেনদেন","স্ট্যাটাস"]);
+    var totalDue=0;
+    rows.forEach(function(x,i){
+      if(x.bal>0) totalDue+=x.bal;
+      aoa.push([ i+1, x.c.name||"", x.c.phone||"", x.c.address||"",
+        Math.round(x.bal)/100, txnsOf(x.c.id).length,
+        x.bal>0?"বাকি":(x.bal<0?"জমা":"পরিশোধিত") ]);
+    });
+    aoa.push([]);
+    aoa.push(["","","","মোট বাকি (৳):", Math.round(totalDue)/100, rows.length+" জন কাস্টমার"]);
+    var ws=XLSX.utils.aoa_to_sheet(aoa);
+    ws["!cols"]=[{wch:7},{wch:24},{wch:15},{wch:22},{wch:13},{wch:9},{wch:11}];
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"কাস্টমার");
+    XLSX.writeFile(wb,"bakibondhu-customers-"+new Date().toISOString().slice(0,10)+".xlsx");
+    toast("এক্সপোর্ট সম্পন্ন");
+  }).catch(function(e){ toast("এক্সপোর্ট ব্যর্থ — ইন্টারনেট দেখুন"); });
 }
 
 // collections add
