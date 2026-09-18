@@ -1,198 +1,218 @@
-/// Bangla UI strings, in one place (Coding Standards §5 — no hard-coded strings
-/// in widgets; English is a later secondary language). Bangla-first (spec §33).
+/// UI strings for both supported languages. Bangla-first (spec §33) with
+/// English as a runtime-switchable secondary language. [S.lang] selects the
+/// active language; every member returns the string for it, so call sites stay
+/// `S.foo` and the whole app re-renders when the language changes.
+enum AppLang { bn, en }
+
 class S {
-  static const appName = 'বাকিবন্ধু';
+  static AppLang lang = AppLang.bn;
+  static bool get _bn => lang == AppLang.bn;
+
+  /// Language names, always shown in their own script (for the selector).
+  static const langBanglaName = 'বাংলা';
+  static const langEnglishName = 'English';
+  static String get language => _bn ? 'ভাষা' : 'Language';
+
+  static String get appName => _bn ? 'বাকিবন্ধু' : 'BakiBondhu';
 
   // Home
-  static const totalOwedLabel = 'মোট বাকি — আপনার পাওনা';
-  static const totalSales = 'মোট বিক্রি';
-  static const todaysSales = 'আজকের বিক্রি';
-  static const viewDailySales = 'বিক্রির হিসাব দেখুন';
-  static const newCustomer = 'নতুন কাস্টমার';
-  static const searchCustomers = 'নাম বা মোবাইল দিয়ে খুঁজুন';
-  static String noSearchResults(String q) => '“$q” — এমন কোনো কাস্টমার পাওয়া যায়নি';
-  static const sortBy = 'সাজান';
-  static const sortMostOwed = 'সর্বোচ্চ বাকি';
-  static const sortByName = 'নাম (ক–হ)';
-  static const sortRecent = 'নতুন আগে';
+  static String get totalOwedLabel => _bn ? 'মোট বাকি — আপনার পাওনা' : 'Total due — your receivables';
+  static String get totalSales => _bn ? 'মোট বিক্রি' : 'Total sales';
+  static String get todaysSales => _bn ? 'আজকের বিক্রি' : "Today's sales";
+  static String get viewDailySales => _bn ? 'বিক্রির হিসাব দেখুন' : 'View sales report';
+  static String get newCustomer => _bn ? 'নতুন কাস্টমার' : 'New customer';
+  static String get searchCustomers => _bn ? 'নাম বা মোবাইল দিয়ে খুঁজুন' : 'Search by name or mobile';
+  static String noSearchResults(String q) => _bn ? '“$q” — এমন কোনো কাস্টমার পাওয়া যায়নি' : '“$q” — no matching customer found';
+  static String get sortBy => _bn ? 'সাজান' : 'Sort';
+  static String get sortMostOwed => _bn ? 'সর্বোচ্চ বাকি' : 'Most owed';
+  static String get sortByName => _bn ? 'নাম (ক–হ)' : 'Name (A–Z)';
+  static String get sortRecent => _bn ? 'নতুন আগে' : 'Newest first';
 
   // Trial / subscription reminder (Home banner)
-  static const trialDismiss = 'বন্ধ করুন';
-  static String trialEndsInDays(int days) => days <= 0
-      ? 'আপনার মেয়াদ আজই শেষ হচ্ছে। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'
-      : (days == 1
-          ? 'আপনার মেয়াদ আগামীকাল শেষ হচ্ছে। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'
-          : 'আপনার মেয়াদ শেষ হতে $days দিন বাকি। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।');
-  static const trialExpired =
-      'আপনার মেয়াদ শেষ হয়ে গেছে। সিঙ্ক চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।';
+  static String get trialDismiss => _bn ? 'বন্ধ করুন' : 'Dismiss';
+  static String trialEndsInDays(int days) => _bn
+      ? (days <= 0
+          ? 'আপনার মেয়াদ আজই শেষ হচ্ছে। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'
+          : (days == 1
+              ? 'আপনার মেয়াদ আগামীকাল শেষ হচ্ছে। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'
+              : 'আপনার মেয়াদ শেষ হতে $days দিন বাকি। চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'))
+      : (days <= 0
+          ? 'Your subscription ends today. Contact the admin to keep it active.'
+          : (days == 1
+              ? 'Your subscription ends tomorrow. Contact the admin to keep it active.'
+              : 'Your subscription ends in $days days. Contact the admin to keep it active.'));
+  static String get trialExpired => _bn
+      ? 'আপনার মেয়াদ শেষ হয়ে গেছে। সিঙ্ক চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'
+      : 'Your subscription has expired. Contact the admin to keep sync active.';
 
   // Sales report
-  static const salesReportTitle = 'বিক্রির হিসাব';
-  static const noSales = 'এখনো কোনো বিক্রি নেই';
-  static const yesterday = 'গতকাল';
-  static String salesCount(int n) => '$n টি বিক্রি';
-  static const addSale = 'বিক্রি যোগ করুন';
-  static const saleAmountLabel = 'বিক্রির পরিমাণ (৳)';
-  static const saleNoteLabel = 'বিবরণ (ঐচ্ছিক)';
-  static const saleSaved = 'বিক্রি যোগ হয়েছে';
-  static const periodDaily = 'দৈনিক';
-  static const periodMonthly = 'মাসিক';
-  static const periodQuarterly = 'ত্রৈমাসিক';
-  static const periodYearly = 'বার্ষিক';
-  static const emptyTitle = 'এখনো কোনো কাস্টমার নেই';
-  static const emptyPrompt = 'আপনার প্রথম কাস্টমার যোগ করে বাকির হিসাব শুরু করুন।';
-  static String customerCount(int n) => '$n জন কাস্টমার';
+  static String get salesReportTitle => _bn ? 'বিক্রির হিসাব' : 'Sales report';
+  static String get noSales => _bn ? 'এখনো কোনো বিক্রি নেই' : 'No sales yet';
+  static String get yesterday => _bn ? 'গতকাল' : 'Yesterday';
+  static String salesCount(int n) => _bn ? '$n টি বিক্রি' : '$n sales';
+  static String get addSale => _bn ? 'বিক্রি যোগ করুন' : 'Add sale';
+  static String get saleAmountLabel => _bn ? 'বিক্রির পরিমাণ (৳)' : 'Sale amount (৳)';
+  static String get saleNoteLabel => _bn ? 'বিবরণ (ঐচ্ছিক)' : 'Note (optional)';
+  static String get saleSaved => _bn ? 'বিক্রি যোগ হয়েছে' : 'Sale added';
+  static String get periodDaily => _bn ? 'দৈনিক' : 'Daily';
+  static String get periodMonthly => _bn ? 'মাসিক' : 'Monthly';
+  static String get periodQuarterly => _bn ? 'ত্রৈমাসিক' : 'Quarterly';
+  static String get periodYearly => _bn ? 'বার্ষিক' : 'Yearly';
+  static String get emptyTitle => _bn ? 'এখনো কোনো কাস্টমার নেই' : 'No customers yet';
+  static String get emptyPrompt => _bn ? 'আপনার প্রথম কাস্টমার যোগ করে বাকির হিসাব শুরু করুন।' : 'Add your first customer to start tracking dues.';
+  static String customerCount(int n) => _bn ? '$n জন কাস্টমার' : '$n customers';
 
   // Customer detail
-  static const currentDue = 'এখন বাকি';
-  static const advance = 'অগ্রিম';
-  static const settled = 'পরিশোধিত';
-  static const history = 'লেনদেন';
-  static const noHistory = 'এখনো কোনো লেনদেন নেই';
-  static const gaveCredit = 'বাকি দিলাম';
-  static const gotPayment = 'টাকা পেলাম';
-  static const remind = 'মনে করান';
-  static const reminderSoon = 'রিমাইন্ডার শীঘ্রই যোগ হচ্ছে';
+  static String get currentDue => _bn ? 'এখন বাকি' : 'Due now';
+  static String get advance => _bn ? 'অগ্রিম' : 'Advance';
+  static String get settled => _bn ? 'পরিশোধিত' : 'Settled';
+  static String get history => _bn ? 'লেনদেন' : 'Transactions';
+  static String get noHistory => _bn ? 'এখনো কোনো লেনদেন নেই' : 'No transactions yet';
+  static String get gaveCredit => _bn ? 'বাকি দিলাম' : 'Gave credit';
+  static String get gotPayment => _bn ? 'টাকা পেলাম' : 'Got payment';
+  static String get remind => _bn ? 'মনে করান' : 'Remind';
+  static String get reminderSoon => _bn ? 'রিমাইন্ডার শীঘ্রই যোগ হচ্ছে' : 'Reminder coming soon';
 
   // Forms
-  static const nameLabel = 'নাম';
-  static const nameRequired = 'নাম লিখুন';
-  static const mobileLabel = 'মোবাইল নম্বর (ঐচ্ছিক)';
-  static const mobileLabelRequired = 'মোবাইল নম্বর';
-  static const mobileRequired = 'মোবাইল নম্বর দিন';
-  static const invalidMobile = 'সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা, 01…)';
-  static const duplicateCustomerPhone = 'এই মোবাইল নম্বরে একজন কাস্টমার আগে থেকেই আছে';
-  static const addressLabelOptional = 'ঠিকানা (ঐচ্ছিক)';
-  static const amountLabel = 'পরিমাণ';
-  static const amountRequired = 'সঠিক পরিমাণ লিখুন';
-  static const noteLabel = 'নোট (ঐচ্ছিক)';
-  static const save = 'সেভ করুন';
-  static const add = 'যোগ করুন';
-  static const cancel = 'বাতিল';
-  static const delete = 'মুছুন';
+  static String get nameLabel => _bn ? 'নাম' : 'Name';
+  static String get nameRequired => _bn ? 'নাম লিখুন' : 'Enter a name';
+  static String get mobileLabel => _bn ? 'মোবাইল নম্বর (ঐচ্ছিক)' : 'Mobile number (optional)';
+  static String get mobileLabelRequired => _bn ? 'মোবাইল নম্বর' : 'Mobile number';
+  static String get mobileRequired => _bn ? 'মোবাইল নম্বর দিন' : 'Enter a mobile number';
+  static String get invalidMobile => _bn ? 'সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা, 01…)' : 'Enter a valid mobile number (11 digits, 01…)';
+  static String get duplicateCustomerPhone => _bn ? 'এই মোবাইল নম্বরে একজন কাস্টমার আগে থেকেই আছে' : 'A customer with this mobile number already exists';
+  static String get addressLabelOptional => _bn ? 'ঠিকানা (ঐচ্ছিক)' : 'Address (optional)';
+  static String get amountLabel => _bn ? 'পরিমাণ' : 'Amount';
+  static String get amountRequired => _bn ? 'সঠিক পরিমাণ লিখুন' : 'Enter a valid amount';
+  static String get noteLabel => _bn ? 'নোট (ঐচ্ছিক)' : 'Note (optional)';
+  static String get save => _bn ? 'সেভ করুন' : 'Save';
+  static String get add => _bn ? 'যোগ করুন' : 'Add';
+  static String get cancel => _bn ? 'বাতিল' : 'Cancel';
+  static String get delete => _bn ? 'মুছুন' : 'Delete';
 
   // Edit / delete customer
-  static const editCustomer = 'কাস্টমার এডিট করুন';
-  static const deleteCustomer = 'কাস্টমার মুছুন';
+  static String get editCustomer => _bn ? 'কাস্টমার এডিট করুন' : 'Edit customer';
+  static String get deleteCustomer => _bn ? 'কাস্টমার মুছুন' : 'Delete customer';
 
   // Transaction history export
-  static const exportHistory = 'লেনদেন এক্সপোর্ট করুন';
-  static const historyExportTitle = 'লেনদেনের হিসাব';
+  static String get exportHistory => _bn ? 'লেনদেন এক্সপোর্ট করুন' : 'Export transactions';
+  static String get historyExportTitle => _bn ? 'লেনদেনের হিসাব' : 'Transaction statement';
 
   // App update
-  static const updateApp = 'অ্যাপ আপডেট';
-  static const updateAppSubtitle = 'নতুন সংস্করণ আছে কিনা দেখুন';
-  static const updateAvailableTitle = 'নতুন আপডেট পাওয়া গেছে';
-  static String updateAvailableBody(String version) =>
-      'নতুন সংস্করণ (v$version) পাওয়া গেছে। আপডেট করলে আপনার সব তথ্য অপরিবর্তিত থাকবে।';
-  static const updateNow = 'আপডেট করুন';
-  static const updateLater = 'পরে';
-  static const updateChecking = 'চেক করা হচ্ছে…';
-  static String updateUpToDate(String version) => 'সর্বশেষ সংস্করণ চলছে (v$version)';
+  static String get updateApp => _bn ? 'অ্যাপ আপডেট' : 'Update app';
+  static String get updateAppSubtitle => _bn ? 'নতুন সংস্করণ আছে কিনা দেখুন' : 'Check for a new version';
+  static String get updateAvailableTitle => _bn ? 'নতুন আপডেট পাওয়া গেছে' : 'Update available';
+  static String updateAvailableBody(String version) => _bn
+      ? 'নতুন সংস্করণ (v$version) পাওয়া গেছে। আপডেট করলে আপনার সব তথ্য অপরিবর্তিত থাকবে।'
+      : 'A new version (v$version) is available. Your data stays intact after updating.';
+  static String get updateNow => _bn ? 'আপডেট করুন' : 'Update';
+  static String get updateLater => _bn ? 'পরে' : 'Later';
+  static String get updateChecking => _bn ? 'চেক করা হচ্ছে…' : 'Checking…';
+  static String updateUpToDate(String version) => _bn ? 'সর্বশেষ সংস্করণ চলছে (v$version)' : 'You are on the latest version (v$version)';
 
   // Excel (customer report) export
-  static const exportExcel = 'এক্সেল এক্সপোর্ট';
-  static const exportExcelTooltip = 'সব কাস্টমার এক্সেলে এক্সপোর্ট করুন';
-  static const customerReportTitle = 'কাস্টমার রিপোর্ট';
-  static const exportNoCustomers = 'এক্সপোর্ট করার মতো কাস্টমার নেই';
-  static const exportPreparing = 'এক্সেল তৈরি হচ্ছে…';
-  static const exportFailed = 'এক্সপোর্ট ব্যর্থ হয়েছে';
-  static const shopLabel = 'দোকান';
-  static const customerLabel = 'কাস্টমার';
-  static const runningDue = 'চলতি বাকি';
-  static const totalTransactions = 'মোট লেনদেন';
-  static const currentBalanceLabel = 'বর্তমান হিসাব';
-  static const madeWithApp = 'বাকিবন্ধু অ্যাপ দিয়ে তৈরি';
-  static const adjustmentUp = 'সমন্বয় (বৃদ্ধি)';
-  static const adjustmentDown = 'সমন্বয় (হ্রাস)';
-  static const copyText = 'কপি করুন';
-  static const shareText = 'শেয়ার করুন';
-  static const copied = 'কপি হয়েছে';
-  static const nothingToExport = 'এক্সপোর্ট করার মতো লেনদেন নেই';
-  static const customerUpdated = 'কাস্টমারের তথ্য আপডেট হয়েছে';
-  static const cannotDeleteHasDue =
-      'এই কাস্টমারের বাকি আছে — আগে বাকি পরিশোধ করুন, তারপর মুছুন।';
-  static String deleteCustomerConfirm(String name) =>
-      '“$name”-কে ও তার সব লেনদেনের হিসাব মুছে ফেলবেন? এটি আর ফেরানো যাবে না।';
+  static String get exportExcel => _bn ? 'এক্সেল এক্সপোর্ট' : 'Excel export';
+  static String get exportExcelTooltip => _bn ? 'সব কাস্টমার এক্সেলে এক্সপোর্ট করুন' : 'Export all customers to Excel';
+  static String get customerReportTitle => _bn ? 'কাস্টমার রিপোর্ট' : 'Customer report';
+  static String get exportNoCustomers => _bn ? 'এক্সপোর্ট করার মতো কাস্টমার নেই' : 'No customers to export';
+  static String get exportPreparing => _bn ? 'এক্সেল তৈরি হচ্ছে…' : 'Preparing Excel…';
+  static String get exportFailed => _bn ? 'এক্সপোর্ট ব্যর্থ হয়েছে' : 'Export failed';
+  static String get shopLabel => _bn ? 'দোকান' : 'Shop';
+  static String get customerLabel => _bn ? 'কাস্টমার' : 'Customer';
+  static String get runningDue => _bn ? 'চলতি বাকি' : 'Running due';
+  static String get totalTransactions => _bn ? 'মোট লেনদেন' : 'Total transactions';
+  static String get currentBalanceLabel => _bn ? 'বর্তমান হিসাব' : 'Current balance';
+  static String get madeWithApp => _bn ? 'বাকিবন্ধু অ্যাপ দিয়ে তৈরি' : 'Made with the BakiBondhu app';
+  static String get adjustmentUp => _bn ? 'সমন্বয় (বৃদ্ধি)' : 'Adjustment (increase)';
+  static String get adjustmentDown => _bn ? 'সমন্বয় (হ্রাস)' : 'Adjustment (decrease)';
+  static String get copyText => _bn ? 'কপি করুন' : 'Copy';
+  static String get shareText => _bn ? 'শেয়ার করুন' : 'Share';
+  static String get copied => _bn ? 'কপি হয়েছে' : 'Copied';
+  static String get nothingToExport => _bn ? 'এক্সপোর্ট করার মতো লেনদেন নেই' : 'No transactions to export';
+  static String get customerUpdated => _bn ? 'কাস্টমারের তথ্য আপডেট হয়েছে' : 'Customer updated';
+  static String get cannotDeleteHasDue => _bn
+      ? 'এই কাস্টমারের বাকি আছে — আগে বাকি পরিশোধ করুন, তারপর মুছুন।'
+      : 'This customer has an outstanding due — settle it first, then delete.';
+  static String deleteCustomerConfirm(String name) => _bn
+      ? '“$name”-কে ও তার সব লেনদেনের হিসাব মুছে ফেলবেন? এটি আর ফেরানো যাবে না।'
+      : 'Delete “$name” and all their transaction history? This cannot be undone.';
 
   // Add transaction (Screen 3)
-  static const dateLabel = 'তারিখ';
-  static const today = 'আজ';
-  static const dueDateLabel = 'শেষ তারিখ';
+  static String get dateLabel => _bn ? 'তারিখ' : 'Date';
+  static String get today => _bn ? 'আজ' : 'Today';
+  static String get dueDateLabel => _bn ? 'শেষ তারিখ' : 'Due date';
 
   // Reminder (Screen 5)
-  static const reminderTitle = 'মনে করিয়ে দিন';
-  static const sendSms = 'SMS পাঠান';
-  static const whatsapp = 'WhatsApp';
-  static const editBeforeSend = 'পাঠানোর আগে বদলাতে পারেন';
-  static const needPhone = 'রিমাইন্ডার পাঠাতে মোবাইল নম্বর দরকার';
-  static const nothingDue = 'এই কাস্টমারের কোনো বাকি নেই';
-  static const shopNamePlaceholder = 'আপনার দোকান';
-  static const couldNotOpen = 'অ্যাপটি খোলা গেল না';
+  static String get reminderTitle => _bn ? 'মনে করিয়ে দিন' : 'Send a reminder';
+  static String get sendSms => _bn ? 'SMS পাঠান' : 'Send SMS';
+  static String get whatsapp => 'WhatsApp';
+  static String get editBeforeSend => _bn ? 'পাঠানোর আগে বদলাতে পারেন' : 'You can edit before sending';
+  static String get needPhone => _bn ? 'রিমাইন্ডার পাঠাতে মোবাইল নম্বর দরকার' : 'A mobile number is needed to send a reminder';
+  static String get nothingDue => _bn ? 'এই কাস্টমারের কোনো বাকি নেই' : 'This customer has no due';
+  static String get shopNamePlaceholder => _bn ? 'আপনার দোকান' : 'Your shop';
+  static String get couldNotOpen => _bn ? 'অ্যাপটি খোলা গেল না' : 'Could not open the app';
 
   // Sync Center (Screen §5.14)
-  static const syncCenter = 'সিঙ্ক';
-  static const syncNow = 'এখন সিঙ্ক করুন';
-  static const synced = 'সিঙ্ক হয়েছে';
-  static const toUpload = 'আপলোডের অপেক্ষায়';
-  static const failedLabel = 'ব্যর্থ';
-  static const conflictsLabel = 'দ্বন্দ্ব';
-  static const allSynced = 'সব সিঙ্ক হয়েছে';
-  static const notConnected = 'সার্ভার এখনো যুক্ত হয়নি — সব ডেটা এই ফোনে সংরক্ষিত।';
-  static const conflictsNeedReview = 'কিছু লেনদেন পর্যালোচনা দরকার';
-  static const conflictReviewSoon = 'সার্ভার যুক্ত হলে দ্বন্দ্ব পর্যালোচনা করা যাবে';
-  static String syncResult(int pushed, int pulled) =>
-      'আপলোড $pushed · ডাউনলোড $pulled';
+  static String get syncCenter => _bn ? 'সিঙ্ক' : 'Sync';
+  static String get syncNow => _bn ? 'এখন সিঙ্ক করুন' : 'Sync now';
+  static String get synced => _bn ? 'সিঙ্ক হয়েছে' : 'Synced';
+  static String get toUpload => _bn ? 'আপলোডের অপেক্ষায়' : 'Waiting to upload';
+  static String get failedLabel => _bn ? 'ব্যর্থ' : 'Failed';
+  static String get conflictsLabel => _bn ? 'দ্বন্দ্ব' : 'Conflicts';
+  static String get allSynced => _bn ? 'সব সিঙ্ক হয়েছে' : 'All synced';
+  static String get notConnected => _bn ? 'সার্ভার এখনো যুক্ত হয়নি — সব ডেটা এই ফোনে সংরক্ষিত।' : 'Not connected to the server yet — all data is saved on this phone.';
+  static String get conflictsNeedReview => _bn ? 'কিছু লেনদেন পর্যালোচনা দরকার' : 'Some transactions need review';
+  static String get conflictReviewSoon => _bn ? 'সার্ভার যুক্ত হলে দ্বন্দ্ব পর্যালোচনা করা যাবে' : 'Conflicts can be reviewed once the server is connected';
+  static String syncResult(int pushed, int pulled) => _bn ? 'আপলোড $pushed · ডাউনলোড $pulled' : 'Uploaded $pushed · Downloaded $pulled';
 
   // Collections (§8.8/§8.9)
-  static const collections = 'কালেকশন';
-  static const recordCollection = 'কালেকশন যোগ করুন';
-  static const recordPromise = 'প্রতিশ্রুতি যোগ করুন';
-  static const promises = 'প্রতিশ্রুতি';
-  static const activityHistory = 'কালেকশন ইতিহাস';
-  static const noActivity = 'এখনো কোনো কালেকশন নেই';
-  static const noPromises = 'এখনো কোনো প্রতিশ্রুতি নেই';
-  static const methodLabel = 'যোগাযোগ';
-  static const statusLabel = 'অবস্থা';
-  static const nextFollowUpLabel = 'পরবর্তী ফলো-আপ';
-  static const promiseAmountLabel = 'প্রতিশ্রুত পরিমাণ';
-  static const promiseDateLabel = 'প্রতিশ্রুতির তারিখ';
+  static String get collections => _bn ? 'কালেকশন' : 'Collections';
+  static String get recordCollection => _bn ? 'কালেকশন যোগ করুন' : 'Add collection';
+  static String get recordPromise => _bn ? 'প্রতিশ্রুতি যোগ করুন' : 'Add promise';
+  static String get promises => _bn ? 'প্রতিশ্রুতি' : 'Promises';
+  static String get activityHistory => _bn ? 'কালেকশন ইতিহাস' : 'Collection history';
+  static String get noActivity => _bn ? 'এখনো কোনো কালেকশন নেই' : 'No collections yet';
+  static String get noPromises => _bn ? 'এখনো কোনো প্রতিশ্রুতি নেই' : 'No promises yet';
+  static String get methodLabel => _bn ? 'যোগাযোগ' : 'Contact';
+  static String get statusLabel => _bn ? 'অবস্থা' : 'Status';
+  static String get nextFollowUpLabel => _bn ? 'পরবর্তী ফলো-আপ' : 'Next follow-up';
+  static String get promiseAmountLabel => _bn ? 'প্রতিশ্রুত পরিমাণ' : 'Promised amount';
+  static String get promiseDateLabel => _bn ? 'প্রতিশ্রুতির তারিখ' : 'Promise date';
 
   // Settings
-  static const settings = 'সেটিংস';
-  static const shopNameSetting = 'দোকানের নাম';
-  static const accountSection = 'সিঙ্ক ও অ্যাকাউন্ট';
-  static const aboutSection = 'সম্পর্কে';
-  static const savedMsg = 'সংরক্ষিত হয়েছে';
-  static const notLoggedIn = 'লগ ইন করা নেই';
+  static String get settings => _bn ? 'সেটিংস' : 'Settings';
+  static String get shopNameSetting => _bn ? 'দোকানের নাম' : 'Shop name';
+  static String get accountSection => _bn ? 'সিঙ্ক ও অ্যাকাউন্ট' : 'Sync & account';
+  static String get aboutSection => _bn ? 'সম্পর্কে' : 'About';
+  static String get savedMsg => _bn ? 'সংরক্ষিত হয়েছে' : 'Saved';
+  static String get notLoggedIn => _bn ? 'লগ ইন করা নেই' : 'Not logged in';
 
   // Auth (login to sync)
-  static const logIn = 'লগ ইন';
-  static const registerAction = 'নিবন্ধন';
-  static const signInToSync = 'সিঙ্ক করতে লগ ইন করুন';
-  static const logOut = 'লগ আউট';
-  static const passwordLabel = 'পাসওয়ার্ড';
-  static const businessNameLabel = 'দোকান/ব্যবসার নাম';
-  static const businessRequired = 'দোকান/ব্যবসার নাম দিন';
-  static const yourNameLabel = 'আপনার নাম';
-  static const identifierLabel = 'মোবাইল নম্বর';
-  static const bivagLabel = 'বিভাগ (ঐচ্ছিক)';
-  static const thanaLabel = 'থানা/উপজেলা (ঐচ্ছিক)';
-  static const zilaLabel = 'জেলা (ঐচ্ছিক)';
-  static const selectBivagHint = 'বিভাগ নির্বাচন করুন';
-  static const selectZilaHint = 'জেলা নির্বাচন করুন';
-  static const selectThanaHint = 'থানা/উপজেলা নির্বাচন করুন';
-  static const selectBivagFirst = 'আগে বিভাগ নির্বাচন করুন';
-  static const selectZilaFirst = 'আগে জেলা নির্বাচন করুন';
-  static const passwordShort = 'কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন';
-  static const toggleToLogin = 'অ্যাকাউন্ট আছে? লগ ইন করুন';
-  static const toggleToRegister = 'নতুন? নিবন্ধন করুন';
-  static const authFailed = 'ব্যর্থ হয়েছে';
-  static String loggedInAs(String role) => 'লগ ইন করা আছে ($role)';
+  static String get logIn => _bn ? 'লগ ইন' : 'Log in';
+  static String get registerAction => _bn ? 'নিবন্ধন' : 'Register';
+  static String get signInToSync => _bn ? 'সিঙ্ক করতে লগ ইন করুন' : 'Log in to sync';
+  static String get logOut => _bn ? 'লগ আউট' : 'Log out';
+  static String get passwordLabel => _bn ? 'পাসওয়ার্ড' : 'Password';
+  static String get businessNameLabel => _bn ? 'দোকান/ব্যবসার নাম' : 'Shop / business name';
+  static String get businessRequired => _bn ? 'দোকান/ব্যবসার নাম দিন' : 'Enter the shop / business name';
+  static String get yourNameLabel => _bn ? 'আপনার নাম' : 'Your name';
+  static String get identifierLabel => _bn ? 'মোবাইল নম্বর' : 'Mobile number';
+  static String get bivagLabel => _bn ? 'বিভাগ (ঐচ্ছিক)' : 'Division (optional)';
+  static String get thanaLabel => _bn ? 'থানা/উপজেলা (ঐচ্ছিক)' : 'Thana/Upazila (optional)';
+  static String get zilaLabel => _bn ? 'জেলা (ঐচ্ছিক)' : 'District (optional)';
+  static String get selectBivagHint => _bn ? 'বিভাগ নির্বাচন করুন' : 'Select division';
+  static String get selectZilaHint => _bn ? 'জেলা নির্বাচন করুন' : 'Select district';
+  static String get selectThanaHint => _bn ? 'থানা/উপজেলা নির্বাচন করুন' : 'Select thana/upazila';
+  static String get selectBivagFirst => _bn ? 'আগে বিভাগ নির্বাচন করুন' : 'Select a division first';
+  static String get selectZilaFirst => _bn ? 'আগে জেলা নির্বাচন করুন' : 'Select a district first';
+  static String get passwordShort => _bn ? 'কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন' : 'Use a password of at least 6 characters';
+  static String get toggleToLogin => _bn ? 'অ্যাকাউন্ট আছে? লগ ইন করুন' : 'Have an account? Log in';
+  static String get toggleToRegister => _bn ? 'নতুন? নিবন্ধন করুন' : 'New? Register';
+  static String get authFailed => _bn ? 'ব্যর্থ হয়েছে' : 'Failed';
+  static String loggedInAs(String role) => _bn ? 'লগ ইন করা আছে ($role)' : 'Logged in ($role)';
 
   // Landing (opening screen) — registered shop owners only; no offline/guest path.
-  static const landingTagline = 'বাকির হিসাব সহজে রাখুন।';
-  static const landingLogin = 'লগ ইন করুন';
-  static const landingRegister = 'নতুন অ্যাকাউন্ট খুলুন';
+  static String get landingTagline => _bn ? 'বাকির হিসাব সহজে রাখুন।' : 'Keep your credit ledger with ease.';
+  static String get landingLogin => _bn ? 'লগ ইন করুন' : 'Log in';
+  static String get landingRegister => _bn ? 'নতুন অ্যাকাউন্ট খুলুন' : 'Create a new account';
 }
-

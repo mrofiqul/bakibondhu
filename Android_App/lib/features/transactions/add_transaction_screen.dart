@@ -118,7 +118,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     // Date + due date + note
                     ListTile(
                       leading: const Icon(Icons.event),
-                      title: const Text(S.dateLabel),
+                      title: Text(S.dateLabel),
                       trailing:
                           Text(_isToday(_date) ? S.today : shortDate(_date)),
                       onTap: () => _pickDate(due: false),
@@ -126,7 +126,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     if (_isCredit)
                       ListTile(
                         leading: const Icon(Icons.schedule),
-                        title: const Text(S.dueDateLabel),
+                        title: Text(S.dueDateLabel),
                         trailing:
                             Text(_dueDate == null ? '—' : shortDate(_dueDate!)),
                         onTap: () => _pickDate(due: true),
@@ -136,7 +136,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       child: TextField(
                         controller: _noteCtrl,
                         decoration:
-                            const InputDecoration(labelText: S.noteLabel),
+                            InputDecoration(labelText: S.noteLabel),
                       ),
                     ),
                   ],
@@ -150,7 +150,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: _valid && !_saving ? _save : null,
-                  child: const Text(S.save),
+                  child: Text(S.save),
                 ),
               ),
             ),

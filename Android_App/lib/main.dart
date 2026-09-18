@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 
 import 'package:bakibondhu/app.dart';
 import 'package:bakibondhu/core/config.dart';
+import 'package:bakibondhu/core/language.dart';
+import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/data/auth_api.dart';
 import 'package:bakibondhu/data/infinityfree_client.dart';
 import 'package:bakibondhu/data/local_database.dart';
@@ -27,6 +29,11 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final settings = SharedPrefsSettingsStore(prefs);
   final onboarded = await settings.onboardingComplete();
+
+  // Apply the saved UI language (default Bangla) before the first frame.
+  final savedLang = langFromCode(await settings.language());
+  S.lang = savedLang;
+  appLanguage.value = savedLang;
 
   final session = Session(const FlutterSecureStorage());
   await session.load();

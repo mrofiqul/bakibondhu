@@ -18,6 +18,11 @@ abstract class SettingsStore {
   /// means the local data isn't yet tied to any account (fresh/offline).
   Future<String?> dataOwnerBusinessId();
   Future<void> setDataOwnerBusinessId(String? businessId);
+
+  /// The UI language code the user picked ('bn' or 'en'); null = not chosen
+  /// yet, so the app defaults to Bangla.
+  Future<String?> language();
+  Future<void> setLanguage(String code);
 }
 
 /// In-memory settings for tests.
@@ -58,4 +63,12 @@ class InMemorySettingsStore implements SettingsStore {
   @override
   Future<void> setDataOwnerBusinessId(String? businessId) async =>
       _dataOwner = businessId;
+
+  String? _language;
+
+  @override
+  Future<String?> language() async => _language;
+
+  @override
+  Future<void> setLanguage(String code) async => _language = code;
 }

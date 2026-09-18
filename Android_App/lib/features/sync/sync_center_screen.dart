@@ -53,7 +53,7 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text(S.couldNotOpen)));
+          .showSnackBar(SnackBar(content: Text(S.couldNotOpen)));
     } finally {
       if (mounted) setState(() => _syncing = false);
       _refresh();
@@ -87,7 +87,7 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
     final session = AppScope.sessionOf(context);
     final canSync = engine != null && session.isLoggedIn;
     return Scaffold(
-      appBar: AppBar(title: const Text(S.syncCenter)),
+      appBar: AppBar(title: Text(S.syncCenter)),
       body: FutureBuilder<_SyncData>(
         future: _future,
         builder: (context, snap) {
@@ -120,14 +120,14 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
                 FilledButton.icon(
                   onPressed: _login,
                   icon: const Icon(Icons.login),
-                  label: const Text(S.logIn),
+                  label: Text(S.logIn),
                 ),
               ] else ...[
                 Row(children: [
                   const Icon(Icons.verified_user, size: 18),
                   const SizedBox(width: 8),
                   Expanded(child: Text(S.loggedInAs(session.role ?? ''))),
-                  TextButton(onPressed: _logout, child: const Text(S.logOut)),
+                  TextButton(onPressed: _logout, child: Text(S.logOut)),
                 ]),
                 const SizedBox(height: 8),
                 FilledButton.icon(
@@ -138,7 +138,7 @@ class _SyncCenterScreenState extends State<SyncCenterScreen> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.sync),
-                  label: const Text(S.syncNow),
+                  label: Text(S.syncNow),
                 ),
               ],
               if (data.conflicts.isNotEmpty) ...[

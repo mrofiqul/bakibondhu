@@ -179,14 +179,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final rows = _data?.customers ?? const <CustomerBalance>[];
     final messenger = ScaffoldMessenger.of(context);
     if (rows.isEmpty) {
-      messenger.showSnackBar(const SnackBar(content: Text(S.exportNoCustomers)));
+      messenger.showSnackBar(SnackBar(content: Text(S.exportNoCustomers)));
       return;
     }
-    messenger.showSnackBar(const SnackBar(content: Text(S.exportPreparing)));
+    messenger.showSnackBar(SnackBar(content: Text(S.exportPreparing)));
     try {
       await exportCustomerReport(rows: rows, shopName: _shopName ?? '');
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text(S.exportFailed)));
+      messenger.showSnackBar(SnackBar(content: Text(S.exportFailed)));
     }
   }
 
@@ -241,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addCustomer,
         icon: const Icon(Icons.person_add_alt_1),
-        label: const Text(S.newCustomer),
+        label: Text(S.newCustomer),
       ),
       body: Builder(
         builder: (context) {
@@ -554,7 +554,7 @@ class _EmptyState extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleMedium,
                 textAlign: TextAlign.center),
             const SizedBox(height: 8),
-            const Text(S.emptyPrompt, textAlign: TextAlign.center),
+            Text(S.emptyPrompt, textAlign: TextAlign.center),
           ],
         ),
       ),

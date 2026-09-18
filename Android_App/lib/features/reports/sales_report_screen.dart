@@ -54,7 +54,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     await _repo.addSale(amount: input.amount, note: input.note);
     if (mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text(S.saleSaved)));
+          .showSnackBar(SnackBar(content: Text(S.saleSaved)));
     }
     await _refresh();
   }
@@ -76,11 +76,11 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
   Widget build(BuildContext context) {
     final data = _data;
     return Scaffold(
-      appBar: AppBar(title: const Text(S.salesReportTitle)),
+      appBar: AppBar(title: Text(S.salesReportTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addSale,
         icon: const Icon(Icons.add),
-        label: const Text(S.addSale),
+        label: Text(S.addSale),
       ),
       body: data == null
           ? const Center(child: CircularProgressIndicator())
@@ -90,7 +90,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: SegmentedButton<SalesPeriod>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                           value: SalesPeriod.day, label: Text(S.periodDaily)),
                       ButtonSegment(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
+import 'package:bakibondhu/core/language.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/theme.dart';
 import 'package:bakibondhu/data/auth_api.dart';
@@ -46,11 +47,14 @@ class BakiBondhuApp extends StatelessWidget {
       syncEngine: syncEngine,
       session: session,
       authApi: authApi,
-      child: MaterialApp(
-        title: S.appName,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        home: startLanding ? const LandingScreen() : const HomeScreen(),
+      child: ValueListenableBuilder<AppLang>(
+        valueListenable: appLanguage,
+        builder: (context, _, __) => MaterialApp(
+          title: S.appName,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light(),
+          home: startLanding ? const LandingScreen() : const HomeScreen(),
+        ),
       ),
     );
   }
