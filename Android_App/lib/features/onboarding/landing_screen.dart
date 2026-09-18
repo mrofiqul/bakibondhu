@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/features/auth/login_screen.dart';
 import 'package:bakibondhu/features/dashboard/home_screen.dart';
-import 'package:bakibondhu/features/onboarding/onboarding_screen.dart';
 
-/// Opening screen (spec §7): a welcome page offering Login, Register, or
-/// continue-offline. Login/Register open the auth form; offline goes through the
-/// shop-name onboarding. Any successful path lands on Home and is not shown again.
+/// Opening screen (spec §7): a welcome page offering Login or Register. Only a
+/// registered shop owner can use the app, so there is no offline/guest path —
+/// both buttons open the auth form and a successful sign-in lands on Home.
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
 
@@ -24,13 +23,6 @@ class LandingScreen extends StatelessWidget {
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     }
-  }
-
-  void _continueOffline(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-    );
   }
 
   @override
@@ -71,11 +63,6 @@ class LandingScreen extends StatelessWidget {
                   onPressed: () => _openAuth(context, register: true),
                   child: const Text(S.landingRegister),
                 ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => _continueOffline(context),
-                child: const Text(S.continueOffline),
               ),
               const SizedBox(height: 8),
             ],

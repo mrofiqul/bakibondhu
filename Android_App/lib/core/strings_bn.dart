@@ -190,16 +190,9 @@ class S {
   static const authFailed = 'ব্যর্থ হয়েছে';
   static String loggedInAs(String role) => 'লগ ইন করা আছে ($role)';
 
-  // Landing (opening screen)
-  static const landingTagline = 'বাকির হিসাব সহজে রাখুন — ইন্টারনেট ছাড়াও চলে।';
+  // Landing (opening screen) — registered shop owners only; no offline/guest path.
+  static const landingTagline = 'বাকির হিসাব সহজে রাখুন।';
   static const landingLogin = 'লগ ইন করুন';
   static const landingRegister = 'নতুন অ্যাকাউন্ট খুলুন';
-  static const continueOffline = 'অ্যাকাউন্ট ছাড়া চালিয়ে যান';
-
-  // First run / onboarding
-  static const welcome = 'স্বাগতম';
-  static const onboardSubtitle = 'আপনার দোকানের নাম দিন — রিমাইন্ডারে ব্যবহার হবে।';
-  static const shopNameLabel = 'দোকানের নাম (ঐচ্ছিক)';
-  static const getStarted = 'শুরু করুন';
 }
 
