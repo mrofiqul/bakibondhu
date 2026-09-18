@@ -75,3 +75,10 @@ local.properties
 
 # Local build artifacts / packaged installers (APKs, zips)
 Installer/
+
+# ==========================================================================
+# Generated docs (standalone HTML built from docs/*/build.py → dist/)
+# ==========================================================================
+# The web-app guide's standalone file is a local convenience copy, not tracked.
+# (The Owner's Manual standalone IS tracked at the repo root by choice.)
+/BakiBondhu_Web_Guide.html
