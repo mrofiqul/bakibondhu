@@ -117,10 +117,10 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.২";
+var VERSION="ওয়েব সংস্করণ ১.৩";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=3;
+var WEB_BUILD=4;
 
 // ---------- language (bn / en) ----------
 // The UI is authored in Bangla; when English is selected we translate the
@@ -142,9 +142,9 @@ var I18N={
   "কপি হয়েছে":"Copied","কপি করা যায়নি":"Could not copy","লোড হচ্ছে…":"Loading…",
   "চেক করা হচ্ছে…":"Checking…","চেক করা যায়নি":"Could not check",
   "সর্বশেষ সংস্করণ চলছে":"You are on the latest version","সেভ হয়েছে":"Saved",
-  "এক্সেল তৈরি হচ্ছে…":"Preparing Excel…","এক্সপোর্ট সম্পন্ন":"Export complete",
-  "এক্সপোর্ট ব্যর্থ — ইন্টারনেট দেখুন":"Export failed — check your internet",
-  "এক্সপোর্ট করার মতো কাস্টমার নেই":"No customers to export",
+  "ডাউনলোড হচ্ছে…":"Downloading…","ডাউনলোড সম্পন্ন":"Download complete",
+  "ডাউনলোড ব্যর্থ — ইন্টারনেট দেখুন":"Download failed — check your internet",
+  "ডাউনলোড করার মতো কাস্টমার নেই":"No customers to download",
   // auth
   "বাকির হিসাব — সহজে, অনলাইনে":"Track credit — easily, online",
   "লগ ইন করুন":"Log in","নতুন অ্যাকাউন্ট":"New account","লগ ইন":"Log in","নিবন্ধন করুন":"Register",
@@ -199,9 +199,9 @@ var I18N={
   "মাধ্যম":"Method","অবস্থা":"Status","স্ট্যাটাস":"Status",
   // settings
   "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
-  "📊 এক্সেল এক্সপোর্ট — সব কাস্টমার":"📊 Excel export — all customers",
+  "📥 রিপোর্ট ডাউনলোড — সব কাস্টমার":"📥 Download report — all customers",
   "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help",
-  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.২":"Web version 1.2","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৩":"Web version 1.3","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
   // statement export + update sheet + trial
   "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
   "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
@@ -475,7 +475,7 @@ function renderSettings(){
   m.appendChild(el('<div class="sechead">দোকানের নাম</div>'));
   m.appendChild(el('<div style="display:flex;gap:8px"><input class="in" id="set_shop" value="'+esc(S.shopName)+'" placeholder="দোকানের নাম"><button class="go" id="set_save" style="width:auto;margin:0;padding:12px 18px">সেভ</button></div>'));
   m.appendChild(el('<div class="s" style="color:var(--muted);font-size:13px;margin-top:6px">রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।</div>'));
-  var xrow=el('<button class="setrow" id="set_xlsx" style="width:100%;margin-top:20px;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>📊 এক্সেল এক্সপোর্ট — সব কাস্টমার</span><span style="color:var(--muted)">⬇</span></button>');
+  var xrow=el('<button class="setrow" id="set_xlsx" style="width:100%;margin-top:20px;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>📥 রিপোর্ট ডাউনলোড — সব কাস্টমার</span><span style="color:var(--muted)">⬇</span></button>');
   m.appendChild(xrow);
   var urow=el('<button class="setrow" id="set_update" style="width:100%;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>🔄 অ্যাপ আপডেট / Update App</span><span style="color:var(--muted)">›</span></button>');
   m.appendChild(urow);
@@ -615,8 +615,8 @@ function loadXLSX(){
   });
 }
 function exportCustomersXlsx(){
-  if(!S.customers.length){ toast("এক্সপোর্ট করার মতো কাস্টমার নেই"); return; }
-  toast("এক্সেল তৈরি হচ্ছে…");
+  if(!S.customers.length){ toast("ডাউনলোড করার মতো কাস্টমার নেই"); return; }
+  toast("ডাউনলোড হচ্ছে…");
   loadXLSX().then(function(XLSX){
     var rows=S.customers.map(function(c){ return {c:c,bal:balanceOf(c.id)}; });
     rows.sort(function(a,b){ return b.bal-a.bal; });
@@ -639,8 +639,8 @@ function exportCustomersXlsx(){
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"কাস্টমার");
     XLSX.writeFile(wb,"bakibondhu-customers-"+new Date().toISOString().slice(0,10)+".xlsx");
-    toast("এক্সপোর্ট সম্পন্ন");
-  }).catch(function(e){ toast("এক্সপোর্ট ব্যর্থ — ইন্টারনেট দেখুন"); });
+    toast("ডাউনলোড সম্পন্ন");
+  }).catch(function(e){ toast("ডাউনলোড ব্যর্থ — ইন্টারনেট দেখুন"); });
 }
 
 // ---------- app update ----------

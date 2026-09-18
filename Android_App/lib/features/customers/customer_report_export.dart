@@ -1,18 +1,26 @@
-import 'dart:io';
-
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:file_saver/file_saver.dart';
+import 'package:flutter/services.dart';
 
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/xlsx_writer.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 
+const _downloadsChannel = MethodChannel('bakibondhu/downloads');
+const _xlsxMime =
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
 /// Builds an `.xlsx` report of every customer of this shop (name, mobile,
-/// address, outstanding due, status) and hands it to the OS share sheet, so the
-/// owner can save it / send it to Excel, Drive, email, WhatsApp, etc.
-Future<void> exportCustomerReport({
+/// address, outstanding due, status) and **downloads** it.
+///
+/// By default it saves straight to the public **Downloads** folder (via
+/// MediaStore). Pass [chooseLocation] — or when the direct save isn't available
+/// (e.g. older Android) — to open the system "Save to…" picker so the owner can
+/// choose any folder. Returns the saved path/location, or null if the user
+/// cancelled the picker.
+Future<String?> downloadCustomerReport({
   required List<CustomerBalance> rows,
   required String shopName,
+  bool chooseLocation = false,
 }) async {
   final title = shopName.trim().isEmpty ? S.appName : shopName.trim();
   final now = DateTime.now();
@@ -47,20 +55,27 @@ Future<void> exportCustomerReport({
     XlsxSheet('কাস্টমার', data, cols: const [7, 24, 15, 22, 13, 11]),
   ]);
 
-  final dir = await getTemporaryDirectory();
-  final fname = 'bakibondhu-customers-${_stamp(now)}.xlsx';
-  final file = File('${dir.path}/$fname');
-  await file.writeAsBytes(bytes, flush: true);
+  final base = 'bakibondhu-customers-${_stamp(now)}';
 
-  await Share.shareXFiles(
-    [
-      XFile(
-        file.path,
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        name: fname,
-      )
-    ],
-    subject: '$title — ${S.customerReportTitle}',
+  if (!chooseLocation) {
+    // Default: straight to the public Downloads folder (MediaStore).
+    try {
+      final saved = await _downloadsChannel.invokeMethod<String>(
+        'saveToDownloads',
+        {'name': '$base.xlsx', 'bytes': bytes, 'mime': _xlsxMime},
+      );
+      if (saved != null) return saved;
+    } catch (_) {
+      // Falls through to the picker (e.g. older Android or a save error).
+    }
+  }
+
+  // "Save to…" picker — the user chooses the folder.
+  return FileSaver.instance.saveAs(
+    name: base,
+    bytes: bytes,
+    ext: 'xlsx',
+    mimeType: MimeType.microsoftExcel,
   );
 }
 

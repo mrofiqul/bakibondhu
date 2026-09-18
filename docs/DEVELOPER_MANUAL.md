@@ -113,6 +113,13 @@ BakiBondhu/
   Bangla source is the base and, when English is selected, a curated `bn→en` map +
   a post-render DOM translator (`translateDom`) rewrite the text nodes; toggle on the
   auth screen + Settings, persisted in `localStorage`.
+- **v0.1.22 — Download the customer report** (was "Export"). Android now writes the
+  `.xlsx` straight to the public **Downloads** folder via a small MediaStore
+  platform channel (`bakibondhu/downloads` in `MainActivity.kt`, API 29+), with a
+  fallback/`Save to…` picker through `file_saver`'s `saveAs` (note: file_saver's
+  `saveFile` writes to app-private storage, so it isn't used for the default). Web
+  and admin already trigger real browser downloads; all three were relabelled
+  Export → **Download**.
 
 ---
 

@@ -4,8 +4,9 @@ An easy credit ledger for shopkeepers. This guide shows, step by step, how to us
 the BakiBondhu app. (The app can run in **Bangla or English** — Bangla labels are
 shown in brackets.)
 
-> **Version v0.1.21** — new: **Bangla/English language** selection, **Excel export**
-> (all customers), in-app **Update**, and an **account is now required** to use the app.
+> **Version v0.1.22** — new: **Bangla/English language** selection, **download** the
+> all-customers report to your **Downloads** folder, in-app **Update**, and an
+> **account is now required** to use the app.
 
 ---
 
@@ -17,7 +18,7 @@ records** easily — instead of a paper notebook.
 - ✅ **Works offline after you log in** — all records stay on your phone.
 - ✅ **Bangla & English** — switch language anytime with a toggle.
 - ✅ Send customers a **reminder** (SMS / WhatsApp).
-- ✅ Export an **Excel (.xlsx) report** of all your customers.
+- ✅ Download an **Excel (.xlsx) report** of all your customers to your Downloads folder.
 
 ---
 
@@ -156,10 +157,11 @@ Open **⚙️ Settings** for:
   instantly and your choice is remembered next time. The same toggle is also at the
   top of the **Login** screen.
 - **Shop name** — used in reminder messages and exports.
-- **📊 Excel export — all customers** — builds an **Excel (.xlsx) report of every
-  customer** (name, mobile, address, outstanding due, status, and the total due),
-  then opens the share sheet so you can save or send it (Drive, email, WhatsApp…).
-  *(You can also export from the 📊 icon at the top-right of the Home screen.)*
+- **📥 Download report — all customers** — an **Excel (.xlsx) report of every
+  customer** (name, mobile, address, outstanding due, status, and the total due)
+  is downloaded straight to your phone's **Downloads** folder. Tap **Save to…** in
+  the confirmation to pick another folder instead. *(You can also download from the
+  ⬇️ icon at the top-right of the Home screen.)*
 - **📲 Update app** — checks for a newer version. If one exists it opens the APK
   download; installing it over the existing app **keeps all your data**. When a new
   version is available, the app also shows a pop-up on launch.
