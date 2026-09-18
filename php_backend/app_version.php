@@ -7,10 +7,10 @@
 // Updating never touches the user's data; it only installs a newer build.
 return [
     'android' => [
-        'version' => '0.1.22',
-        'build'   => 23,
+        'version' => '0.1.23',
+        'build'   => 24,
         'url'     => 'https://github.com/mrofiqul/bakibondhu-app/releases/latest/download/BakiBondhu.apk',
-        'notes'   => 'নতুন: অ্যাপ আপডেট নোটিফিকেশন ও কাস্টমার রিপোর্ট এক্সেল এক্সপোর্ট।',
+        'notes'   => 'নতুন: রিপোর্ট সরাসরি ডাউনলোড ও অ্যাপ-আপডেট চেক ঠিক করা হয়েছে।',
     ],
     'web' => [
         'build'   => 4,

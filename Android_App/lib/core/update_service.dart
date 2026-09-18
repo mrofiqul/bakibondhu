@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bakibondhu/core/config.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
+import 'package:bakibondhu/data/infinityfree_client.dart';
 
 /// A newer app build advertised by the server.
 class AppUpdateInfo {
@@ -26,9 +26,13 @@ class AppUpdateInfo {
 /// the check fails for any reason (offline, timeout, bad response) — the app is
 /// offline-first, so a failed check must never disrupt the UI.
 Future<AppUpdateInfo?> checkForAppUpdate({int currentBuild = kAppBuild}) async {
+  // Use InfinityFreeClient (not a plain http client) so the shared-host anti-bot
+  // "browser check" is solved — otherwise the request gets the challenge HTML
+  // instead of JSON and the update is never seen.
+  final client = InfinityFreeClient();
   try {
     final uri = Uri.parse('$kSyncBaseUrl/api/v1/app/version');
-    final res = await http.get(uri).timeout(const Duration(seconds: 8));
+    final res = await client.get(uri).timeout(const Duration(seconds: 15));
     if (res.statusCode != 200) return null;
     final body = jsonDecode(res.body);
     if (body is! Map) return null;
@@ -46,6 +50,8 @@ Future<AppUpdateInfo?> checkForAppUpdate({int currentBuild = kAppBuild}) async {
     );
   } catch (_) {
     return null;
+  } finally {
+    client.close();
   }
 }
 
