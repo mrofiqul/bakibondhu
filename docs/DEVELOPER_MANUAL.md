@@ -19,8 +19,10 @@ BakiBondhu/
 │   ├── lib/
 │   │   ├── main.dart       Composition root (wires storage, auth, sync)
 │   │   ├── app.dart        Root widget + entry routing (landing vs home)
-│   │   ├── core/           Theme, Bangla strings, formatting, validators,
-│   │   │                   BD geography (bd_geo: bivag/zila/thana), AppScope, dialogs
+│   │   ├── core/           Theme, bilingual strings (`strings_bn.dart` = runtime
+│   │   │                   বাংলা/English `S`), `language.dart`/`language_toggle.dart`,
+│   │   │                   `config.dart` (base URL + version), `xlsx_writer.dart`,
+│   │   │                   `update_service.dart`, formatting, validators, bd_geo, AppScope
 │   │   ├── domain/         Pure business rules (money, balance, allocation, aging)
 │   │   ├── data/           Repositories (sqflite), auth API, session, InfinityFree client
 │   │   ├── sync/           Sync engine, types, HTTP sync API, local sync store
@@ -31,8 +33,12 @@ BakiBondhu/
 ├── php_backend/            PHP + MySQL backend (deployed to InfinityFree)
 │   ├── index.php           Front controller / router (auth, sync, admin)
 │   ├── lib.php             DB (PDO), JSON, UUID, HS256 JWT sign+verify, auth guards
-│   ├── admin_lib.php       Admin auth (scoped JWT), reports, actions, audit log
+│   ├── admin_lib.php       Admin auth (scoped JWT), reports, actions, audit log,
+│   │                       customer .xlsx export (grouped by shop)
+│   ├── xlsx.php            Dependency-free .xlsx writer (zipped XML: crc32 + deflate)
+│   ├── app_version.php     Latest app/web build for the in-app update check
 │   ├── admin/index.html    Super-admin dashboard SPA (served at /admin)
+│   ├── app/index.html      Shopkeeper web app SPA — bilingual (served at /app)
 │   ├── admin_setup.php     One-time first-admin bootstrap (delete after use)
 │   ├── setup.php           One-time table creator (delete after use)
 │   ├── config.php          SECRETS (DB creds + jwt_secret) — GITIGNORED
@@ -76,10 +82,37 @@ BakiBondhu/
 | Layer | Choice |
 |---|---|
 | App | Flutter (Dart ≥ 3.3), Material 3 |
-| Local storage | `sqflite`, `shared_preferences`, `flutter_secure_storage` |
+| Local storage | `sqflite`, `shared_preferences`, `flutter_secure_storage`, `path_provider` |
 | Networking | `http` + custom `InfinityFreeClient` (AES via `pointycastle`) |
 | Auth backend | PHP 8 (PDO/MySQL), HS256 JWT, bcrypt |
 | Sync backend (prepared) | ASP.NET Core 9, Npgsql/Dapper, PostgreSQL, RLS |
+
+### Recent features (v0.1.17 – v0.1.21)
+- **v0.1.17 — unified collections/promises into sync.** `EntityKind` gained
+  `collection`/`promise`; sync push/pull handles them so app and web share them on
+  the one DB (`collection_activities`, `promise_to_pay`).
+- **v0.1.18 — Excel (.xlsx) customer-report export** on app + web + admin. `.xlsx`
+  is hand-built everywhere (no PhpSpreadsheet, no `archive` pkg): zipped XML via
+  CRC-32 + raw DEFLATE. Server: `php_backend/xlsx.php` + `GET /api/v1/admin/export/
+  customers.xlsx` (all customers grouped by shop). Android:
+  `lib/core/xlsx_writer.dart` (shared to the OS via `share_plus`, staged with
+  `path_provider`). Web: lazy-loads SheetJS from cdnjs on demand.
+- **v0.1.19 — in-app update.** Public `GET /api/v1/app/version` (from
+  `app_version.php`) advertises the latest build. Android `lib/core/update_service.dart`
+  compares `kAppBuild` and opens the APK URL; web compares `WEB_BUILD` and reloads.
+  Installing over the same signed package keeps all data.
+- **v0.1.20 — registered owners only.** Removed the "continue without account"
+  path and the offline onboarding screen; login/register is required
+  (`startLanding = !onboarded && token == null`; login/register set
+  `onboardingComplete`). Existing data is untouched.
+- **v0.1.21 — বাংলা / English language selection.** Android: `strings_bn.dart` is
+  now a runtime bilingual `S` (`AppLang` enum + getters); an `appLanguage`
+  `ValueNotifier` rebuilds the root (`app.dart`), the choice persists via
+  `SettingsStore.language()`, and a `LanguageToggle` sits at the top of the landing
+  screen + in Settings (so nearly all `const Text(S.x)` became non-const). Web: the
+  Bangla source is the base and, when English is selected, a curated `bn→en` map +
+  a post-render DOM translator (`translateDom`) rewrite the text nodes; toggle on the
+  auth screen + Settings, persisted in `localStorage`.
 
 ---
 
@@ -281,9 +314,16 @@ sync wire contract, so switching is just a `SYNC_BASE_URL` change.
   `…/releases/latest/download/BakiBondhu.apk`.
 
 ### Publish a new app version
-1. Bump `version:` in `Android_App/pubspec.yaml` (e.g. `0.1.16+17`), the About
-   label in `features/settings/settings_screen.dart`, and the download caption
-   (version + ~size) in `php_backend/index.html`.
+1. Bump the version everywhere it appears:
+   - `version:` in `Android_App/pubspec.yaml` (e.g. `0.1.21+22`);
+   - `kAppVersion` / `kAppBuild` in `Android_App/lib/core/config.dart` (the About
+     label in `settings_screen.dart` now reads `kAppVersion`, so it follows along);
+   - `android.version` / `android.build` in `php_backend/app_version.php` (this is
+     what already-installed apps compare against to offer an **update**, so it must
+     equal the new APK's versionName/versionCode);
+   - the download caption (version + ~size) in `php_backend/index.html`.
+   - **Web-only changes:** also bump `WEB_BUILD` in `php_backend/app/index.html` and
+     `web.build` in `app_version.php` so open web sessions get the reload prompt.
 2. Build and release (Flutter may not be on PATH — the dev box uses
    `/c/src/flutter/bin/flutter`):
    ```bash
@@ -296,9 +336,15 @@ sync wire contract, so switching is just a `SYNC_BASE_URL` change.
    ```
    This ARM-focused APK is ~34 MB and installs on any real phone. The GitHub asset
    **must** be named `BakiBondhu.apk`.
-3. Deploy the updated `php_backend/index.html` via FTP so the caption shows the new
-   version/size. The download button and `…/releases/latest/download/BakiBondhu.apk`
-   already auto-serve the newest release, so the link itself needs no change.
+3. Deploy the changed host files via FTP: `php_backend/index.html` (caption),
+   `app_version.php` (update endpoint), and any changed `app/index.html` / `admin/`
+   / PHP. The download button and `…/releases/latest/download/BakiBondhu.apk`
+   auto-serve the newest release, so the link itself needs no change.
+   > ⚠️ **Deploy paths must not cross:** the landing page `php_backend/index.html`
+   > → `/htdocs/index.html`, but the API router `php_backend/index.php` →
+   > `/htdocs/index.php`. Uploading the landing over `index.php` makes the whole
+   > API 200-serve the landing HTML (`.htaccess` `DirectoryIndex index.html index.php`
+   > + rewrite-to-`index.php`). Verify `/health` returns JSON after any deploy.
 
 ---
 
@@ -359,4 +405,8 @@ Passwords are bcrypt; user tokens are 30-day HS256 JWTs (`sub`, `business_id`,
   delete allowed once settled). Still to do: transaction-level edits, richer
   **conflict-resolution** UI, and pushing deletes down to *other* devices via server
   tombstones (today a delete reaches other devices only on reinstall).
-- Web app (Flutter web) — the same domain rules apply.
+- **Shopkeeper web app is live** at `/app` — a static Bangla/English JS SPA
+  (`php_backend/app/index.html`) on the same MySQL DB via the sync API (not Flutter
+  web). **Excel export, in-app update, and বাংলা/English** ship on both app and web
+  (see *Recent features*). Possible next: full localization of the web export headers
+  and richer per-language number/date formatting.

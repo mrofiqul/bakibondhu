@@ -1,8 +1,11 @@
 # BakiBondhu — User Guide (English)
 
 An easy credit ledger for shopkeepers. This guide shows, step by step, how to use
-the BakiBondhu app. (The app's on-screen text is in Bangla; the Bangla labels are
+the BakiBondhu app. (The app can run in **Bangla or English** — Bangla labels are
 shown in brackets.)
+
+> **Version v0.1.21** — new: **Bangla/English language** selection, **Excel export**
+> (all customers), in-app **Update**, and an **account is now required** to use the app.
 
 ---
 
@@ -11,9 +14,10 @@ shown in brackets.)
 BakiBondhu is a mobile app to keep your customers' **credit (baki) and payment
 records** easily — instead of a paper notebook.
 
-- ✅ **Works without internet** — all records stay on your phone.
-- ✅ **In Bangla** — simple and clear.
+- ✅ **Works offline after you log in** — all records stay on your phone.
+- ✅ **Bangla & English** — switch language anytime with a toggle.
 - ✅ Send customers a **reminder** (SMS / WhatsApp).
+- ✅ Export an **Excel (.xlsx) report** of all your customers.
 
 ---
 
@@ -32,13 +36,16 @@ records** easily — instead of a paper notebook.
 
 ## 3. Opening the app the first time
 
-A welcome screen appears with three choices:
+A welcome screen appears. **An account is required to use the app** (since v0.1.20
+there is no offline/guest option):
 
 | Option | When to choose it |
 |---|---|
 | **Log in** (লগ ইন করুন) | If you already created an account. |
 | **Create account** (নতুন অ্যাকাউন্ট খুলুন) | First time — see the required fields below. |
-| **Continue offline** (অ্যাকাউন্ট ছাড়া চালিয়ে যান) | Use it on this phone only, without an account. |
+
+Use the **বাংলা | English** toggle at the **top-right** of this screen to pick the
+app's language (see §9).
 
 **Creating an account:** enter your **name, shop name, mobile number, and a
 password (at least 6 characters)** — all four are required. You can also record your
@@ -48,9 +55,8 @@ one above it (choose a division to unlock its districts, a district to unlock it
 thanas). Location is optional. The mobile must be a **Bangladesh 11-digit number**
 (e.g. `01712345678`).
 
-> 💡 Everything works without an account too. Signing in lets you **sync to the
-> cloud** and share your ledger across phones (see §11). Only logging in /
-> registering and syncing need internet.
+> 💡 Signing in lets you **sync to the cloud** and share your ledger across phones
+> (see §11). After you log in once, the app works **offline** too (see §13).
 
 ---
 
@@ -142,10 +148,22 @@ On the customer screen, tap the **📋 Collections** (কালেকশন) ico
 
 ---
 
-## 9. Settings & shop name
+## 9. Settings
 
-Open **⚙️ Settings** and set your **Shop name** — used in reminder messages. The
-**Sync & account** section is here too.
+Open **⚙️ Settings** for:
+
+- **Language (ভাষা)** — the **বাংলা | English** toggle. The whole app switches
+  instantly and your choice is remembered next time. The same toggle is also at the
+  top of the **Login** screen.
+- **Shop name** — used in reminder messages and exports.
+- **📊 Excel export — all customers** — builds an **Excel (.xlsx) report of every
+  customer** (name, mobile, address, outstanding due, status, and the total due),
+  then opens the share sheet so you can save or send it (Drive, email, WhatsApp…).
+  *(You can also export from the 📊 icon at the top-right of the Home screen.)*
+- **📲 Update app** — checks for a newer version. If one exists it opens the APK
+  download; installing it over the existing app **keeps all your data**. When a new
+  version is available, the app also shows a pop-up on launch.
+- **Sync & account** — Log in / Log out and sync (see §10, §11).
 
 ---
 
