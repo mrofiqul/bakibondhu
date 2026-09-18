@@ -78,6 +78,14 @@ class S {
   // Transaction history export
   static const exportHistory = 'লেনদেন এক্সপোর্ট করুন';
   static const historyExportTitle = 'লেনদেনের হিসাব';
+
+  // Excel (customer report) export
+  static const exportExcel = 'এক্সেল এক্সপোর্ট';
+  static const exportExcelTooltip = 'সব কাস্টমার এক্সেলে এক্সপোর্ট করুন';
+  static const customerReportTitle = 'কাস্টমার রিপোর্ট';
+  static const exportNoCustomers = 'এক্সপোর্ট করার মতো কাস্টমার নেই';
+  static const exportPreparing = 'এক্সেল তৈরি হচ্ছে…';
+  static const exportFailed = 'এক্সপোর্ট ব্যর্থ হয়েছে';
   static const shopLabel = 'দোকান';
   static const customerLabel = 'কাস্টমার';
   static const runningDue = 'চলতি বাকি';
