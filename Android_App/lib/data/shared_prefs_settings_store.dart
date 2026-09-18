@@ -8,6 +8,7 @@ class SharedPrefsSettingsStore implements SettingsStore {
   static const _kOnboarded = 'onboarding_complete';
   static const _kTrialDismissedOn = 'trial_reminder_dismissed_on';
   static const _kDataOwner = 'data_owner_business_id';
+  static const _kLanguage = 'ui_language';
 
   final SharedPreferences _prefs;
   SharedPrefsSettingsStore(this._prefs);
@@ -52,4 +53,11 @@ class SharedPrefsSettingsStore implements SettingsStore {
       await _prefs.setString(_kDataOwner, businessId);
     }
   }
+
+  @override
+  Future<String?> language() async => _prefs.getString(_kLanguage);
+
+  @override
+  Future<void> setLanguage(String code) async =>
+      _prefs.setString(_kLanguage, code);
 }

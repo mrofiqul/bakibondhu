@@ -39,7 +39,7 @@ Future<({String name, String phone, String? address})?> showAddCustomerDialog(
                   controller: nameCtrl,
                   autofocus: true,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: S.nameLabel),
+                  decoration: InputDecoration(labelText: S.nameLabel),
                   validator: (v) =>
                       (v == null || v.trim().isEmpty) ? S.nameRequired : null,
                 ),
@@ -60,7 +60,7 @@ Future<({String name, String phone, String? address})?> showAddCustomerDialog(
                 TextFormField(
                   controller: addressCtrl,
                   decoration:
-                      const InputDecoration(labelText: S.addressLabelOptional),
+                      InputDecoration(labelText: S.addressLabelOptional),
                 ),
               ],
             ),
@@ -68,7 +68,7 @@ Future<({String name, String phone, String? address})?> showAddCustomerDialog(
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(S.cancel)),
+                child: Text(S.cancel)),
             FilledButton(
               onPressed: checking
                   ? null
@@ -110,7 +110,7 @@ Future<({Money amount, String? note})?> showAddSaleDialog(BuildContext context) 
   return showDialog<({Money amount, String? note})>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text(S.addSale),
+      title: Text(S.addSale),
       content: Form(
         key: formKey,
         child: Column(
@@ -123,7 +123,7 @@ Future<({Money amount, String? note})?> showAddSaleDialog(BuildContext context) 
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
-              decoration: const InputDecoration(labelText: S.saleAmountLabel),
+              decoration: InputDecoration(labelText: S.saleAmountLabel),
               validator: (v) {
                 final n = num.tryParse((v ?? '').trim());
                 return (n == null || n <= 0) ? S.amountRequired : null;
@@ -131,14 +131,14 @@ Future<({Money amount, String? note})?> showAddSaleDialog(BuildContext context) 
             ),
             TextFormField(
               controller: noteCtrl,
-              decoration: const InputDecoration(labelText: S.saleNoteLabel),
+              decoration: InputDecoration(labelText: S.saleNoteLabel),
             ),
           ],
         ),
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context), child: const Text(S.cancel)),
+            onPressed: () => Navigator.pop(context), child: Text(S.cancel)),
         FilledButton(
           onPressed: () {
             if (!formKey.currentState!.validate()) return;
@@ -148,7 +148,7 @@ Future<({Money amount, String? note})?> showAddSaleDialog(BuildContext context) 
               note: note.isEmpty ? null : note,
             ));
           },
-          child: const Text(S.add),
+          child: Text(S.add),
         ),
       ],
     ),

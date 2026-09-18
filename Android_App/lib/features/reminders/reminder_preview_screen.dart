@@ -11,12 +11,12 @@ import 'package:bakibondhu/domain/money.dart';
 class ReminderPreviewScreen extends StatefulWidget {
   final Customer customer;
   final Money balance;
-  final String shopName;
+  final String? shopName;
 
   const ReminderPreviewScreen({
     required this.customer,
     required this.balance,
-    this.shopName = S.shopNamePlaceholder,
+    this.shopName,
     super.key,
   });
 
@@ -29,7 +29,7 @@ class _ReminderPreviewScreenState extends State<ReminderPreviewScreen> {
       TextEditingController(text: buildReminderMessage(
     name: widget.customer.name,
     balance: widget.balance,
-    shopName: widget.shopName,
+    shopName: widget.shopName ?? S.shopNamePlaceholder,
   ));
 
   @override
@@ -45,7 +45,7 @@ class _ReminderPreviewScreenState extends State<ReminderPreviewScreen> {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text(S.couldNotOpen)));
+          .showSnackBar(SnackBar(content: Text(S.couldNotOpen)));
     }
   }
 
@@ -67,7 +67,7 @@ class _ReminderPreviewScreenState extends State<ReminderPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(S.reminderTitle)),
+      appBar: AppBar(title: Text(S.reminderTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -97,7 +97,7 @@ class _ReminderPreviewScreenState extends State<ReminderPreviewScreen> {
                   child: FilledButton.icon(
                     onPressed: _sendSms,
                     icon: const Icon(Icons.sms),
-                    label: const Text(S.sendSms),
+                    label: Text(S.sendSms),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -105,7 +105,7 @@ class _ReminderPreviewScreenState extends State<ReminderPreviewScreen> {
                   child: FilledButton.tonalIcon(
                     onPressed: _phoneDigits.isEmpty ? null : _sendWhatsApp,
                     icon: const Icon(Icons.chat),
-                    label: const Text(S.whatsapp),
+                    label: Text(S.whatsapp),
                   ),
                 ),
               ],

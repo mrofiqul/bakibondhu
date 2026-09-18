@@ -56,7 +56,7 @@ Future<void> showUpdateDialog(BuildContext context, AppUpdateInfo info) async {
   await showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text(S.updateAvailableTitle),
+      title: Text(S.updateAvailableTitle),
       content: Text(
         '${S.updateAvailableBody(info.version)}'
         '${info.notes.isNotEmpty ? '\n\n${info.notes}' : ''}',
@@ -64,14 +64,14 @@ Future<void> showUpdateDialog(BuildContext context, AppUpdateInfo info) async {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text(S.updateLater),
+          child: Text(S.updateLater),
         ),
         FilledButton(
           onPressed: () {
             Navigator.pop(ctx);
             openUpdateUrl(info.url);
           },
-          child: const Text(S.updateNow),
+          child: Text(S.updateNow),
         ),
       ],
     ),

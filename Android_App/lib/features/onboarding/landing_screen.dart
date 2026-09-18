@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bakibondhu/core/language_toggle.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/features/auth/login_screen.dart';
 import 'package:bakibondhu/features/dashboard/home_screen.dart';
@@ -34,6 +35,10 @@ class LandingScreen extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
+              const Align(
+                alignment: Alignment.centerRight,
+                child: LanguageToggle(),
+              ),
               const Spacer(),
               Text(
                 S.appName,
@@ -53,7 +58,7 @@ class LandingScreen extends StatelessWidget {
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () => _openAuth(context, register: false),
-                  child: const Text(S.landingLogin),
+                  child: Text(S.landingLogin),
                 ),
               ),
               const SizedBox(height: 12),
@@ -61,7 +66,7 @@ class LandingScreen extends StatelessWidget {
                 width: double.infinity,
                 child: FilledButton.tonal(
                   onPressed: () => _openAuth(context, register: true),
-                  child: const Text(S.landingRegister),
+                  child: Text(S.landingRegister),
                 ),
               ),
               const SizedBox(height: 8),

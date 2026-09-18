@@ -104,6 +104,10 @@
   @keyframes sp{to{transform:rotate(360deg)}}
   .loading{display:grid;place-items:center;min-height:60vh;color:var(--muted)}
   .setrow{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;border-bottom:1px solid var(--border)}
+  .authtop{display:flex;justify-content:flex-end;padding:8px 2px 0;max-width:420px;margin:0 auto;width:100%}
+  .langtog{display:inline-flex;border:1px solid var(--border);border-radius:20px;padding:2px;background:var(--surface)}
+  .langtog button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:5px 13px;border-radius:16px;cursor:pointer}
+  .langtog button.on{background:var(--green);color:#fff}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -113,10 +117,143 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.১";
+var VERSION="ওয়েব সংস্করণ ১.২";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=2;
+var WEB_BUILD=3;
+
+// ---------- language (bn / en) ----------
+// The UI is authored in Bangla; when English is selected we translate the
+// rendered text nodes via the map below (post-render, longest-match first), so
+// the Bangla source stays the single source of truth. User data (names, notes,
+// place names) isn't in the map, so it is left as typed.
+var LANG=(function(){ try{ return localStorage.getItem("bb_web_lang")||"bn"; }catch(e){ return "bn"; } })();
+var I18N={
+  // errors / toasts
+  "সমস্যা হয়েছে":"Something went wrong","একটি সমস্যা হয়েছে":"Something went wrong",
+  "মোবাইল নম্বর বা পাসওয়ার্ড ভুল":"Wrong mobile number or password",
+  "এই নম্বর দিয়ে আগেই অ্যাকাউন্ট আছে — লগ ইন করুন":"An account with this number already exists — please log in",
+  "সাবস্ক্রিপশনের মেয়াদ শেষ — অ্যাডমিনের সাথে যোগাযোগ করুন":"Subscription expired — contact the admin",
+  "অ্যাকাউন্ট সাসপেন্ড করা হয়েছে":"Account suspended",
+  "এই নম্বরের কাস্টমার আগেই আছে":"A customer with this number already exists",
+  "সংযোগ সমস্যা — আবার চেষ্টা করুন":"Connection problem — try again",
+  "আপডেট হয়েছে":"Updated","যোগ হয়েছে":"Added","বিক্রি যোগ হয়েছে":"Sale added",
+  "কাস্টমার যোগ হয়েছে":"Customer added","মুছে ফেলা হয়েছে":"Deleted",
+  "কপি হয়েছে":"Copied","কপি করা যায়নি":"Could not copy","লোড হচ্ছে…":"Loading…",
+  "চেক করা হচ্ছে…":"Checking…","চেক করা যায়নি":"Could not check",
+  "সর্বশেষ সংস্করণ চলছে":"You are on the latest version","সেভ হয়েছে":"Saved",
+  "এক্সেল তৈরি হচ্ছে…":"Preparing Excel…","এক্সপোর্ট সম্পন্ন":"Export complete",
+  "এক্সপোর্ট ব্যর্থ — ইন্টারনেট দেখুন":"Export failed — check your internet",
+  "এক্সপোর্ট করার মতো কাস্টমার নেই":"No customers to export",
+  // auth
+  "বাকির হিসাব — সহজে, অনলাইনে":"Track credit — easily, online",
+  "লগ ইন করুন":"Log in","নতুন অ্যাকাউন্ট":"New account","লগ ইন":"Log in","নিবন্ধন করুন":"Register",
+  "নতুন? অ্যাকাউন্ট খুলুন":"New? Create an account","অ্যাকাউন্ট আছে? লগ ইন করুন":"Have an account? Log in",
+  "আপনার নাম দিন":"Enter your name","আপনার নাম":"Your name","দোকানের নাম দিন":"Enter the shop name","দোকানের নাম":"Shop name",
+  "মোবাইল নম্বর":"Mobile number","পাসওয়ার্ড":"Password",
+  "বিভাগ (ঐচ্ছিক)":"Division (optional)","জেলা (ঐচ্ছিক)":"District (optional)","থানা/উপজেলা (ঐচ্ছিক)":"Thana/Upazila (optional)",
+  "বিভাগ নির্বাচন করুন":"Select division","জেলা নির্বাচন করুন":"Select district","থানা/উপজেলা নির্বাচন করুন":"Select thana/upazila",
+  "আগে বিভাগ নির্বাচন করুন":"Select a division first","আগে জেলা নির্বাচন করুন":"Select a district first",
+  "সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা, 01…)":"Enter a valid mobile number (11 digits, 01…)",
+  "সঠিক মোবাইল নম্বর দিন":"Enter a valid mobile number","কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন":"Use a password of at least 6 characters",
+  "নাম দিন":"Enter a name",
+  // home
+  "মোট বাকি — আপনার পাওনা":"Total due — your receivables","আজকের বিক্রি":"Today's sales",
+  "বিক্রির হিসাব দেখুন":"View sales report","＋ নতুন কাস্টমার":"＋ New customer",
+  "নাম বা মোবাইল দিয়ে খুঁজুন":"Search by name or mobile",
+  "সর্বোচ্চ বাকি":"Most owed","নাম (ক–হ)":"Name (A–Z)","নতুন আগে":"Newest first",
+  "এখনো কোনো কাস্টমার নেই।":"No customers yet.","নিচের বাটন দিয়ে প্রথম কাস্টমার যোগ করুন।":"Add your first customer with the button below.",
+  "— কিছু পাওয়া যায়নি":"— nothing found","জন কাস্টমার":"customers",
+  // customer detail
+  "এখন বাকি":"Due now","এখনো কোনো লেনদেন নেই":"No transactions yet",
+  "↑ বাকি দিলাম":"↑ Gave credit","↓ টাকা পেলাম":"↓ Got payment",
+  "বাকি দিলাম":"Gave credit","টাকা পেলাম":"Got payment",
+  "সমন্বয় (বৃদ্ধি)":"Adjustment (increase)","সমন্বয় (হ্রাস)":"Adjustment (decrease)","মনে করান":"Remind",
+  "📤 লেনদেন এক্সপোর্ট করুন":"📤 Export transactions","✎ কাস্টমার এডিট করুন":"✎ Edit customer","🗑 কাস্টমার মুছুন":"🗑 Delete customer",
+  // customer sheet / txn sheet
+  "নতুন কাস্টমার":"New customer","কাস্টমার এডিট করুন":"Edit customer",
+  "ঠিকানা (ঐচ্ছিক)":"Address (optional)","বাকি যোগ করুন":"Add credit","পরিশোধ যোগ করুন":"Add payment",
+  "পরিমাণ (৳)":"Amount (৳)","নোট (ঐচ্ছিক)":"Note (optional)","বিবরণ (ঐচ্ছিক)":"Note (optional)","সঠিক পরিমাণ দিন":"Enter a valid amount",
+  "এই নম্বরের কাস্টমার আগেই আছে।":"A customer with this number already exists.",
+  "-কে ও তার সব লেনদেনের হিসাব মুছে ফেলবেন? এটি আর ফেরানো যাবে না।":" and all their transaction history — delete? This cannot be undone.",
+  "এই কাস্টমারের বাকি আছে — আগে বাকি পরিশোধ করুন।":"This customer has an outstanding due — settle it first.",
+  "কাস্টমার মুছুন":"Delete customer",
+  // reminder
+  "✎ পাঠানোর আগে বার্তা সম্পাদনা করতে পারেন":"✎ You can edit the message before sending",
+  "✉ SMS পাঠান":"✉ Send SMS","এই কাস্টমারের কোনো বাকি নেই":"This customer has no due",
+  "রিমাইন্ডার পাঠাতে মোবাইল নম্বর দরকার":"A mobile number is needed to send a reminder",
+  // sales
+  "বিক্রির হিসাব":"Sales report","＋ বিক্রি যোগ করুন":"＋ Add sale","বিক্রি যোগ করুন":"Add sale",
+  "এখনো কোনো বিক্রি যোগ করা হয়নি":"No sales added yet","টি বিক্রি":"sales",
+  "দৈনিক":"Daily","মাসিক":"Monthly","ত্রৈমাসিক":"Quarterly","বার্ষিক":"Yearly",
+  "এই মাসের বিক্রি":"This month's sales","এই তিন মাসের বিক্রি":"This quarter's sales","এই বছরের বিক্রি":"This year's sales",
+  // collections
+  "কালেকশন":"Collections","＋ কালেকশন":"＋ Collection","＋ প্রতিশ্রুতি":"＋ Promise",
+  "কালেকশন যোগ করুন":"Add collection","প্রতিশ্রুতি যোগ করুন":"Add promise","প্রতিশ্রুতি":"Promises",
+  "কার্যক্রমের ইতিহাস":"Activity history","কোনো কার্যক্রম নেই":"No activity yet","কোনো প্রতিশ্রুতি নেই":"No promises yet",
+  "পরবর্তী ফলো-আপ (ঐচ্ছিক)":"Next follow-up (optional)","ফলো-আপ:":"Follow-up:","তারিখ দিন":"Enter a date",
+  "ফোন":"Phone","সরাসরি":"In person","মেসেজ":"Message","অন্যান্য":"Other",
+  "যোগাযোগ হয়নি":"Not contacted","যোগাযোগ হয়েছে":"Contacted","পরিশোধের প্রতিশ্রুতি":"Promised to pay",
+  "আংশিক পরিশোধ":"Partially paid","অস্বীকার / বিরোধ":"Refused / disputed","ফলো-আপ দরকার":"Follow-up required",
+  "খোলা":"Open","পূর্ণ":"Fulfilled","আংশিক":"Partial","ভঙ্গ":"Broken",
+  "মাধ্যম":"Method","অবস্থা":"Status","স্ট্যাটাস":"Status",
+  // settings
+  "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
+  "📊 এক্সেল এক্সপোর্ট — সব কাস্টমার":"📊 Excel export — all customers",
+  "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.২":"Web version 1.2","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  // statement export + update sheet + trial
+  "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
+  "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
+  "লেনদেনের হিসাব":"Transaction statement","📋 কপি করুন":"📋 Copy","📤 শেয়ার করুন":"📤 Share",
+  "নতুন আপডেট পাওয়া গেছে":"Update available",
+  "নতুন সংস্করণ পাওয়া গেছে। আপডেট করলে আপনার সব তথ্য অপরিবর্তিত থাকবে।":"A new version is available. Your data stays intact after updating.",
+  "আপডেট করুন":"Update","পরে":"Later",
+  "সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে। অ্যাডমিনের সাথে যোগাযোগ করুন।":"Your subscription has expired. Contact the admin.",
+  "সাবস্ক্রিপশনের মেয়াদ ":"Your subscription ends "," শেষ হবে।":".","আজ":"today"," দিনে":" days",
+  // months + generic labels
+  "জানুয়ারি":"January","ফেব্রুয়ারি":"February","মার্চ":"March","এপ্রিল":"April","মে":"May","জুন":"June",
+  "জুলাই":"July","আগস্ট":"August","সেপ্টেম্বর":"September","অক্টোবর":"October","নভেম্বর":"November","ডিসেম্বর":"December",
+  "সর্বোচ্চ":"Most","চলতি বাকি":"Running due","মোট বাকি":"Total due",
+  "পরিশোধিত":"Settled","বাকি":"due","জমা":"credit",
+  "কাস্টমার":"Customer","লেনদেন":"Transactions","বাকিবন্ধু":"BakiBondhu"
+};
+var I18N_KEYS=null;
+function translateDom(root){
+  if(LANG!=="en"||!root) return;
+  if(!I18N_KEYS) I18N_KEYS=Object.keys(I18N).sort(function(a,b){return b.length-a.length;});
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null,false),nodes=[],n;
+  while((n=w.nextNode())) nodes.push(n);
+  nodes.forEach(function(tn){
+    var s=tn.nodeValue; if(!s||!/[ঀ-৿]/.test(s)) return;
+    var out=s;
+    for(var i=0;i<I18N_KEYS.length;i++){ var k=I18N_KEYS[i]; if(out.indexOf(k)>=0) out=out.split(k).join(I18N[k]); }
+    if(out!==s) tn.nodeValue=out;
+  });
+  if(root.querySelectorAll) root.querySelectorAll("[placeholder]").forEach(function(el){
+    var p=el.getAttribute("placeholder"); if(!p||!/[ঀ-৿]/.test(p)) return; var o=p;
+    for(var i=0;i<I18N_KEYS.length;i++){ var k=I18N_KEYS[i]; if(o.indexOf(k)>=0) o=o.split(k).join(I18N[k]); }
+    if(o!==p) el.setAttribute("placeholder",o);
+  });
+}
+function applyLang(root){ if(LANG==="en") translateDom(root||document.body); }
+function setLang(l){ if(l!=="en"&&l!=="bn") return; if(l===LANG) return; LANG=l; try{localStorage.setItem("bb_web_lang",l);}catch(e){} render(); }
+function langToggleHtml(){ return '<div class="langtog">'+
+  '<button data-lang="bn" class="'+(LANG==="bn"?"on":"")+'">বাংলা</button>'+
+  '<button data-lang="en" class="'+(LANG==="en"?"on":"")+'">English</button></div>'; }
+// Delegated toggle clicks + a MutationObserver so ANY re-render (including
+// direct renderHome/renderAuth calls and dropdown rebuilds) gets translated.
+var _translating=false;
+function initI18n(){
+  document.addEventListener("click",function(e){
+    var b=e.target&&e.target.closest?e.target.closest("[data-lang]"):null;
+    if(b) setLang(b.getAttribute("data-lang"));
+  });
+  new MutationObserver(function(){
+    if(LANG!=="en"||_translating) return;
+    _translating=true; try{ translateDom(document.body); }finally{ _translating=false; }
+  }).observe(document.body,{childList:true,subtree:true});
+}
 var API="/api/v1";
 var LS={tok:"bb_web_tok",biz:"bb_web_biz",shop:"bb_web_shop",dev:"bb_web_dev",sort:"bb_web_sort"};
 var S={ token:localStorage.getItem(LS.tok)||null, businessId:localStorage.getItem(LS.biz)||null,
@@ -164,12 +301,13 @@ function logout(){ [LS.tok,LS.biz,LS.shop].forEach(function(k){localStorage.remo
 var app=document.getElementById("app");
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 function el(h){ var d=document.createElement("div"); d.innerHTML=h.trim(); return d.firstChild; }
-function toast(m){ var t=el('<div class="toast">'+esc(m)+'</div>'); document.body.appendChild(t); setTimeout(function(){t.remove();},2400); }
+function toast(m){ var t=el('<div class="toast">'+esc(m)+'</div>'); document.body.appendChild(t); applyLang(t); setTimeout(function(){t.remove();},2400); }
 function initials(n){ n=(n||"").trim(); return n?n[0]:"?"; }
 function go(v){ v.sort=v.sort||view.sort; view=v; query=""; window.scrollTo(0,0); render(); }
-function loadingScreen(){ app.innerHTML=''; app.appendChild(el('<div class="loading"><div><span class="spin" style="border-color:#cbd5cd;border-top-color:var(--green)"></span> লোড হচ্ছে…</div></div>')); }
+function loadingScreen(){ app.innerHTML=''; app.appendChild(el('<div class="loading"><div><span class="spin" style="border-color:#cbd5cd;border-top-color:var(--green)"></span> লোড হচ্ছে…</div></div>')); applyLang(app); }
 
-function render(){ if(!S.token){renderAuth();return;} if(view.name==="customer"){renderCustomer();return;} if(view.name==="sales"){renderSales();return;} if(view.name==="collections"){renderCollections();return;} if(view.name==="settings"){renderSettings();return;} renderHome(); }
+function _render(){ if(!S.token){renderAuth();return;} if(view.name==="customer"){renderCustomer();return;} if(view.name==="sales"){renderSales();return;} if(view.name==="collections"){renderCollections();return;} if(view.name==="settings"){renderSettings();return;} renderHome(); }
+function render(){ _render(); applyLang(document.body); }
 
 function friendly(e){ if(!e) return "সমস্যা হয়েছে";
   if(e.code==="invalid_credentials") return "মোবাইল নম্বর বা পাসওয়ার্ড ভুল";
@@ -184,6 +322,7 @@ function friendly(e){ if(!e) return "সমস্যা হয়েছে";
 var authMode="login";
 function renderAuth(){
   app.innerHTML=""; var isLogin=authMode==="login";
+  app.appendChild(el('<div class="authtop">'+langToggleHtml()+'</div>'));
   var geo = isLogin?"":('<label class="fl">বিভাগ (ঐচ্ছিক)</label><select class="in" id="f_bivag"><option value="">বিভাগ নির্বাচন করুন</option>'+GEO.bivags.map(function(b){return '<option>'+esc(b)+'</option>';}).join("")+'</select>'+
     '<label class="fl">জেলা (ঐচ্ছিক)</label><select class="in" id="f_zila" disabled><option value="">আগে বিভাগ নির্বাচন করুন</option></select>'+
     '<label class="fl">থানা/উপজেলা (ঐচ্ছিক)</label><select class="in" id="f_thana" disabled><option value="">আগে জেলা নির্বাচন করুন</option></select>');
@@ -285,7 +424,7 @@ function renderCustomer(){
 function openCustomerMenu(c,bal){
   closeMenus();
   var menu=el('<div class="menu"><button data-a="export">📤 লেনদেন এক্সপোর্ট করুন</button><button data-a="edit">✎ কাস্টমার এডিট করুন</button><button class="danger" data-a="delete">🗑 কাস্টমার মুছুন</button></div>');
-  document.body.appendChild(menu);
+  document.body.appendChild(menu); applyLang(menu);
   menu.querySelectorAll("button").forEach(function(b){ b.onclick=function(){ var a=b.getAttribute("data-a"); closeMenus(); if(a==="export")exportSheet(c,bal); else if(a==="edit")customerSheet(c); else deleteCustomer(c,bal); }; });
   setTimeout(function(){ document.addEventListener("click",closeMenus,{once:true}); },0);
 }
@@ -332,6 +471,7 @@ function renderCollections(){
 function renderSettings(){
   app.innerHTML=""; app.appendChild(topBar("সেটিংস",{back:function(){go({name:"home"});}}));
   var m=el('<main></main>');
+  m.appendChild(el('<div class="setrow" style="align-items:center"><span>ভাষা / Language</span>'+langToggleHtml()+'</div>'));
   m.appendChild(el('<div class="sechead">দোকানের নাম</div>'));
   m.appendChild(el('<div style="display:flex;gap:8px"><input class="in" id="set_shop" value="'+esc(S.shopName)+'" placeholder="দোকানের নাম"><button class="go" id="set_save" style="width:auto;margin:0;padding:12px 18px">সেভ</button></div>'));
   m.appendChild(el('<div class="s" style="color:var(--muted);font-size:13px;margin-top:6px">রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।</div>'));
@@ -350,7 +490,7 @@ function renderSettings(){
 }
 
 // ---------- sheets ----------
-function openSheet(node){ var mask=el('<div class="mask"></div>'); mask.appendChild(node); mask.addEventListener("click",function(e){if(e.target===mask)mask.remove();}); document.body.appendChild(mask); return mask; }
+function openSheet(node){ var mask=el('<div class="mask"></div>'); mask.appendChild(node); mask.addEventListener("click",function(e){if(e.target===mask)mask.remove();}); document.body.appendChild(mask); applyLang(mask); return mask; }
 
 function customerSheet(existing){
   var isEdit=!!existing;
@@ -417,7 +557,10 @@ function addSaleSheet(){
 }
 
 // reminder
-function reminderMsg(name,bal,shop){ return "আসসালামু আলাইকুম "+name+" ভাই। আপনার কাছে "+(shop||"আমাদের দোকান")+"-এ "+taka(bal)+" বাকি আছে। সুবিধামতো পরিশোধ করলে উপকৃত হতাম। ধন্যবাদ।"; }
+function reminderMsg(name,bal,shop){
+  if(LANG==="en") return "Assalamu alaikum "+name+". You have a due of "+taka(bal)+" at "+(shop||"our shop")+". Kindly pay at your convenience. Thank you.";
+  return "আসসালামু আলাইকুম "+name+" ভাই। আপনার কাছে "+(shop||"আমাদের দোকান")+"-এ "+taka(bal)+" বাকি আছে। সুবিধামতো পরিশোধ করলে উপকৃত হতাম। ধন্যবাদ।";
+}
 function reminderSheet(c,bal){
   if(bal<=0){ toast("এই কাস্টমারের কোনো বাকি নেই"); return; }
   if(!c.phone){ toast("রিমাইন্ডার পাঠাতে মোবাইল নম্বর দরকার"); return; }
@@ -562,6 +705,7 @@ function promiseSheet(c){
 }
 
 // ---------- boot ----------
+initI18n();
 if(S.token){ loadingScreen(); pullAll().then(render).catch(function(e){ if(e.status===401){logout();} else {toast(friendly(e));render();} }); setTimeout(function(){checkWebUpdate(false);},1500); }
 else render();
 })();

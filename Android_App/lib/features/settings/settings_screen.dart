@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/config.dart';
+import 'package:bakibondhu/core/language_toggle.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/update_service.dart';
 import 'package:bakibondhu/features/sync/sync_center_screen.dart';
@@ -39,7 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AppScope.settingsOf(context).setShopName(_shopCtrl.text.trim());
     if (mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text(S.savedMsg)));
+          .showSnackBar(SnackBar(content: Text(S.savedMsg)));
     }
   }
 
@@ -65,10 +66,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final session = AppScope.sessionOf(context);
     return Scaffold(
-      appBar: AppBar(title: const Text(S.settings)),
+      appBar: AppBar(title: Text(S.settings)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(S.language, style: Theme.of(context).textTheme.titleMedium),
+              const LanguageToggle(),
+            ],
+          ),
+          const Divider(height: 32),
           Text(S.shopNameSetting, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Row(children: [
@@ -79,12 +88,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            FilledButton(onPressed: _saveShopName, child: const Text(S.save)),
+            FilledButton(onPressed: _saveShopName, child: Text(S.save)),
           ]),
           const Divider(height: 32),
           ListTile(
             leading: const Icon(Icons.sync),
-            title: const Text(S.accountSection),
+            title: Text(S.accountSection),
             subtitle: Text(session.isLoggedIn
                 ? S.loggedInAs(session.role ?? '')
                 : S.notLoggedIn),
@@ -98,8 +107,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(height: 32),
           ListTile(
             leading: const Icon(Icons.system_update),
-            title: const Text(S.updateApp),
-            subtitle: const Text(S.updateAppSubtitle),
+            title: Text(S.updateApp),
+            subtitle: Text(S.updateAppSubtitle),
             trailing: _checkingUpdate
                 ? const SizedBox(
                     width: 20,
@@ -111,10 +120,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(height: 32),
           Text(S.aboutSection, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          const ListTile(
-            leading: Icon(Icons.info_outline),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
             title: Text('${S.appName} · v$kAppVersion'),
-            subtitle: Text('Bangla-first · offline-first'),
+            subtitle: const Text('Bangla-first · offline-first'),
           ),
         ],
       ),

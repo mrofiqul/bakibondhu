@@ -126,13 +126,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _name,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: S.yourNameLabel),
+                  decoration: InputDecoration(labelText: S.yourNameLabel),
                   validator: (v) => (v == null || v.trim().isEmpty) ? S.nameRequired : null,
                 ),
                 TextFormField(
                   controller: _business,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: S.businessNameLabel),
+                  decoration: InputDecoration(labelText: S.businessNameLabel),
                   validator: (v) => (v == null || v.trim().isEmpty) ? S.businessRequired : null,
                 ),
               ],
@@ -140,13 +140,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _phone,
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(labelText: S.identifierLabel),
+                decoration: InputDecoration(labelText: S.identifierLabel),
                 validator: bdMobileValidator,
               ),
               TextFormField(
                 controller: _password,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: S.passwordLabel),
+                decoration: InputDecoration(labelText: S.passwordLabel),
                 validator: (v) => (v == null || v.length < 6) ? S.passwordShort : null,
               ),
               if (_registering) ...[
@@ -154,8 +154,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: _bivag,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: S.bivagLabel),
-                  hint: const Text(S.selectBivagHint),
+                  decoration: InputDecoration(labelText: S.bivagLabel),
+                  hint: Text(S.selectBivagHint),
                   items: [
                     for (final b in kBdBivags)
                       DropdownMenuItem(value: b, child: Text(b)),
@@ -173,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     labelText: S.zilaLabel,
                     helperText: _bivag == null ? S.selectBivagFirst : null,
                   ),
-                  hint: const Text(S.selectZilaHint),
+                  hint: Text(S.selectZilaHint),
                   items: [
                     for (final z in (kBdZilasByBivag[_bivag] ?? const <String>[]))
                       DropdownMenuItem(value: z, child: Text(z)),
@@ -194,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Nudge the user to pick a district first.
                     helperText: _zila == null ? S.selectZilaFirst : null,
                   ),
-                  hint: const Text(S.selectThanaHint),
+                  hint: Text(S.selectThanaHint),
                   items: [
                     for (final t in (kBdThanasByZila[_zila] ?? const <String>[]))
                       DropdownMenuItem(value: t, child: Text(t)),

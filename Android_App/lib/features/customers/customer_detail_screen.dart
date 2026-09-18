@@ -117,7 +117,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.copy),
-                      label: const Text(S.copyText),
+                      label: Text(S.copyText),
                       onPressed: () async {
                         await Clipboard.setData(ClipboardData(text: statement));
                         if (ctx.mounted) Navigator.pop(ctx);
@@ -129,7 +129,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   Expanded(
                     child: FilledButton.icon(
                       icon: const Icon(Icons.share),
-                      label: const Text(S.shareText),
+                      label: Text(S.shareText),
                       onPressed: () {
                         Navigator.pop(ctx);
                         Share.share(statement,
@@ -179,16 +179,16 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(S.deleteCustomer),
+        title: Text(S.deleteCustomer),
         content: Text(S.deleteCustomerConfirm(data.customer.name)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text(S.cancel)),
+              child: Text(S.cancel)),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppTheme.owed),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(S.delete),
+            child: Text(S.delete),
           ),
         ],
       ),
@@ -247,24 +247,24 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 if (v == 'delete') _deleteCustomer(data);
               },
               itemBuilder: (_) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'export',
                   child: ListTile(
-                      leading: Icon(Icons.ios_share),
+                      leading: const Icon(Icons.ios_share),
                       title: Text(S.exportHistory),
                       contentPadding: EdgeInsets.zero),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: ListTile(
-                      leading: Icon(Icons.edit_outlined),
+                      leading: const Icon(Icons.edit_outlined),
                       title: Text(S.editCustomer),
                       contentPadding: EdgeInsets.zero),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: ListTile(
-                      leading: Icon(Icons.delete_outline, color: AppTheme.owed),
+                      leading: const Icon(Icons.delete_outline, color: AppTheme.owed),
                       title: Text(S.deleteCustomer),
                       contentPadding: EdgeInsets.zero),
                 ),
@@ -290,7 +290,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         const Divider(height: 1),
         Expanded(
           child: data.history.isEmpty
-              ? const Center(child: Text(S.noHistory))
+              ? Center(child: Text(S.noHistory))
               : ListView.separated(
                   itemCount: data.history.length,
                   separatorBuilder: (_, __) => const Divider(height: 1),
@@ -358,7 +358,7 @@ class _ActionsRow extends StatelessWidget {
             child: FilledButton.tonalIcon(
               onPressed: onCredit,
               icon: const Icon(Icons.arrow_upward),
-              label: const Text(S.gaveCredit),
+              label: Text(S.gaveCredit),
             ),
           ),
           const SizedBox(width: 8),
@@ -366,7 +366,7 @@ class _ActionsRow extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: onPayment,
               icon: const Icon(Icons.arrow_downward),
-              label: const Text(S.gotPayment),
+              label: Text(S.gotPayment),
             ),
           ),
           const SizedBox(width: 8),

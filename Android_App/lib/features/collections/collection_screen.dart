@@ -71,7 +71,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(S.collections)),
+      appBar: AppBar(title: Text(S.collections)),
       body: Builder(
         builder: (context) {
           final data = _data;
@@ -86,7 +86,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
                   child: FilledButton.tonalIcon(
                     onPressed: _addActivity,
                     icon: const Icon(Icons.add_call),
-                    label: const Text(S.recordCollection),
+                    label: Text(S.recordCollection),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -94,20 +94,20 @@ class _CollectionScreenState extends State<CollectionScreen> {
                   child: FilledButton.tonalIcon(
                     onPressed: _addPromise,
                     icon: const Icon(Icons.handshake_outlined),
-                    label: const Text(S.recordPromise),
+                    label: Text(S.recordPromise),
                   ),
                 ),
               ]),
               const SizedBox(height: 16),
-              const _SectionHeader(S.promises),
+              _SectionHeader(S.promises),
               if (data.promises.isEmpty)
-                const _Empty(S.noPromises)
+                _Empty(S.noPromises)
               else
                 ...data.promises.map((p) => _PromiseTile(p)),
               const SizedBox(height: 16),
-              const _SectionHeader(S.activityHistory),
+              _SectionHeader(S.activityHistory),
               if (data.activities.isEmpty)
-                const _Empty(S.noActivity)
+                _Empty(S.noActivity)
               else
                 ...data.activities.map((a) => _ActivityTile(a)),
             ],
@@ -189,12 +189,12 @@ Future<_ActivityResult?> _showActivityDialog(BuildContext context) {
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        title: const Text(S.recordCollection),
+        title: Text(S.recordCollection),
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             DropdownButtonFormField<ContactMethod>(
               initialValue: method,
-              decoration: const InputDecoration(labelText: S.methodLabel),
+              decoration: InputDecoration(labelText: S.methodLabel),
               items: [
                 for (final m in ContactMethod.values)
                   DropdownMenuItem(value: m, child: Text(contactMethodLabels[m]!)),
@@ -203,7 +203,7 @@ Future<_ActivityResult?> _showActivityDialog(BuildContext context) {
             ),
             DropdownButtonFormField<CollectionStatus>(
               initialValue: status,
-              decoration: const InputDecoration(labelText: S.statusLabel),
+              decoration: InputDecoration(labelText: S.statusLabel),
               items: [
                 for (final s in CollectionStatus.values)
                   DropdownMenuItem(value: s, child: Text(collectionStatusLabels[s]!)),
@@ -212,12 +212,12 @@ Future<_ActivityResult?> _showActivityDialog(BuildContext context) {
             ),
             TextField(
               controller: noteCtrl,
-              decoration: const InputDecoration(labelText: S.noteLabel),
+              decoration: InputDecoration(labelText: S.noteLabel),
             ),
             const SizedBox(height: 8),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text(S.nextFollowUpLabel),
+              title: Text(S.nextFollowUpLabel),
               trailing: Text(followUp == null ? '—' : shortDate(followUp!)),
               onTap: () async {
                 final picked = await showDatePicker(
@@ -232,7 +232,7 @@ Future<_ActivityResult?> _showActivityDialog(BuildContext context) {
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text(S.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(S.cancel)),
           FilledButton(
             onPressed: () => Navigator.pop(context, (
               method: method,
@@ -240,7 +240,7 @@ Future<_ActivityResult?> _showActivityDialog(BuildContext context) {
               note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
               nextFollowUp: followUp,
             )),
-            child: const Text(S.save),
+            child: Text(S.save),
           ),
         ],
       ),
@@ -259,14 +259,14 @@ Future<_PromiseResult?> _showPromiseDialog(BuildContext context) {
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        title: const Text(S.recordPromise),
+        title: Text(S.recordPromise),
         content: Form(
           key: formKey,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             TextFormField(
               controller: amountCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: S.promiseAmountLabel, prefixText: '৳ '),
+              decoration: InputDecoration(labelText: S.promiseAmountLabel, prefixText: '৳ '),
               validator: (v) {
                 final n = num.tryParse((v ?? '').trim());
                 return (n == null || n <= 0) ? S.amountRequired : null;
@@ -274,7 +274,7 @@ Future<_PromiseResult?> _showPromiseDialog(BuildContext context) {
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text(S.promiseDateLabel),
+              title: Text(S.promiseDateLabel),
               trailing: Text(shortDate(promiseDate)),
               onTap: () async {
                 final picked = await showDatePicker(
@@ -289,7 +289,7 @@ Future<_PromiseResult?> _showPromiseDialog(BuildContext context) {
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text(S.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(S.cancel)),
           FilledButton(
             onPressed: () {
               if (!formKey.currentState!.validate()) return;
@@ -299,7 +299,7 @@ Future<_PromiseResult?> _showPromiseDialog(BuildContext context) {
                 followUpDate: null,
               ));
             },
-            child: const Text(S.save),
+            child: Text(S.save),
           ),
         ],
       ),
