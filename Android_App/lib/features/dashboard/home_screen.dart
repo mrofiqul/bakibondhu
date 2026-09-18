@@ -175,18 +175,33 @@ class _HomeScreenState extends State<HomeScreen> {
     await _refresh();
   }
 
-  Future<void> _exportExcel() async {
+  Future<void> _downloadReport({bool chooseLocation = false}) async {
     final rows = _data?.customers ?? const <CustomerBalance>[];
     final messenger = ScaffoldMessenger.of(context);
     if (rows.isEmpty) {
-      messenger.showSnackBar(SnackBar(content: Text(S.exportNoCustomers)));
+      messenger.showSnackBar(SnackBar(content: Text(S.downloadNoCustomers)));
       return;
     }
-    messenger.showSnackBar(SnackBar(content: Text(S.exportPreparing)));
     try {
-      await exportCustomerReport(rows: rows, shopName: _shopName ?? '');
+      final saved = await downloadCustomerReport(
+        rows: rows,
+        shopName: _shopName ?? '',
+        chooseLocation: chooseLocation,
+      );
+      if (!mounted || saved == null) return; // null = user cancelled the picker
+      messenger.showSnackBar(SnackBar(
+        content: Text(chooseLocation ? S.downloadSaved : S.downloadedToDownloads),
+        action: chooseLocation
+            ? null
+            : SnackBarAction(
+                label: S.downloadChooseLocation,
+                onPressed: () => _downloadReport(chooseLocation: true),
+              ),
+      ));
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(S.exportFailed)));
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(S.downloadFailed)));
+      }
     }
   }
 
@@ -213,9 +228,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.grid_on),
-            tooltip: S.exportExcelTooltip,
-            onPressed: _exportExcel,
+            icon: const Icon(Icons.download),
+            tooltip: S.downloadTooltip,
+            onPressed: () => _downloadReport(),
           ),
           IconButton(
             icon: const Icon(Icons.sync),

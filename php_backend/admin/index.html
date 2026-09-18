@@ -106,7 +106,7 @@
     <div class="brand">বাকিবন্ধু <span>· Admin</span></div>
     <div class="sp"></div>
     <span class="muted" id="who"></span>
-    <button id="exportx">⬇ Export customers</button>
+    <button id="exportx">⬇ Download customers</button>
     <button id="refresh">↻ Refresh</button>
     <button id="logout">Log out</button>
   </header>
@@ -201,7 +201,7 @@ document.getElementById('refresh').onclick=()=>{ loadOverview(); loadShops(); lo
 // Fetched with the admin bearer token, so it goes through a blob download.
 document.getElementById('exportx').onclick=async()=>{
   const btn=document.getElementById('exportx'); const old=btn.textContent;
-  btn.textContent='Exporting…'; btn.disabled=true;
+  btn.textContent='Downloading…'; btn.disabled=true;
   try{
     const res=await fetch(API+'/admin/export/customers.xlsx',{headers:{'Authorization':'Bearer '+store.t}});
     if(!res.ok) throw new Error('HTTP '+res.status);
@@ -211,8 +211,8 @@ document.getElementById('exportx').onclick=async()=>{
     a.href=url; a.download='bakibondhu-customers-'+new Date().toISOString().slice(0,10)+'.xlsx';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
-    toast('Exported');
-  }catch(e){ toast('Export failed'); }
+    toast('Downloaded');
+  }catch(e){ toast('Download failed'); }
   btn.textContent=old; btn.disabled=false;
 };
 

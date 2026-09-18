@@ -110,13 +110,15 @@ class S {
   static String get updateChecking => _bn ? 'চেক করা হচ্ছে…' : 'Checking…';
   static String updateUpToDate(String version) => _bn ? 'সর্বশেষ সংস্করণ চলছে (v$version)' : 'You are on the latest version (v$version)';
 
-  // Excel (customer report) export
-  static String get exportExcel => _bn ? 'এক্সেল এক্সপোর্ট' : 'Excel export';
-  static String get exportExcelTooltip => _bn ? 'সব কাস্টমার এক্সেলে এক্সপোর্ট করুন' : 'Export all customers to Excel';
+  // Customer-report download (.xlsx)
+  static String get downloadReport => _bn ? 'রিপোর্ট ডাউনলোড' : 'Download report';
+  static String get downloadTooltip => _bn ? 'সব কাস্টমারের রিপোর্ট (Excel) ডাউনলোড করুন' : 'Download all-customers report (Excel)';
   static String get customerReportTitle => _bn ? 'কাস্টমার রিপোর্ট' : 'Customer report';
-  static String get exportNoCustomers => _bn ? 'এক্সপোর্ট করার মতো কাস্টমার নেই' : 'No customers to export';
-  static String get exportPreparing => _bn ? 'এক্সেল তৈরি হচ্ছে…' : 'Preparing Excel…';
-  static String get exportFailed => _bn ? 'এক্সপোর্ট ব্যর্থ হয়েছে' : 'Export failed';
+  static String get downloadNoCustomers => _bn ? 'ডাউনলোড করার মতো কাস্টমার নেই' : 'No customers to download';
+  static String get downloadedToDownloads => _bn ? 'Downloads ফোল্ডারে ডাউনলোড হয়েছে' : 'Downloaded to your Downloads folder';
+  static String get downloadSaved => _bn ? 'সেভ হয়েছে' : 'Saved';
+  static String get downloadChooseLocation => _bn ? 'জায়গা বেছে নিন' : 'Save to…';
+  static String get downloadFailed => _bn ? 'ডাউনলোড ব্যর্থ হয়েছে' : 'Download failed';
   static String get shopLabel => _bn ? 'দোকান' : 'Shop';
   static String get customerLabel => _bn ? 'কাস্টমার' : 'Customer';
   static String get runningDue => _bn ? 'চলতি বাকি' : 'Running due';

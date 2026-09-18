@@ -1,7 +1,7 @@
 name: bakibondhu
 description: "BakiBondhu — a Bangla-first, offline-first collection ledger for Bangladeshi micro-merchants (Android field app)."
 publish_to: "none"
-version: 0.1.21+22
+version: 0.1.22+23
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -24,8 +24,12 @@ dependencies:
   # customer report (.xlsx), to any app.
   share_plus: ^9.0.0
 
-  # App temp directory to stage the generated .xlsx before sharing it.
+  # App temp directory to stage generated files.
   path_provider: ^2.1.0
+
+  # Download the customer-report .xlsx to the device Downloads folder, or let
+  # the user pick a location (Save to…).
+  file_saver: ^0.2.13
 
   # Small persisted settings (shop name, onboarding flag).
   shared_preferences: ^2.3.0
