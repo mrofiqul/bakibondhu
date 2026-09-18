@@ -1,0 +1,567 @@
+<title>BakiBondhu Owner's Manual</title>
+<style>
+  :root{
+    --ground:#f4f6f0; --surface:#ffffff; --surface-2:#eef2ea; --border:#e1e6dc;
+    --ink:#1a201b; --muted:#5c665e; --faint:#8a938661;
+    --green:#167c48; --green-deep:#0d5a34; --green-soft:#e6f1ea;
+    --warn:#8f5600; --warn-bg:#fbeed6; --warn-bd:#efd7a6;
+    --bad:#b3261e; --bad-bg:#fbe9e7; --bad-bd:#f0cfca;
+    --info:#1f5f8f; --info-bg:#e6f0f7; --info-bd:#cfe0ee;
+    --shadow:0 1px 2px rgba(20,30,22,.05),0 8px 26px rgba(20,40,25,.06);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#11150f; --surface:#191e16; --surface-2:#20271d; --border:#2b332560;
+    --ink:#e9efe7; --muted:#a4aea0; --faint:#8a93865e;
+    --green:#63d59d; --green-deep:#8fe6b7; --green-soft:#15311f;
+    --warn:#e6b567; --warn-bg:#31260f; --warn-bd:#4a3a16;
+    --bad:#f2857c; --bad-bg:#3a1512; --bad-bd:#5a231d;
+    --info:#8fc2e6; --info-bg:#132632; --info-bd:#24404f;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="dark"]{
+    --ground:#11150f; --surface:#191e16; --surface-2:#20271d; --border:#2b332560;
+    --ink:#e9efe7; --muted:#a4aea0; --faint:#8a93865e;
+    --green:#63d59d; --green-deep:#8fe6b7; --green-soft:#15311f;
+    --warn:#e6b567; --warn-bg:#31260f; --warn-bd:#4a3a16;
+    --bad:#f2857c; --bad-bg:#3a1512; --bad-bd:#5a231d;
+    --info:#8fc2e6; --info-bg:#132632; --info-bd:#24404f;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--ground); color:var(--ink);
+    font-family:"IBM Plex Sans","Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .bn{font-family:"Noto Sans Bengali","IBM Plex Sans",sans-serif;}
+  a{color:var(--green-deep);text-underline-offset:3px}
+  h1,h2,h3{font-family:"Fraunces","Noto Sans Bengali",Georgia,serif;font-weight:600;line-height:1.15;text-wrap:balance}
+
+  /* ---- shell ---- */
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+  header.top{
+    border-bottom:1px solid var(--border); background:
+      radial-gradient(1200px 240px at 12% -40%, color-mix(in srgb,var(--green) 12%, transparent), transparent 70%);
+  }
+  .top-inner{padding:44px 0 30px}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--green-deep);font-weight:500}
+  h1{font-size:clamp(30px,5vw,46px);margin:12px 0 6px;letter-spacing:-.01em}
+  .lede{font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:60ch;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .meta .pill{font-size:12.5px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:5px 12px;color:var(--muted);box-shadow:var(--shadow)}
+  .meta .pill b{color:var(--ink);font-weight:600}
+
+  /* ---- doc layout ---- */
+  .doc{display:grid;grid-template-columns:250px minmax(0,1fr);gap:44px;align-items:start;padding:36px 0 80px}
+  nav.toc{position:sticky;top:18px;font-size:13.5px;max-height:calc(100vh - 36px);overflow:auto}
+  nav.toc .tt{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;padding-left:14px}
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:s}
+  nav.toc li{counter-increment:s}
+  nav.toc a{display:flex;gap:9px;text-decoration:none;color:var(--muted);padding:5px 12px;border-left:2px solid transparent;border-radius:0 8px 8px 0}
+  nav.toc a::before{content:counter(s,decimal-leading-zero);font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint);padding-top:2px}
+  nav.toc a:hover{color:var(--ink);background:var(--surface-2)}
+  nav.toc a.on{color:var(--green-deep);border-left-color:var(--green);background:var(--surface-2);font-weight:600}
+
+  main{min-width:0}
+  section{scroll-margin-top:18px;margin-bottom:14px;padding-bottom:26px;border-bottom:1px solid var(--border)}
+  section:last-child{border-bottom:0}
+  section>h2{font-size:clamp(21px,3vw,27px);margin:14px 0 4px;display:flex;gap:12px;align-items:baseline}
+  section>h2 .num{font-family:"IBM Plex Mono",monospace;font-size:14px;color:var(--green);font-weight:500;flex:none}
+  main p,main li{max-width:70ch}
+  main h3{font-size:16.5px;margin:24px 0 6px}
+  main p{margin:10px 0}
+  .sub{color:var(--muted);margin-top:-2px !important}
+
+  /* steps */
+  ol.steps{counter-reset:st;list-style:none;padding:0;margin:14px 0}
+  ol.steps>li{counter-increment:st;position:relative;padding:2px 0 14px 44px;margin:0}
+  ol.steps>li::before{content:counter(st);position:absolute;left:0;top:0;width:29px;height:29px;border-radius:50%;
+    background:var(--green-soft);color:var(--green-deep);font-weight:600;font-size:14px;display:grid;place-items:center;
+    border:1px solid color-mix(in srgb,var(--green) 30%, transparent);font-family:"IBM Plex Mono",monospace}
+  ol.steps>li:not(:last-child)::after{content:"";position:absolute;left:14px;top:32px;bottom:2px;width:1px;background:var(--border)}
+  ul.plain{list-style:none;padding-left:0;margin:10px 0}
+  ul.plain>li{position:relative;padding-left:22px;margin:6px 0}
+  ul.plain>li::before{content:"›";position:absolute;left:4px;color:var(--green);font-weight:700}
+
+  /* ui chips */
+  .ui{font-family:"IBM Plex Sans",sans-serif;font-size:.86em;font-weight:600;background:var(--surface);
+    border:1px solid var(--border);border-radius:7px;padding:1px 8px;box-shadow:0 1px 0 rgba(0,0,0,.03);white-space:nowrap}
+  .ui.g{background:var(--green);color:#fff;border-color:var(--green)}
+  .ui.d{color:var(--bad);border-color:var(--bad-bd)}
+  .path,code{font-family:"IBM Plex Mono",monospace;font-size:.85em;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:1.5px 7px;word-break:break-word}
+  kbd{font-family:"IBM Plex Mono",monospace;font-size:.8em;background:var(--surface);border:1px solid var(--border);border-bottom-width:2px;border-radius:6px;padding:1px 7px}
+
+  /* callouts */
+  .call{border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 16px;margin:16px 0;background:var(--surface);box-shadow:var(--shadow)}
+  .call p{margin:4px 0}
+  .call .lbl{font-weight:600;font-size:13px;letter-spacing:.02em;display:flex;align-items:center;gap:7px}
+  .call.tip{border-left-color:var(--green);background:var(--green-soft)}
+  .call.tip .lbl{color:var(--green-deep)}
+  .call.warn{border-left-color:var(--warn);background:var(--warn-bg);border-color:var(--warn-bd)}
+  .call.warn .lbl{color:var(--warn)}
+  .call.danger{border-left-color:var(--bad);background:var(--bad-bg);border-color:var(--bad-bd)}
+  .call.danger .lbl{color:var(--bad)}
+  .call.info{border-left-color:var(--info);background:var(--info-bg);border-color:var(--info-bd)}
+  .call.info .lbl{color:var(--info)}
+
+  /* tables */
+  .scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);margin:16px 0;box-shadow:var(--shadow)}
+  table{width:100%;border-collapse:collapse;font-size:14px;background:var(--surface);min-width:440px}
+  th,td{text-align:left;padding:11px 15px;border-bottom:1px solid var(--border);vertical-align:top}
+  thead th{background:var(--surface-2);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;white-space:nowrap}
+  tbody tr:last-child td{border-bottom:0}
+  td b{font-weight:600}
+
+  /* status pills */
+  .st{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .st.active{background:var(--green-soft);color:var(--green-deep)}
+  .st.sus,.st.exp{background:var(--bad-bg);color:var(--bad)}
+  .st.soon{background:var(--warn-bg);color:var(--warn)}
+  .st.unl{background:var(--surface-2);color:var(--muted)}
+
+  /* misc */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .cardlet{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px;box-shadow:var(--shadow)}
+  .cardlet h3{margin:0 0 4px;font-size:15px}
+  .cardlet p{margin:0;font-size:14px;color:var(--muted)}
+  hr.soft{border:0;border-top:1px solid var(--border);margin:22px 0}
+  .foot{color:var(--muted);font-size:13.5px;padding:26px 0 60px;text-align:center;border-top:1px solid var(--border)}
+  .foot .bn{font-size:15px;color:var(--ink)}
+
+  @media (max-width:860px){
+    .doc{grid-template-columns:1fr;gap:8px}
+    nav.toc{position:static;max-height:none;border:1px solid var(--border);border-radius:var(--radius);padding:16px;background:var(--surface);margin-bottom:10px}
+    .grid2{grid-template-columns:1fr}
+  }
+  @media print{
+    nav.toc,.meta{display:none}
+    body{background:#fff}
+    section{break-inside:auto}
+    .call,.scroll,.cardlet{box-shadow:none}
+  }
+</style>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="eyebrow">Platform Operations Guide</div>
+    <h1>BakiBondhu Owner's Manual</h1>
+    <p class="lede">Everything you need to run the platform from the web Admin Panel — sign in, watch the numbers, manage shops and subscriptions, keep the data clean, and stay secure. Written for you, the app owner.</p>
+    <div class="meta">
+      <span class="pill">Audience: <b>Platform owner only</b></span>
+      <span class="pill">Admin panel: <b>web, owner-login</b></span>
+      <span class="pill">App version: <b>v0.1.17</b></span>
+      <span class="pill">Updated: <b>18 Sep 2026</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap doc">
+  <nav class="toc" aria-label="Contents">
+    <p class="tt">Contents</p>
+    <ol>
+      <li><a href="#intro">Your role as owner</a></li>
+      <li><a href="#before">Before you start</a></li>
+      <li><a href="#login">Signing in to the panel</a></li>
+      <li><a href="#overview">The dashboard (Overview)</a></li>
+      <li><a href="#shops">Managing shops</a></li>
+      <li><a href="#subscriptions">Subscriptions &amp; trials</a></li>
+      <li><a href="#suspend">Suspend &amp; unsuspend</a></li>
+      <li><a href="#delete-shop">Deleting a shop</a></li>
+      <li><a href="#data">Customers, sales &amp; data</a></li>
+      <li><a href="#users">Shop users &amp; passwords</a></li>
+      <li><a href="#audit">The audit log</a></li>
+      <li><a href="#playbook">Everyday playbook</a></li>
+      <li><a href="#security">Security &amp; good practice</a></li>
+      <li><a href="#app">The mobile &amp; web apps</a></li>
+      <li><a href="#trouble">Troubleshooting &amp; FAQ</a></li>
+      <li><a href="#glossary">Quick reference</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- 1 -->
+    <section id="intro">
+      <h2><span class="num">01</span> Your role as owner</h2>
+      <p>BakiBondhu (<span class="bn">বাকিবন্ধু</span>) is a Bangla-first, offline-first credit-ledger app for Bangladeshi shopkeepers. Each shopkeeper installs the Android app, records their customers' <span class="bn">বাকি</span> (credit) and <span class="bn">পরিশোধ</span> (payments) and daily sales, and — once they create an account — their data syncs to the cloud.</p>
+      <p>As the <b>owner</b>, you sit above every shop. You don't use the shopkeeper app to manage the platform; you use a separate, private <b>web Admin Panel</b>. From there you can:</p>
+      <ul class="plain">
+        <li>See platform-wide numbers — how many shops, users, customers, and how much credit is outstanding across everyone.</li>
+        <li>Manage each shop's <b>subscription</b> — set, extend, or clear an expiry date.</li>
+        <li><b>Suspend</b> a shop temporarily, or <b>delete</b> one permanently.</li>
+        <li>Clean up data — remove a customer, clear a shop's sales, reset a user's password.</li>
+        <li>Review an <b>audit log</b> of every action you take.</li>
+      </ul>
+      <div class="call info">
+        <p class="lbl">ℹ️ The panel is web-only</p>
+        <p>The Admin Panel is <b>not</b> inside the downloadable app. It lives at a private web address and only your owner account can log in. Ordinary shopkeepers never see it.</p>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section id="before">
+      <h2><span class="num">02</span> Before you start</h2>
+      <p>You need three things:</p>
+      <div class="grid2">
+        <div class="cardlet"><h3>1 · The panel address</h3><p><span class="path">https://bakibondhu.infinityfreeapp.com/admin</span></p></div>
+        <div class="cardlet"><h3>2 · Your admin login</h3><p>Username <span class="path">Admin</span> and the password you chose during setup.</p></div>
+        <div class="cardlet"><h3>3 · A web browser</h3><p>Any modern browser — Chrome, Edge, or Firefox — on a phone or computer.</p></div>
+      </div>
+      <h3>Where your admin account came from</h3>
+      <p>Your owner account was created once, during first-time setup, through a special page (<span class="path">admin_setup.php</span>). That page was then removed for safety, so it can never be used again to create another admin. This is by design — there is exactly one admin account, and it is yours.</p>
+      <div class="call warn">
+        <p class="lbl">⚠️ Keep these safe</p>
+        <p>Your admin password is the master key to the whole platform. Store it in a password manager, never share it, and never type it on a computer you don't trust. If you ever forget it, recovery requires developer access to the server database — so don't lose it.</p>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section id="login">
+      <h2><span class="num">03</span> Signing in to the panel</h2>
+      <ol class="steps">
+        <li>Open your browser and go to <span class="path">https://bakibondhu.infinityfreeapp.com/admin</span></li>
+        <li>You'll see the <b class="bn">বাকিবন্ধু · Admin</b> sign-in box. Enter your <b>Username</b> (<span class="path">Admin</span>) and <b>Password</b>.</li>
+        <li>Click <span class="ui g">Sign in</span>. The dashboard opens on the <span class="ui">Overview</span> tab.</li>
+      </ol>
+      <p>Across the top you'll always have three tabs — <span class="ui">Overview</span>, <span class="ui">Shops</span>, <span class="ui">Audit log</span> — plus <span class="ui">↻ Refresh</span> and <span class="ui">Log out</span>.</p>
+      <div class="call info">
+        <p class="lbl">ℹ️ Sessions last 8 hours</p>
+        <p>For safety, an admin sign-in stays valid for about <b>8 hours</b>, then you'll be asked to sign in again. On a shared or public computer, always click <span class="ui">Log out</span> when you're done.</p>
+      </div>
+      <div class="call tip">
+        <p class="lbl">✓ Wrong password?</p>
+        <p>If you see <i>"wrong username or password"</i>, check Caps Lock and that the username is exactly <span class="path">Admin</span> (capital A). The panel briefly runs a background security check the first time it loads — if a page looks blank for a second, just wait or refresh once.</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="overview">
+      <h2><span class="num">04</span> The dashboard (Overview tab)</h2>
+      <p>The <span class="ui">Overview</span> tab is your platform at a glance. At the top is a row of <b>KPI tiles</b>; below them a <b>14-day new-shops chart</b> and a <b>Recent activity</b> feed of the latest transactions across every shop.</p>
+      <h3>What each number means</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Tile</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><b>Shops</b></td><td>Total registered shops (businesses) on the platform.</td></tr>
+            <tr><td><b>Users</b></td><td>Total shop-owner user accounts (one per shop at minimum).</td></tr>
+            <tr><td><b>Customers</b></td><td>All customers added across every shop.</td></tr>
+            <tr><td><b>Transactions</b></td><td>All ledger entries (credit + payment) across every shop.</td></tr>
+            <tr><td><b>Suspended</b></td><td>Shops you have suspended (they can't log in or sync).</td></tr>
+            <tr><td><b>Expired</b></td><td>Shops whose subscription date has passed.</td></tr>
+            <tr><td><b>Outstanding credit</b></td><td>Total unpaid <span class="bn">বাকি</span> owed to all shops, added up — the platform's total receivable.</td></tr>
+            <tr><td><b>Total sales</b></td><td>Sum of all direct-sale entries recorded across every shop.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="call tip">
+        <p class="lbl">✓ Reading the platform's health</p>
+        <p>A healthy, growing platform shows the <b>Shops</b> and <b>Customers</b> numbers rising over time and a steady <b>14-day chart</b>. A sudden jump in <b>Outstanding credit</b> with very few shops usually means test data — see the cleanup playbook in section 12.</p>
+      </div>
+      <p>Click <span class="ui">↻ Refresh</span> any time to pull the latest figures.</p>
+    </section>
+
+    <!-- 5 -->
+    <section id="shops">
+      <h2><span class="num">05</span> Managing shops (Shops tab)</h2>
+      <p>The <span class="ui">Shops</span> tab lists every shop in one table. Each row shows the shop and its key stats; the last column holds the actions.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Column</th><th>What it shows</th></tr></thead>
+          <tbody>
+            <tr><td><b>Shop</b></td><td>Shop name and the date it registered.</td></tr>
+            <tr><td><b>Status</b></td><td><span class="st active">active</span> or <span class="st sus">suspended</span>.</td></tr>
+            <tr><td><b>Expiry</b></td><td><span class="st unl">Unlimited</span>, a date, <span class="st soon">In&nbsp;3d</span> when close, or <span class="st exp">Expired</span>.</td></tr>
+            <tr><td><b>Users · Cust. · Txns</b></td><td>Counts of users, customers, and transactions in that shop.</td></tr>
+            <tr><td><b>Outstanding</b></td><td>Unpaid credit owed to that shop.</td></tr>
+            <tr><td><b>Sales</b></td><td>That shop's total recorded sales.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Row actions</h3>
+      <ul class="plain">
+        <li><span class="ui">View</span> — open the shop's full detail (users, customers &amp; balances, and sales). See section 9.</li>
+        <li><span class="ui">Set expiry</span> — manage the subscription date. See section 6.</li>
+        <li><span class="ui">Suspend</span> / <span class="ui">Unsuspend</span> — block or restore access. See section 7.</li>
+        <li><span class="ui d">Delete</span> — permanently remove the shop and all its data. See section 8.</li>
+      </ul>
+      <div class="call info">
+        <p class="lbl">ℹ️ Every action is recorded</p>
+        <p>Suspend, unsuspend, delete, set-expiry, reset-password and clear-sales are all written to the <span class="ui">Audit log</span> with the time and target — so you always have a history of what changed.</p>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section id="subscriptions">
+      <h2><span class="num">06</span> Subscriptions &amp; trials</h2>
+      <p>Every shop has an <b>expiry date</b> — the day its subscription runs through. You control it from the <span class="ui">Set expiry</span> button.</p>
+      <h3>The 30-day free trial</h3>
+      <p>When a new shopkeeper registers, the app automatically gives them a <b>30-day trial</b>: their expiry is set to 30 days from sign-up. They can use everything immediately, and you decide what happens when the trial ends.</p>
+      <h3>Setting or extending an expiry</h3>
+      <ol class="steps">
+        <li>On the <span class="ui">Shops</span> tab, find the shop and click <span class="ui">Set expiry</span>.</li>
+        <li>Pick the date the subscription should run through, using the date picker.</li>
+        <li>Click <span class="ui g">Save</span>. The <b>Expiry</b> column updates immediately.</li>
+      </ol>
+      <p>To give a shop <b>unlimited</b> access (no expiry), open <span class="ui">Set expiry</span> and click <span class="ui">Make unlimited</span> instead.</p>
+      <h3>What the shop experiences</h3>
+      <ul class="plain">
+        <li>The shop stays fully active <b>through</b> the expiry day, and is blocked starting the <b>next</b> day.</li>
+        <li>Once expired, when the shopkeeper tries to log in or sync, they're blocked and shown a Bangla message: <span class="bn">"আপনার সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে। অ্যাডমিনের সাথে যোগাযোগ করুন।"</span> (Your subscription has expired — contact the admin.)</li>
+        <li>Their data is <b>not deleted</b> — the moment you extend the date, access returns.</li>
+      </ul>
+      <div class="call tip">
+        <p class="lbl">✓ In-app reminder</p>
+        <p>Shopkeepers on v0.1.7 or newer see a banner on their Home screen as the expiry gets close (within the last week) and once it passes — nudging them to renew before they're locked out.</p>
+      </div>
+      <div class="call info">
+        <p class="lbl">ℹ️ Expiry vs. suspend</p>
+        <p><b>Expiry</b> is for normal billing — it lapses on a date and the shopkeeper is prompted to renew. <b>Suspend</b> (section 7) is a manual, immediate block for cases like abuse. Both stop login and sync; expiry does it on a schedule, suspend does it instantly.</p>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section id="suspend">
+      <h2><span class="num">07</span> Suspend &amp; unsuspend a shop</h2>
+      <p>Suspending is an immediate on/off switch for a shop's access — useful if a shop is misusing the service or you need to freeze it while you sort something out.</p>
+      <ol class="steps">
+        <li>On the <span class="ui">Shops</span> tab, find the shop and click <span class="ui">Suspend</span>.</li>
+        <li>Confirm the prompt. The shop's <b>Status</b> flips to <span class="st sus">suspended</span>.</li>
+        <li>To restore it, click <span class="ui">Unsuspend</span> on the same row.</li>
+      </ol>
+      <p>While suspended, that shop's users cannot log in and cannot sync — they'll see an <i>"account suspended; contact support"</i> message. Nothing is deleted; unsuspending returns them to normal.</p>
+    </section>
+
+    <!-- 8 -->
+    <section id="delete-shop">
+      <h2><span class="num">08</span> Deleting a shop</h2>
+      <p>Deleting removes a shop and <b>everything in it</b> — its users, customers, transactions, and sales. Use it to clear out test shops or a shop that asked to be removed.</p>
+      <ol class="steps">
+        <li>On the <span class="ui">Shops</span> tab, click <span class="ui d">Delete</span> on the shop's row.</li>
+        <li>Read the confirmation carefully — it names the shop and warns this cannot be undone.</li>
+        <li>Confirm. The shop disappears and the action is logged.</li>
+      </ol>
+      <div class="call danger">
+        <p class="lbl">⛔ This cannot be undone</p>
+        <p>There is no "trash" or restore. Once you confirm, the shop and all of its data are gone from the cloud for good. When in doubt, <b>suspend</b> instead of delete, or export the shop's records first (the shopkeeper can export a customer's history from the app).</p>
+      </div>
+      <div class="call warn">
+        <p class="lbl">⚠️ Deletes reach the phone only on reinstall</p>
+        <p>Deleting on the server removes the shop from the cloud and the panel. If that shop is still installed and logged in on a phone, its local copy stays on that phone until the app is reinstalled — deletions don't push back down to a device.</p>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section id="data">
+      <h2><span class="num">09</span> Customers, sales &amp; data cleanup</h2>
+      <p>Click <span class="ui">View</span> on any shop to open its detail. You'll see three parts:</p>
+      <ul class="plain">
+        <li><b>Users</b> — the shop's accounts, with <span class="ui">Reset password</span> and <span class="ui d">Delete</span> (see section 10).</li>
+        <li><b>Customers &amp; balances</b> — every customer with phone, address, transaction count and current balance. Each has a <span class="ui d">Delete</span> button.</li>
+        <li><b>Direct sales</b> — the count of sale records, with a <span class="ui d">Clear all sales</span> button.</li>
+      </ul>
+      <h3>Delete a single customer</h3>
+      <p>In the <b>Customers &amp; balances</b> table, click <span class="ui d">Delete</span> on that customer's row and confirm. This removes the customer <b>and all of their transactions</b> from the cloud. Handy for pruning junk or test entries.</p>
+      <h3>Clear a shop's sales</h3>
+      <p>Under <b>Direct sales</b>, <span class="ui d">Clear all sales</span> deletes every sale record for that shop (it does not touch customers or the credit ledger). Good for resetting a demo shop before launch.</p>
+      <div class="call warn">
+        <p class="lbl">⚠️ These are permanent too</p>
+        <p>Deleting a customer or clearing sales cannot be undone, and — like shop delete — applies to the cloud copy. A device still logged into that shop keeps its local copy until reinstalled.</p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section id="users">
+      <h2><span class="num">10</span> Shop users &amp; passwords</h2>
+      <p>Inside a shop's <span class="ui">View</span>, the <b>Users</b> section lists that shop's login accounts.</p>
+      <h3>Reset a user's password</h3>
+      <ol class="steps">
+        <li>Open the shop with <span class="ui">View</span>.</li>
+        <li>In the <b>Users</b> table, click <span class="ui">Reset password</span> on the user's row.</li>
+        <li>Type a new password (at least 6 characters) and confirm.</li>
+        <li>Tell the shopkeeper their new password so they can log in and change it later.</li>
+      </ol>
+      <p>Use this when a shopkeeper is locked out and can't remember their password.</p>
+      <h3>Delete a user</h3>
+      <p><span class="ui d">Delete</span> on a user removes just that login account. To remove the whole shop and its data, use <span class="ui d">Delete</span> on the Shops tab instead (section 8).</p>
+      <div class="call info">
+        <p class="lbl">ℹ️ Shopkeeper mobile numbers are unique</p>
+        <p>Each shop-owner registers with a unique mobile number (it's their login ID), and within any one shop, customers can't share a mobile number either. If a shopkeeper says "it won't accept my number," it's likely already registered.</p>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section id="audit">
+      <h2><span class="num">11</span> The audit log</h2>
+      <p>The <span class="ui">Audit log</span> tab shows the latest 50 actions taken from the Admin Panel — each with the time, the admin (you), the action, and what it applied to.</p>
+      <p>Actions recorded include: <span class="path">suspend_business</span>, <span class="path">unsuspend_business</span>, <span class="path">delete_business</span>, <span class="path">set_expiry</span>, <span class="path">delete_user</span>, <span class="path">reset_password</span>, <span class="path">delete_customer</span> and <span class="path">clear_sales</span>.</p>
+      <div class="call tip">
+        <p class="lbl">✓ Use it as your memory</p>
+        <p>Before you worry "did I already extend that shop?" or "when did I suspend them?", check the audit log — it's the reliable record of every change you've made.</p>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section id="playbook">
+      <h2><span class="num">12</span> Everyday playbook</h2>
+      <p>Common situations and exactly what to do:</p>
+
+      <h3>A new shop just signed up</h3>
+      <p>Nothing to do — they get a 30-day trial automatically. Watch them in <span class="ui">Overview</span> and <span class="ui">Shops</span>. Near day 30, decide: extend (they're paying) or let it lapse.</p>
+
+      <h3>A shop paid you — extend their subscription</h3>
+      <p><span class="ui">Shops</span> → <span class="ui">Set expiry</span> → pick the new date (e.g. one month or one year ahead) → <span class="ui g">Save</span>. Access continues seamlessly.</p>
+
+      <h3>A shop stopped paying</h3>
+      <p>Easiest: do nothing — the expiry lapses on its date and they're prompted to renew. Their data is kept, so they return the moment they pay and you extend. For an immediate cut-off, <span class="ui">Suspend</span> them.</p>
+
+      <h3>A shopkeeper is locked out / forgot their password</h3>
+      <p><span class="ui">View</span> the shop → <b>Users</b> → <span class="ui">Reset password</span> → give them the new one (section 10).</p>
+
+      <h3>Clearing out test data before launch</h3>
+      <ol class="steps">
+        <li>In <span class="ui">Shops</span>, delete any obviously fake shops (test names, dummy phone numbers, all-zero stats) with <span class="ui d">Delete</span>.</li>
+        <li>For a real shop that has junk mixed in, <span class="ui">View</span> it and <span class="ui d">Delete</span> the junk customers and/or <span class="ui d">Clear all sales</span>.</li>
+        <li>Check <span class="ui">Overview</span> — the totals should now reflect only real activity.</li>
+      </ol>
+
+      <h3>Checking who owes the most across the platform</h3>
+      <p>Sort by eye using the <b>Outstanding</b> column on the <span class="ui">Shops</span> tab, or open a shop's <span class="ui">View</span> — its customers are listed with balances, highest first.</p>
+    </section>
+
+    <!-- 13 -->
+    <section id="security">
+      <h2><span class="num">13</span> Security &amp; good practice</h2>
+      <ul class="plain">
+        <li><b>One admin, one owner.</b> There is a single admin account. Treat its password like the keys to a safe.</li>
+        <li><b>Use a strong, unique password</b> and store it in a password manager — not on paper by the till.</li>
+        <li><b>Log out on shared devices.</b> Sessions expire after ~8 hours, but always <span class="ui">Log out</span> when finished on a computer others use.</li>
+        <li><b>Prefer suspend over delete</b> when you're unsure — delete is permanent.</li>
+        <li><b>Double-check the name</b> in every confirmation dialog before deleting a shop, customer, or sales.</li>
+        <li><b>Never enter your admin password</b> into any page that isn't the real panel at <span class="path">bakibondhu.infinityfreeapp.com/admin</span>.</li>
+      </ul>
+      <div class="call warn">
+        <p class="lbl">⚠️ Hosting note</p>
+        <p>The platform currently runs on a free shared-hosting plan. It works, but free hosting can be slower or have downtime, and has usage limits. As you grow, plan to move to a paid, reliable host — your developer can advise on the migration.</p>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section id="app">
+      <h2><span class="num">14</span> The mobile &amp; web apps</h2>
+      <p>Shopkeepers use the Android app. They can start using it <b>offline without an account</b>; to sync to the cloud (and appear in your panel), they log in or register.</p>
+      <h3>Where shopkeepers get the app</h3>
+      <p>From your landing page — <span class="path">https://bakibondhu.infinityfreeapp.com</span> — which has a big <b class="bn">অ্যাপ ডাউনলোড করুন</b> (Download app) button. The download always points to the <b>latest</b> version, so the link never goes stale.</p>
+      <h3>Updating to a new version</h3>
+      <ul class="plain">
+        <li>New versions are built and published by your developer. The current version is <b>v0.1.17</b>.</li>
+        <li>To update, a shopkeeper simply downloads and installs the newer APK over the old one — their data is preserved and the local database upgrades automatically.</li>
+        <li>Server-side rules (like subscription expiry) apply to <b>all</b> versions, so even an older app is protected; only new in-app features (location dropdowns at signup, search, sort, export, the expiry banner) require updating.</li>
+      </ul>
+      <div class="call info">
+        <p class="lbl">ℹ️ What shopkeepers can do in the app</p>
+        <p>Add customers (choosing their location by division → district → thana at signup), record credit &amp; payments, log daily sales, send SMS/WhatsApp reminders, track <b>collection activities &amp; payment promises</b>, and — in recent versions — search, sort, edit customers, delete a customer once they're fully paid, and export a customer's transaction history. As of <b>v0.1.17</b> everything (including collections &amp; promises) syncs to the cloud, so it stays the same on their phone and on the web. Each shopkeeper only ever sees their own shop's customers, even on a shared phone. Their expiry and account are managed by <b>you</b> from the panel.</p>
+      </div>
+
+      <h3>The web app — same ledger, in a browser</h3>
+      <p>Shopkeepers don't have to install anything: the same account works in any browser at <span class="path">https://bakibondhu.infinityfreeapp.com/app</span>. It's a full version of the app — customers, credit &amp; payments, reminders, collections, sales — and because it shares the <b>same cloud database</b>, whatever they do on the web shows on their phone and vice-versa.</p>
+      <ul class="plain">
+        <li><b>Nothing to install</b> — it opens like any website; only an internet connection is needed.</li>
+        <li><b>Same login</b> — the phone number and password they use in the app.</li>
+        <li><b>Built-in help</b> — a Bangla user guide is at <span class="path">…/app/guide</span> (also reachable from the web app's <span class="ui">⚙ Settings → সাহায্য / Help</span>).</li>
+      </ul>
+      <div class="call tip">
+        <p class="lbl">✓ Both apps, one panel</p>
+        <p>Whether a shopkeeper uses the phone app or the web, their shop shows up the same way in <b>your</b> admin panel — one subscription, one set of data.</p>
+      </div>
+    </section>
+
+    <!-- 15 -->
+    <section id="trouble">
+      <h2><span class="num">15</span> Troubleshooting &amp; FAQ</h2>
+
+      <h3>The panel looks out of date or a button does nothing</h3>
+      <p>Your browser may be showing a cached copy. Do a hard refresh — <kbd>Ctrl</kbd>+<kbd>F5</kbd> (Windows) or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Mac) — to load the newest version.</p>
+
+      <h3>I can't sign in</h3>
+      <p>Confirm the username is exactly <span class="path">Admin</span> and the password is correct. If a page briefly appears blank, the host's one-time security check is running — wait a moment and refresh once.</p>
+
+      <h3>A shopkeeper says they can't log in or sync</h3>
+      <p>Check their shop's <b>Status</b> and <b>Expiry</b> in <span class="ui">Shops</span>. If <span class="st sus">suspended</span>, unsuspend them. If <span class="st exp">Expired</span>, set a new expiry date. Both restore access instantly.</p>
+
+      <h3>A shop I deleted still shows on someone's phone</h3>
+      <p>Expected. Server deletes clean the cloud and panel; the phone keeps its local copy until the app is reinstalled. Ask them to reinstall for a clean slate.</p>
+
+      <h3>The Outstanding / Sales totals look wrong</h3>
+      <p>They usually reflect leftover test data. Use section 12's cleanup steps to remove test shops, junk customers, or demo sales, then check <span class="ui">Overview</span> again.</p>
+
+      <h3>I forgot my admin password</h3>
+      <p>There's no self-service reset — the setup page was removed for security. Recovery needs developer access to the server database. Keep your password backed up in a password manager to avoid this.</p>
+    </section>
+
+    <!-- 16 -->
+    <section id="glossary">
+      <h2><span class="num">16</span> Quick reference</h2>
+      <h3>Status &amp; expiry badges</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Badge</th><th>Means</th></tr></thead>
+          <tbody>
+            <tr><td><span class="st active">active</span></td><td>Shop is running normally.</td></tr>
+            <tr><td><span class="st sus">suspended</span></td><td>You have blocked this shop; login &amp; sync are off.</td></tr>
+            <tr><td><span class="st unl">Unlimited</span></td><td>No expiry date — never lapses.</td></tr>
+            <tr><td><span class="st soon">In&nbsp;3d</span> / <span class="st soon">Expires today</span></td><td>Subscription is within its final week.</td></tr>
+            <tr><td><span class="st exp">Expired</span></td><td>The date has passed; login &amp; sync are blocked until you extend.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Bangla terms you'll see</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Bangla</th><th>English</th></tr></thead>
+          <tbody>
+            <tr><td class="bn">বাকি</td><td>Credit / money owed to the shop</td></tr>
+            <tr><td class="bn">পরিশোধ / টাকা পেলাম</td><td>Payment received</td></tr>
+            <tr><td class="bn">বাকি দিলাম</td><td>Gave credit</td></tr>
+            <tr><td class="bn">পরিশোধিত</td><td>Settled (nothing owed)</td></tr>
+            <tr><td class="bn">কাস্টমার</td><td>Customer</td></tr>
+            <tr><td class="bn">বিক্রি</td><td>Sale</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Key links</h3>
+      <ul class="plain">
+        <li>Admin Panel — <span class="path">https://bakibondhu.infinityfreeapp.com/admin</span></li>
+        <li>App download / landing page — <span class="path">https://bakibondhu.infinityfreeapp.com</span></li>
+      </ul>
+      <div class="call tip">
+        <p class="lbl">✓ Golden rules</p>
+        <p>Extend before shops expire · Suspend when unsure, delete only when certain · Read the name in every confirm dialog · Keep your password safe · Check the audit log when in doubt.</p>
+      </div>
+    </section>
+
+    <div class="foot">
+      <p class="bn">বাকিবন্ধু</p>
+      <p>Owner's Management Manual · prepared for the platform owner · v0.1.17 · 18 Sep 2026</p>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Scroll-spy: highlight the current section in the table of contents.
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var map = {};
+    links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(l){ l.classList.remove('on'); });
+          var a = map[e.target.id]; if(a) a.classList.add('on');
+        }
+      });
+    }, { rootMargin: '0px 0px -75% 0px', threshold: 0 });
+    document.querySelectorAll('main section[id]').forEach(function(s){ obs.observe(s); });
+  })();
+</script>
