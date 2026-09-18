@@ -1,0 +1,358 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<title>বাকিবন্ধু ওয়েব গাইড</title>
+<style>
+  :root{
+    --ground:#f5f7f2; --surface:#ffffff; --surface-2:#eef3ea; --border:#e0e6db;
+    --ink:#182018; --muted:#5f6a60; --faint:#8a938666;
+    --green:#17694A; --green-deep:#0d5233; --green-soft:#e2efe8;
+    --owed:#9C3B2E; --owed-bg:#fbe9e5; --owed-bd:#f0cfc7;
+    --warn:#8a5300; --warn-bg:#fbeed6; --warn-bd:#eed6a4;
+    --info:#1f5f8f; --info-bg:#e6f0f7; --info-bd:#cfe0ee;
+    --shadow:0 1px 2px rgba(20,40,25,.05),0 8px 24px rgba(20,40,25,.06);
+    --radius:16px;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0f130e; --surface:#171c15; --surface-2:#1e251b; --border:#2a3226;
+    --ink:#e8efe5; --muted:#a3ad9f; --faint:#8a93865a;
+    --green:#63d59d; --green-deep:#8fe6b7; --green-soft:#14301e;
+    --owed:#f0897d; --owed-bg:#3a1712; --owed-bd:#582420;
+    --warn:#e6b567; --warn-bg:#31260f; --warn-bd:#493916;
+    --info:#8fc2e6; --info-bg:#12222e; --info-bd:#24404f;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0f130e; --surface:#171c15; --surface-2:#1e251b; --border:#2a3226;
+    --ink:#e8efe5; --muted:#a3ad9f; --faint:#8a93865a;
+    --green:#63d59d; --green-deep:#8fe6b7; --green-soft:#14301e;
+    --owed:#f0897d; --owed-bg:#3a1712; --owed-bd:#582420;
+    --warn:#e6b567; --warn-bg:#31260f; --warn-bd:#493916;
+    --info:#8fc2e6; --info-bg:#12222e; --info-bd:#24404f;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);
+    font-family:"Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:"Baloo Da 2","Noto Sans Bengali",sans-serif;line-height:1.3;font-weight:600}
+  .mono{font-family:"IBM Plex Mono",monospace}
+  a{color:var(--green-deep);text-underline-offset:3px}
+
+  header.top{border-bottom:1px solid var(--border);
+    background:radial-gradient(1100px 260px at 15% -50%, color-mix(in srgb,var(--green) 16%, transparent), transparent 70%);}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 22px}
+  .top-inner{padding:46px 0 34px}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;
+    font-size:12.5px;font-weight:600;padding:5px 13px;border-radius:999px;letter-spacing:.02em}
+  h1{font-size:clamp(30px,5.4vw,48px);margin:16px 0 8px;font-weight:700;letter-spacing:-.01em}
+  .lede{font-size:clamp(16px,2.4vw,19px);color:var(--muted);max-width:56ch;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .pill{font-size:13px;background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:6px 13px;color:var(--muted);box-shadow:var(--shadow)}
+  .pill b{color:var(--ink);font-weight:600}
+  .pill.link{color:var(--green-deep)}
+
+  .doc{display:grid;grid-template-columns:236px minmax(0,1fr);gap:46px;align-items:start;padding:34px 0 90px}
+  nav.toc{position:sticky;top:16px;font-size:14px;max-height:calc(100vh - 32px);overflow:auto}
+  nav.toc .tt{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 12px;padding-left:14px}
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:s}
+  nav.toc li{counter-increment:s}
+  nav.toc a{display:flex;gap:10px;text-decoration:none;color:var(--muted);padding:6px 12px;
+    border-left:2px solid transparent;border-radius:0 8px 8px 0}
+  nav.toc a::before{content:counter(s,decimal-leading-zero);font-family:"IBM Plex Mono",monospace;
+    font-size:11px;color:var(--faint);padding-top:3px}
+  nav.toc a:hover{color:var(--ink);background:var(--surface-2)}
+  nav.toc a.on{color:var(--green-deep);border-left-color:var(--green);background:var(--surface-2);font-weight:600}
+
+  main{min-width:0}
+  section{scroll-margin-top:18px;margin-bottom:8px;padding-bottom:30px;border-bottom:1px solid var(--border)}
+  section:last-child{border-bottom:0}
+  section>h2{font-size:clamp(22px,3.2vw,29px);margin:18px 0 6px;display:flex;gap:13px;align-items:baseline}
+  section>h2 .num{font-family:"IBM Plex Mono",monospace;font-size:15px;color:var(--green);font-weight:500;flex:none}
+  main h3{font-size:18px;margin:24px 0 6px}
+  main p,main li{max-width:68ch}
+  main p{margin:11px 0}
+
+  ol.steps{counter-reset:st;list-style:none;padding:0;margin:16px 0}
+  ol.steps>li{counter-increment:st;position:relative;padding:3px 0 16px 46px;margin:0}
+  ol.steps>li::before{content:counter(st);position:absolute;left:0;top:1px;width:30px;height:30px;border-radius:50%;
+    background:var(--green-soft);color:var(--green-deep);font-weight:700;font-size:14px;display:grid;place-items:center;
+    border:1px solid color-mix(in srgb,var(--green) 32%, transparent);font-family:"IBM Plex Mono",monospace}
+  ol.steps>li:not(:last-child)::after{content:"";position:absolute;left:14.5px;top:33px;bottom:2px;width:1px;background:var(--border)}
+  ul.plain{list-style:none;padding-left:0;margin:12px 0}
+  ul.plain>li{position:relative;padding-left:24px;margin:8px 0}
+  ul.plain>li::before{content:"›";position:absolute;left:5px;color:var(--green);font-weight:700}
+
+  .ui{font-weight:600;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:1px 9px;box-shadow:0 1px 0 rgba(0,0,0,.03);white-space:nowrap;font-size:.92em}
+  .ui.g{background:var(--green);color:#fff;border-color:var(--green)}
+  .ui.d{color:var(--owed);border-color:var(--owed-bd)}
+  .path,code{font-family:"IBM Plex Mono",monospace;font-size:.85em;background:var(--surface-2);
+    border:1px solid var(--border);border-radius:6px;padding:2px 7px;word-break:break-word}
+
+  .call{border:1px solid var(--border);border-left-width:4px;border-radius:12px;padding:14px 17px;margin:18px 0;
+    background:var(--surface);box-shadow:var(--shadow)}
+  .call p{margin:4px 0}
+  .call .lbl{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .call.tip{border-left-color:var(--green);background:var(--green-soft)}
+  .call.tip .lbl{color:var(--green-deep)}
+  .call.info{border-left-color:var(--info);background:var(--info-bg);border-color:var(--info-bd)}
+  .call.info .lbl{color:var(--info)}
+  .call.warn{border-left-color:var(--warn);background:var(--warn-bg);border-color:var(--warn-bd)}
+  .call.warn .lbl{color:var(--warn)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+  .cardlet{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:16px 17px;box-shadow:var(--shadow)}
+  .cardlet h3{margin:0 0 4px;font-size:16px}
+  .cardlet p{margin:0;font-size:14.5px;color:var(--muted)}
+  .cardlet .e{font-size:22px;line-height:1;margin-bottom:8px}
+
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0;font-weight:600}
+  .flow .step{background:var(--green-soft);color:var(--green-deep);border:1px solid color-mix(in srgb,var(--green) 28%, transparent);
+    border-radius:10px;padding:8px 14px}
+  .flow .arw{color:var(--green);font-weight:700}
+
+  .foot{color:var(--muted);font-size:14px;padding:30px 0 70px;text-align:center;border-top:1px solid var(--border)}
+  .foot .bn{font-size:17px;color:var(--ink);font-family:"Baloo Da 2",sans-serif;font-weight:600}
+
+  @media (max-width:880px){
+    .doc{grid-template-columns:1fr;gap:6px}
+    nav.toc{position:static;max-height:none;border:1px solid var(--border);border-radius:var(--radius);
+      padding:16px;background:var(--surface);margin-bottom:12px}
+    .grid2{grid-template-columns:1fr}
+  }
+  [hidden]{display:none!important}
+</style>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <span class="badge">🌐 ওয়েব ব্যবহার গাইড</span>
+    <h1>বাকিবন্ধু ওয়েব — ব্যবহারের নিয়ম</h1>
+    <p class="lede">ব্রাউজার থেকে বাকিবন্ধু চালানোর সম্পূর্ণ গাইড — লগ ইন থেকে শুরু করে কাস্টমার, বাকি-পরিশোধ, রিমাইন্ডার, কালেকশন ও বিক্রি — সব ধাপে ধাপে, বাংলায়।</p>
+    <div class="meta">
+      <span class="pill link mono">bakibondhu.infinityfreeapp.com/app</span>
+      <span class="pill">কার জন্য: <b>দোকানদার</b></span>
+      <span class="pill">চলে: <b>যেকোনো ব্রাউজারে</b></span>
+      <span class="pill">হালনাগাদ: <b>১৭ সেপ্টেম্বর ২০২৬</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap doc">
+  <nav class="toc" aria-label="সূচিপত্র">
+    <p class="tt">সূচিপত্র</p>
+    <ol>
+      <li><a href="#intro">বাকিবন্ধু ওয়েব কী</a></li>
+      <li><a href="#open">খোলা ও সাইন ইন</a></li>
+      <li><a href="#home">হোম স্ক্রিন</a></li>
+      <li><a href="#addcust">নতুন কাস্টমার যোগ</a></li>
+      <li><a href="#ledger">বাকি ও পরিশোধ লেখা</a></li>
+      <li><a href="#manage">এডিট · এক্সপোর্ট · মুছুন</a></li>
+      <li><a href="#remind">রিমাইন্ডার পাঠানো</a></li>
+      <li><a href="#collect">কালেকশন ও প্রতিশ্রুতি</a></li>
+      <li><a href="#sales">বিক্রির হিসাব</a></li>
+      <li><a href="#settings">সেটিংস</a></li>
+      <li><a href="#sync">অ্যাপ ও ওয়েব — এক হিসাব</a></li>
+      <li><a href="#trial">সাবস্ক্রিপশন ও ট্রায়াল</a></li>
+      <li><a href="#faq">সাধারণ প্রশ্ন</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section id="intro">
+      <h2><span class="num">০১</span> বাকিবন্ধু ওয়েব কী</h2>
+      <p><b>বাকিবন্ধু ওয়েব</b> হলো বাকিবন্ধু অ্যাপের ব্রাউজার সংস্করণ। মোবাইল অ্যাপ ইনস্টল না করেও, যেকোনো কম্পিউটার বা ফোনের ব্রাউজার থেকে আপনি আপনার দোকানের <b>বাকি-পরিশোধের হিসাব, বিক্রি, কালেকশন</b> — সব কিছু চালাতে পারবেন।</p>
+      <p>সবচেয়ে বড় সুবিধা: <b>একই অ্যাকাউন্ট, একই হিসাব</b>। ফোনের অ্যাপে যা করবেন তা ওয়েবে দেখাবে, ওয়েবে যা করবেন তা ফোনে দেখাবে — কারণ দুটোই একই ক্লাউডে যুক্ত।</p>
+      <div class="grid2">
+        <div class="cardlet"><div class="e">🧾</div><h3>বাকির খাতা</h3><p>প্রতিটি কাস্টমারের বাকি ও পরিশোধ, চলতি হিসাবসহ।</p></div>
+        <div class="cardlet"><div class="e">📈</div><h3>বিক্রির হিসাব</h3><p>দিন · মাস · তিন মাস · বছর অনুযায়ী মোট বিক্রি।</p></div>
+        <div class="cardlet"><div class="e">🔔</div><h3>রিমাইন্ডার</h3><p>SMS বা WhatsApp দিয়ে বাকির কথা মনে করান।</p></div>
+        <div class="cardlet"><div class="e">☁️</div><h3>ক্লাউড সিঙ্ক</h3><p>ফোন ও ওয়েব — সব ডিভাইসে একই হিসাব।</p></div>
+      </div>
+      <div class="call info">
+        <p class="lbl">ℹ️ ইন্টারনেট লাগবে</p>
+        <p>মোবাইল অ্যাপ অফলাইনেও চলে, কিন্তু ওয়েব সংস্করণ চালাতে <b>ইন্টারনেট সংযোগ</b> দরকার — কারণ এটি সরাসরি ক্লাউডের সাথে কাজ করে।</p>
+      </div>
+    </section>
+
+    <section id="open">
+      <h2><span class="num">০২</span> খোলা ও সাইন ইন</h2>
+      <ol class="steps">
+        <li>ব্রাউজারে যান: <span class="path">bakibondhu.infinityfreeapp.com/app</span></li>
+        <li>আপনার অ্যাকাউন্ট থাকলে <b>মোবাইল নম্বর</b> ও <b>পাসওয়ার্ড</b> দিয়ে <span class="ui g">লগ ইন</span> করুন। (অ্যাপে খোলা অ্যাকাউন্ট দিয়েই ওয়েবে ঢুকতে পারবেন।)</li>
+        <li>নতুন হলে <span class="ui">নতুন? অ্যাকাউন্ট খুলুন</span>-এ চাপ দিন।</li>
+      </ol>
+      <h3>নতুন অ্যাকাউন্ট খোলা</h3>
+      <p><b>আপনার নাম, দোকানের নাম, মোবাইল নম্বর</b> ও <b>পাসওয়ার্ড</b> (কমপক্ষে ৬ অক্ষর) দিন। চাইলে ঠিকানাও বেছে নিন:</p>
+      <div class="flow">
+        <span class="step">বিভাগ</span><span class="arw">→</span>
+        <span class="step">জেলা</span><span class="arw">→</span>
+        <span class="step">থানা/উপজেলা</span>
+      </div>
+      <p>আগে বিভাগ বাছুন — তখন সেই বিভাগের জেলা আসবে; জেলা বাছলে সেই জেলার থানা/উপজেলা আসবে। ঠিকানা দেওয়া <b>ঐচ্ছিক</b>।</p>
+      <div class="call tip">
+        <p class="lbl">✓ মোবাইল নম্বরই আপনার আইডি</p>
+        <p>বাংলাদেশের ১১ সংখ্যার নম্বর (যেমন <span class="path">01712345678</span>) দিন। একবার লগ ইন করলে অনেকদিন লগ ইন থাকবেন।</p>
+      </div>
+    </section>
+
+    <section id="home">
+      <h2><span class="num">০৩</span> হোম স্ক্রিন</h2>
+      <p>লগ ইন করলে ওপরে দেখবেন আপনার <b>দোকানের নাম</b> এবং তিনটি বোতাম — <span class="ui">📈 বিক্রি</span>, <span class="ui">⟳ রিফ্রেশ</span>, <span class="ui">⚙ সেটিংস</span>।</p>
+      <ul class="plain">
+        <li><b>মোট বাকি — আপনার পাওনা:</b> সব কাস্টমার মিলিয়ে কত টাকা পাওনা, আর কত জন কাস্টমার।</li>
+        <li><b>📈 আজকের বিক্রি:</b> আজ কত টাকার বিক্রি হয়েছে — চাপ দিলে বিক্রির হিসাব খোলে।</li>
+        <li><b>🔍 খোঁজা:</b> <span class="ui">নাম বা মোবাইল দিয়ে খুঁজুন</span> বক্সে লিখে কাস্টমার খুঁজে নিন।</li>
+        <li><b>সাজানো (sort):</b> তালিকা <span class="ui">সর্বোচ্চ বাকি</span>, <span class="ui">নাম (ক–হ)</span>, বা <span class="ui">নতুন আগে</span> — এভাবে সাজান।</li>
+      </ul>
+      <p>নিচে কাস্টমারের তালিকা — যার কাছে বেশি পাওনা সে ওপরে; পাশে দেখাবে <span class="ui d">৳ … বাকি</span> অথবা <span class="ui">পরিশোধিত</span>। ডানদিকে নিচে <span class="ui g">＋ নতুন কাস্টমার</span> বোতাম।</p>
+    </section>
+
+    <section id="addcust">
+      <h2><span class="num">০৪</span> নতুন কাস্টমার যোগ করা</h2>
+      <ol class="steps">
+        <li><span class="ui g">＋ নতুন কাস্টমার</span>-এ চাপ দিন।</li>
+        <li>কাস্টমারের <b>নাম</b> ও <b>মোবাইল নম্বর</b> দিন (নম্বর রিমাইন্ডার পাঠাতে কাজে লাগে)। চাইলে <b>ঠিকানা</b>ও দিন।</li>
+        <li><span class="ui g">যোগ করুন</span> চাপ দিন — কাস্টমার তালিকায় যুক্ত হবে।</li>
+      </ol>
+      <div class="call info">
+        <p class="lbl">ℹ️ এক নম্বর, এক কাস্টমার</p>
+        <p>একই দোকানে দুইজন কাস্টমারের মোবাইল নম্বর এক হতে পারবে না। নম্বর আগে থেকে থাকলে বার্তা দেখাবে।</p>
+      </div>
+    </section>
+
+    <section id="ledger">
+      <h2><span class="num">০৫</span> বাকি ও পরিশোধ লেখা</h2>
+      <p>তালিকা থেকে একজন কাস্টমারে চাপ দিন — তার হিসাব খুলবে (এখন কত বাকি, আগের সব লেনদেন)।</p>
+      <ul class="plain">
+        <li><span class="ui">↑ বাকি দিলাম</span> — বাকিতে মাল দিলে। পরিমাণ ও (চাইলে) নোট লিখে যোগ করুন; বাকি বেড়ে যাবে।</li>
+        <li><span class="ui g">↓ টাকা পেলাম</span> — কাস্টমার টাকা দিলে। পরিমাণ লিখে যোগ করুন; বাকি কমে যাবে।</li>
+      </ul>
+      <p>ওপরে <b>এখন বাকি</b> সাথে সাথে আপডেট হবে; পুরোটা পরিশোধ হলে <b>পরিশোধিত</b> দেখাবে। নিচে সব লেনদেন তারিখসহ সাজানো থাকে।</p>
+    </section>
+
+    <section id="manage">
+      <h2><span class="num">০৬</span> এডিট · এক্সপোর্ট · মুছে ফেলা</h2>
+      <p>কাস্টমারের হিসাব স্ক্রিনের ওপরে ডানে <span class="ui">⋮</span> মেনুতে চাপ দিন:</p>
+      <ul class="plain">
+        <li><b>📤 লেনদেন এক্সপোর্ট করুন</b> — চলতি বাকিসহ সব লেনদেনের একটি লেখা হিসাব তৈরি হয়; <span class="ui">কপি করুন</span> বা <span class="ui g">শেয়ার করুন</span> (WhatsApp ইত্যাদি) দিয়ে কাস্টমারকে পাঠান।</li>
+        <li><b>✎ কাস্টমার এডিট করুন</b> — নাম, মোবাইল বা ঠিকানা বদলান।</li>
+        <li><b>🗑 কাস্টমার মুছুন</b> — কাস্টমারকে মুছে ফেলুন।</li>
+      </ul>
+      <div class="call warn">
+        <p class="lbl">⚠️ শুধু পরিশোধিত কাস্টমার মোছা যায়</p>
+        <p>যার এখনও <b>বাকি আছে</b> তাকে মুছে ফেলা যাবে না — আগে বাকি পরিশোধ করুন। <b>পরিশোধিত</b> হলে মোছা যাবে, আর মুছলে তার সব লেনদেনের হিসাবও চলে যাবে (আর ফেরানো যায় না)।</p>
+      </div>
+    </section>
+
+    <section id="remind">
+      <h2><span class="num">০৭</span> রিমাইন্ডার পাঠানো</h2>
+      <ol class="steps">
+        <li>কাস্টমারের হিসাব স্ক্রিনে <span class="ui">🔔</span> (মনে করান) বোতামে চাপ দিন।</li>
+        <li>একটি ভদ্র বাংলা বার্তা তৈরি হবে (নাম, বাকির পরিমাণ, দোকানের নাম সহ) — চাইলে বদলে নিন।</li>
+        <li><span class="ui g">✉ SMS পাঠান</span> অথবা <span class="ui">🟢 WhatsApp</span> — যেটি দিয়ে পাঠাতে চান বেছে নিন।</li>
+      </ol>
+      <div class="call info">
+        <p class="lbl">ℹ️ কিছু কথা</p>
+        <p>রিমাইন্ডার পাঠাতে কাস্টমারের <b>মোবাইল নম্বর</b> দেওয়া থাকতে হবে এবং <b>বাকি</b> থাকতে হবে। কম্পিউটারে SMS বোতাম কাজ নাও করতে পারে — সেক্ষেত্রে WhatsApp ব্যবহার করুন।</p>
+      </div>
+    </section>
+
+    <section id="collect">
+      <h2><span class="num">০৮</span> কালেকশন ও প্রতিশ্রুতি</h2>
+      <p>কাস্টমারের হিসাব স্ক্রিনের ওপরে <span class="ui">📋</span> আইকনে চাপ দিলে <b>কালেকশন</b> স্ক্রিন খোলে।</p>
+      <ul class="plain">
+        <li><span class="ui">＋ কালেকশন</span> — কবে/কীভাবে যোগাযোগ হলো (ফোন/সরাসরি/মেসেজ), কী অবস্থা, পরবর্তী ফলো-আপ কবে — লিখে রাখুন।</li>
+        <li><span class="ui">＋ প্রতিশ্রুতি</span> — কাস্টমার কবে কত টাকা দেবে বলেছে, তা লিখে রাখুন।</li>
+      </ul>
+      <div class="call tip">
+        <p class="lbl">✓ সব ডিভাইসে মিলে যায়</p>
+        <p>কালেকশন ও প্রতিশ্রুতিও এখন ক্লাউডে সিঙ্ক হয় — ওয়েবে যোগ করলে ফোনে দেখাবে, ফোনে যোগ করলে ওয়েবে দেখাবে।</p>
+      </div>
+    </section>
+
+    <section id="sales">
+      <h2><span class="num">০৯</span> বিক্রির হিসাব</h2>
+      <p>বাকির সাথে আলাদাভাবে আপনি প্রতিটি বিক্রির টাকা লিখে রাখতে পারেন — তাহলে দিন/মাস/বছর অনুযায়ী মোট বিক্রি দেখা যায়।</p>
+      <ol class="steps">
+        <li>হোম-এ <span class="ui">📈 আজকের বিক্রি</span> কার্ডে চাপ দিন।</li>
+        <li><span class="ui g">＋ বিক্রি যোগ করুন</span> → বিক্রির <b>পরিমাণ</b> এবং চাইলে একটি <b>বিবরণ</b> লিখে যোগ করুন।</li>
+        <li>ওপরে <span class="ui">দৈনিক / মাসিক / ত্রৈমাসিক / বার্ষিক</span> বেছে নিয়ে সেই অনুযায়ী মোট বিক্রি দেখুন।</li>
+      </ol>
+      <div class="call info">
+        <p class="lbl">ℹ️ বিক্রি আর বাকি আলাদা</p>
+        <p>এখানে যোগ করা টাকাই "বিক্রি" হিসেবে গোনা হয়। কাউকে বাকি দিলে তা এখানে বিক্রি হিসেবে যোগ হয় না।</p>
+      </div>
+    </section>
+
+    <section id="settings">
+      <h2><span class="num">১০</span> সেটিংস</h2>
+      <p>ওপরে ডানে <span class="ui">⚙</span> চাপ দিন:</p>
+      <ul class="plain">
+        <li><b>দোকানের নাম</b> — লিখে <span class="ui g">সেভ</span> করুন। এই নাম রিমাইন্ডার বার্তা ও এক্সপোর্টে ব্যবহার হয়।</li>
+        <li><b>সংস্করণ</b> — ওয়েব সংস্করণের তথ্য।</li>
+        <li><span class="ui d">লগ আউট</span> — অ্যাকাউন্ট থেকে বেরিয়ে যান।</li>
+      </ul>
+    </section>
+
+    <section id="sync">
+      <h2><span class="num">১১</span> অ্যাপ ও ওয়েব — এক হিসাব</h2>
+      <p>বাকিবন্ধু ওয়েব ও মোবাইল অ্যাপ <b>একই ক্লাউড ডেটাবেস</b> ব্যবহার করে। তাই একই অ্যাকাউন্টে লগ ইন করলে —</p>
+      <ul class="plain">
+        <li>ফোনে যোগ করা কাস্টমার, বাকি, বিক্রি, কালেকশন — সব ওয়েবে দেখাবে।</li>
+        <li>ওয়েবে যোগ করা সব কিছু ফোনেও চলে আসবে (ফোনে সিঙ্ক করার পর)।</li>
+      </ul>
+      <div class="call warn">
+        <p class="lbl">⚠️ একটি ফোনে একটি দোকান</p>
+        <p>একই ফোনে যদি <b>অন্য একটি দোকান</b> লগ ইন করে, তাহলে আগের দোকানের হিসাব ফোন থেকে সরে গিয়ে নতুন দোকানের হিসাব নেমে আসে। তাই অন্য কাউকে ভিন্ন অ্যাকাউন্টে ঢুকতে দেওয়ার আগে সিঙ্ক করে নিন। ওয়েবে প্রতিটি লগ ইন সবসময় শুধু সেই অ্যাকাউন্টের হিসাব দেখায়।</p>
+      </div>
+    </section>
+
+    <section id="trial">
+      <h2><span class="num">১২</span> সাবস্ক্রিপশন ও ট্রায়াল</h2>
+      <p>নতুন অ্যাকাউন্ট খুললে <b>৩০ দিনের ফ্রি ট্রায়াল</b> পাওয়া যায় (বাংলাদেশ সময় অনুযায়ী গোনা হয়)। মেয়াদ শেষের কাছে এলে হোম স্ক্রিনে একটি বার্তা দেখাবে।</p>
+      <ul class="plain">
+        <li>মেয়াদ শেষ হলে লগ ইন বা সিঙ্ক করার সময় বার্তা আসবে — অ্যাডমিনের সাথে যোগাযোগ করে মেয়াদ বাড়িয়ে নিন।</li>
+        <li>মেয়াদ শেষ হলেও <b>আপনার হিসাব মুছে যায় না</b> — মেয়াদ বাড়ানোর সাথে সাথে সব ফিরে আসে।</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h2><span class="num">১৩</span> সাধারণ প্রশ্ন</h2>
+      <h3>অ্যাপ ছাড়া কি সব কাজ ওয়েবে করা যায়?</h3>
+      <p>হ্যাঁ — কাস্টমার, বাকি-পরিশোধ, বিক্রি, রিমাইন্ডার, কালেকশন, এক্সপোর্ট — সব ওয়েবে করা যায়। শুধু ওয়েবে ইন্টারনেট লাগে।</p>
+      <h3>ওয়েব আর অ্যাপের হিসাব কি আলাদা?</h3>
+      <p>না। একই অ্যাকাউন্টে লগ ইন করলে দুটোতেই একই হিসাব — একটিতে বদলালে অন্যটিতেও দেখাবে।</p>
+      <h3>পৃষ্ঠা পুরনো দেখাচ্ছে বা কিছু আপডেট হচ্ছে না?</h3>
+      <p>ওপরের <span class="ui">⟳ রিফ্রেশ</span> বোতামে চাপ দিন — নতুন তথ্য নেমে আসবে।</p>
+      <h3>লগ ইন হচ্ছে না?</h3>
+      <p>মোবাইল নম্বর ও পাসওয়ার্ড ঠিক আছে কিনা দেখুন। ইন্টারনেট সংযোগ পরীক্ষা করুন। পাসওয়ার্ড ভুলে গেলে অ্যাডমিন রিসেট করে দিতে পারেন।</p>
+      <h3>পাসওয়ার্ড কি নিরাপদ?</h3>
+      <p>হ্যাঁ — পাসওয়ার্ড নিরাপদভাবে (এনক্রিপ্ট করে) সংরক্ষণ করা হয়। শেয়ার করা কম্পিউটারে কাজ শেষে অবশ্যই <b>লগ আউট</b> করুন।</p>
+    </section>
+
+    <div class="foot">
+      <p class="bn">বাকিবন্ধু</p>
+      <p>ওয়েব ব্যবহার গাইড · দোকানদারের জন্য · ১৭ সেপ্টেম্বর ২০২৬</p>
+    </div>
+  </main>
+</div>
+
+<script>
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var map = {};
+    links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(l){ l.classList.remove('on'); });
+          var a = map[e.target.id]; if(a) a.classList.add('on');
+        }
+      });
+    }, { rootMargin: '0px 0px -75% 0px', threshold: 0 });
+    document.querySelectorAll('main section[id]').forEach(function(s){ obs.observe(s); });
+  })();
+</script>
