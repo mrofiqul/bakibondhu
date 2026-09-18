@@ -8,6 +8,7 @@ import 'package:bakibondhu/core/theme.dart';
 import 'package:bakibondhu/data/ledger_repository.dart';
 import 'package:bakibondhu/domain/money.dart';
 import 'package:bakibondhu/features/customers/customer_detail_screen.dart';
+import 'package:bakibondhu/core/update_service.dart';
 import 'package:bakibondhu/features/customers/customer_report_export.dart';
 import 'package:bakibondhu/features/reports/sales_report_screen.dart';
 import 'package:bakibondhu/features/settings/settings_screen.dart';
@@ -93,6 +94,24 @@ class _HomeScreenState extends State<HomeScreen> {
         });
     }
     return out;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Check for a newer app version once per launch; if one is available, the
+    // owner sees a pop-up offering to update (data is preserved on update).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybePromptUpdate());
+  }
+
+  bool _updateChecked = false;
+
+  Future<void> _maybePromptUpdate() async {
+    if (_updateChecked) return;
+    _updateChecked = true;
+    final info = await checkForAppUpdate();
+    if (!mounted || info == null) return;
+    await showUpdateDialog(context, info);
   }
 
   @override

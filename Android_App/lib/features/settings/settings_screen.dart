@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
+import 'package:bakibondhu/core/config.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
+import 'package:bakibondhu/core/update_service.dart';
 import 'package:bakibondhu/features/sync/sync_center_screen.dart';
 
 /// Settings: shop name (feeds reminder signatures), account/sync, and about.
@@ -41,6 +43,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  bool _checkingUpdate = false;
+
+  Future<void> _checkUpdate() async {
+    if (_checkingUpdate) return;
+    setState(() => _checkingUpdate = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final info = await checkForAppUpdate();
+    if (!mounted) return;
+    setState(() => _checkingUpdate = false);
+    if (info != null) {
+      await showUpdateDialog(context, info);
+    } else {
+      messenger.showSnackBar(
+        SnackBar(content: Text(S.updateUpToDate(kAppVersion))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = AppScope.sessionOf(context);
@@ -76,11 +96,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           const Divider(height: 32),
+          ListTile(
+            leading: const Icon(Icons.system_update),
+            title: const Text(S.updateApp),
+            subtitle: const Text(S.updateAppSubtitle),
+            trailing: _checkingUpdate
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.chevron_right),
+            onTap: _checkingUpdate ? null : _checkUpdate,
+          ),
+          const Divider(height: 32),
           Text(S.aboutSection, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           const ListTile(
             leading: Icon(Icons.info_outline),
-            title: Text('${S.appName} · v0.1.18'),
+            title: Text('${S.appName} · v$kAppVersion'),
             subtitle: Text('Bangla-first · offline-first'),
           ),
         ],

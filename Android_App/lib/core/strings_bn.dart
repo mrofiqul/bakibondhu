@@ -79,6 +79,17 @@ class S {
   static const exportHistory = 'লেনদেন এক্সপোর্ট করুন';
   static const historyExportTitle = 'লেনদেনের হিসাব';
 
+  // App update
+  static const updateApp = 'অ্যাপ আপডেট';
+  static const updateAppSubtitle = 'নতুন সংস্করণ আছে কিনা দেখুন';
+  static const updateAvailableTitle = 'নতুন আপডেট পাওয়া গেছে';
+  static String updateAvailableBody(String version) =>
+      'নতুন সংস্করণ (v$version) পাওয়া গেছে। আপডেট করলে আপনার সব তথ্য অপরিবর্তিত থাকবে।';
+  static const updateNow = 'আপডেট করুন';
+  static const updateLater = 'পরে';
+  static const updateChecking = 'চেক করা হচ্ছে…';
+  static String updateUpToDate(String version) => 'সর্বশেষ সংস্করণ চলছে (v$version)';
+
   // Excel (customer report) export
   static const exportExcel = 'এক্সেল এক্সপোর্ট';
   static const exportExcelTooltip = 'সব কাস্টমার এক্সেলে এক্সপোর্ট করুন';

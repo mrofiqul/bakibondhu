@@ -31,6 +31,11 @@ try {
         bb_json(200, ['status' => 'ok', 'service' => 'bakibondhu-php', 'time' => gmdate('c')]);
     }
 
+    // Latest app versions so installed apps can offer an update (public).
+    if ($path === '/api/v1/app/version' && $method === 'GET') {
+        bb_json(200, require __DIR__ . '/app_version.php');
+    }
+
     if ($path === '/api/v1/auth/register' && $method === 'POST') {
         handle_register($cfg);
     }

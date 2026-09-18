@@ -113,7 +113,10 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.০";
+var VERSION="ওয়েব সংস্করণ ১.১";
+// Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
+// deployed, so open sessions get prompted to reload to the latest.
+var WEB_BUILD=2;
 var API="/api/v1";
 var LS={tok:"bb_web_tok",biz:"bb_web_biz",shop:"bb_web_shop",dev:"bb_web_dev",sort:"bb_web_sort"};
 var S={ token:localStorage.getItem(LS.tok)||null, businessId:localStorage.getItem(LS.biz)||null,
@@ -334,11 +337,14 @@ function renderSettings(){
   m.appendChild(el('<div class="s" style="color:var(--muted);font-size:13px;margin-top:6px">রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।</div>'));
   var xrow=el('<button class="setrow" id="set_xlsx" style="width:100%;margin-top:20px;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>📊 এক্সেল এক্সপোর্ট — সব কাস্টমার</span><span style="color:var(--muted)">⬇</span></button>');
   m.appendChild(xrow);
+  var urow=el('<button class="setrow" id="set_update" style="width:100%;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>🔄 অ্যাপ আপডেট / Update App</span><span style="color:var(--muted)">›</span></button>');
+  m.appendChild(urow);
   m.appendChild(el('<a class="setrow" href="/app/guide/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span>📘 সাহায্য / Help</span><span style="color:var(--muted)">↗</span></a>'));
   m.appendChild(el('<div class="setrow"><span>সংস্করণ</span><span style="color:var(--muted)">'+VERSION+'</span></div>'));
   var out=el('<button class="go danger" id="set_out" style="margin-top:24px">লগ আউট</button>'); m.appendChild(out);
   app.appendChild(m);
   document.getElementById("set_xlsx").onclick=exportCustomersXlsx;
+  document.getElementById("set_update").onclick=function(){ toast("চেক করা হচ্ছে…"); checkWebUpdate(true); };
   document.getElementById("set_save").onclick=function(){ S.shopName=(document.getElementById("set_shop").value||"").trim(); localStorage.setItem(LS.shop,S.shopName); toast("সেভ হয়েছে"); };
   out.onclick=function(){ if(confirm("লগ আউট করবেন?")) logout(); };
 }
@@ -494,6 +500,37 @@ function exportCustomersXlsx(){
   }).catch(function(e){ toast("এক্সপোর্ট ব্যর্থ — ইন্টারনেট দেখুন"); });
 }
 
+// ---------- app update ----------
+// Compares the server's latest web build to WEB_BUILD. When newer, a pop-up
+// offers to reload to the latest version (localStorage — login/shop — is kept).
+function checkWebUpdate(manual){
+  return fetch(API+"/app/version",{credentials:"same-origin"})
+    .then(function(r){ return r.ok?r.json():null; })
+    .then(function(v){
+      var b=v&&v.web&&v.web.build;
+      if(typeof b==="number" && b>WEB_BUILD){
+        if(manual) showUpdateSheet(v.web);
+        else { var seen=false; try{ seen=sessionStorage.getItem("bb_upd_shown")==="1"; }catch(e){}
+          if(!seen){ try{sessionStorage.setItem("bb_upd_shown","1");}catch(e){} showUpdateSheet(v.web); } }
+        return true;
+      }
+      if(manual) toast("সর্বশেষ সংস্করণ চলছে");
+      return false;
+    })
+    .catch(function(){ if(manual) toast("চেক করা যায়নি"); });
+}
+function doWebUpdate(){ try{ location.replace(location.pathname+"?u="+Date.now()); }catch(e){ location.reload(); } }
+function showUpdateSheet(web){
+  var note=(web&&web.notes)?'<div style="color:var(--muted);font-size:13px;margin-top:8px">'+esc(web.notes)+'</div>':'';
+  var sh=el('<div class="sheet"><h3>নতুন আপডেট পাওয়া গেছে</h3>'+
+    '<div>নতুন সংস্করণ পাওয়া গেছে। আপডেট করলে আপনার সব তথ্য অপরিবর্তিত থাকবে।</div>'+note+
+    '<div class="actions" style="margin-top:16px"><button class="cancel" id="u_later" style="flex:1">পরে</button>'+
+    '<button class="b-pay" id="u_now" style="flex:1">আপডেট করুন</button></div></div>');
+  var mask=openSheet(sh);
+  sh.querySelector("#u_later").onclick=function(){ mask.remove(); };
+  sh.querySelector("#u_now").onclick=function(){ doWebUpdate(); };
+}
+
 // collections add
 function activitySheet(c){
   var sh=el('<div class="sheet"><h3>কালেকশন যোগ করুন</h3>'+
@@ -525,7 +562,7 @@ function promiseSheet(c){
 }
 
 // ---------- boot ----------
-if(S.token){ loadingScreen(); pullAll().then(render).catch(function(e){ if(e.status===401){logout();} else {toast(friendly(e));render();} }); }
+if(S.token){ loadingScreen(); pullAll().then(render).catch(function(e){ if(e.status===401){logout();} else {toast(friendly(e));render();} }); setTimeout(function(){checkWebUpdate(false);},1500); }
 else render();
 })();
 </script>
