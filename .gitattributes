@@ -1,0 +1,4 @@
+# Keep HTML files LF in the working tree too, so they aren't shown as modified
+# on machines with core.autocrlf=true (all HTML is already stored LF in the repo).
+# Covers the generated manual/guide pages and their tracked sources.
+*.html text eol=lf
