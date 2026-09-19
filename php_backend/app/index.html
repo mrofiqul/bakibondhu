@@ -118,10 +118,10 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.৫";
+var VERSION="ওয়েব সংস্করণ ১.৬";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=6;
+var WEB_BUILD=7;
 
 // ---------- language (bn / en) ----------
 // The UI is authored in Bangla; when English is selected we translate the
@@ -138,7 +138,7 @@ var I18N={
   "অ্যাকাউন্ট সাসপেন্ড করা হয়েছে":"Account suspended",
   "এই নম্বরের কাস্টমার আগেই আছে":"A customer with this number already exists",
   "সংযোগ সমস্যা — আবার চেষ্টা করুন":"Connection problem — try again",
-  "ইন্টারনেট নেই — অনলাইন হলে নিজে থেকে সিঙ্ক হবে":"No internet — will sync automatically when back online",
+  "আপনি এখন অফলাইন — ডেটা সিঙ্ক ও ব্যাকআপ করতে ইন্টারনেটে যুক্ত হোন":"You are offline — connect to the internet to sync & back up your data",
   "আপডেট হয়েছে":"Updated","যোগ হয়েছে":"Added","বিক্রি যোগ হয়েছে":"Sale added",
   "কাস্টমার যোগ হয়েছে":"Customer added","মুছে ফেলা হয়েছে":"Deleted",
   "কপি হয়েছে":"Copied","কপি করা যায়নি":"Could not copy","লোড হচ্ছে…":"Loading…",
@@ -203,7 +203,7 @@ var I18N={
   "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
   "📥 রিপোর্ট ডাউনলোড — সব কাস্টমার":"📥 Download report — all customers",
   "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help",
-  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৫":"Web version 1.5","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৬":"Web version 1.6","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
   // statement export + update sheet + trial
   "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
   "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
@@ -717,7 +717,7 @@ function promiseSheet(c){
 var _autoBusy=false;
 function offlineBar(show){
   var el0=document.getElementById("offbar");
-  if(show){ if(!el0){ var b=el('<div id="offbar" class="offbar">ইন্টারনেট নেই — অনলাইন হলে নিজে থেকে সিঙ্ক হবে</div>'); document.body.appendChild(b); applyLang(b); } }
+  if(show){ if(!el0){ var b=el('<div id="offbar" class="offbar">আপনি এখন অফলাইন — ডেটা সিঙ্ক ও ব্যাকআপ করতে ইন্টারনেটে যুক্ত হোন</div>'); document.body.appendChild(b); applyLang(b); } }
   else if(el0){ el0.remove(); }
 }
 window.addEventListener("offline",function(){ offlineBar(true); });
