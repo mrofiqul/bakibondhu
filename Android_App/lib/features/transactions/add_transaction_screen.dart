@@ -29,6 +29,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _noteCtrl = TextEditingController();
   bool _saving = false;
 
+  /// Credit only: also count this amount in today's total sales.
+  bool _addToSales = false;
+
   bool get _isCredit => widget.type == TxnType.credit;
   num? get _parsed => num.tryParse(_amount);
   bool get _valid => (_parsed ?? 0) > 0;
@@ -82,6 +85,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           dueDate: _dueDate,
           note: note,
           at: _date);
+      // Optionally also record this credit amount as a sale for today's total.
+      if (_addToSales) {
+        await repo.addSale(amount: amount, note: note, at: _date);
+      }
     } else {
       await repo.recordPayment(
           customerId: widget.customerId, amount: amount, note: note, at: _date);
@@ -139,6 +146,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             InputDecoration(labelText: S.noteLabel),
                       ),
                     ),
+                    if (_isCredit)
+                      CheckboxListTile(
+                        value: _addToSales,
+                        onChanged: (v) =>
+                            setState(() => _addToSales = v ?? false),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 12),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text(S.addToSalesLabel),
+                      ),
                   ],
                 ),
               ),
