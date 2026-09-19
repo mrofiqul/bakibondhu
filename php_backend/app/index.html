@@ -108,6 +108,7 @@
   .langtog{display:inline-flex;border:1px solid var(--border);border-radius:20px;padding:2px;background:var(--surface)}
   .langtog button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:5px 13px;border-radius:16px;cursor:pointer}
   .langtog button.on{background:var(--green);color:#fff}
+  .offbar{position:fixed;top:0;left:0;right:0;background:var(--owed-bg);color:var(--owed);text-align:center;font-size:13px;font-weight:600;padding:7px 12px;z-index:60;box-shadow:0 1px 4px rgba(0,0,0,.15)}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -117,10 +118,10 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.৪";
+var VERSION="ওয়েব সংস্করণ ১.৫";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=5;
+var WEB_BUILD=6;
 
 // ---------- language (bn / en) ----------
 // The UI is authored in Bangla; when English is selected we translate the
@@ -137,6 +138,7 @@ var I18N={
   "অ্যাকাউন্ট সাসপেন্ড করা হয়েছে":"Account suspended",
   "এই নম্বরের কাস্টমার আগেই আছে":"A customer with this number already exists",
   "সংযোগ সমস্যা — আবার চেষ্টা করুন":"Connection problem — try again",
+  "ইন্টারনেট নেই — অনলাইন হলে নিজে থেকে সিঙ্ক হবে":"No internet — will sync automatically when back online",
   "আপডেট হয়েছে":"Updated","যোগ হয়েছে":"Added","বিক্রি যোগ হয়েছে":"Sale added",
   "কাস্টমার যোগ হয়েছে":"Customer added","মুছে ফেলা হয়েছে":"Deleted",
   "কপি হয়েছে":"Copied","কপি করা যায়নি":"Could not copy","লোড হচ্ছে…":"Loading…",
@@ -201,7 +203,7 @@ var I18N={
   "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
   "📥 রিপোর্ট ডাউনলোড — সব কাস্টমার":"📥 Download report — all customers",
   "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help",
-  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৪":"Web version 1.4","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৫":"Web version 1.5","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
   // statement export + update sheet + trial
   "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
   "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
@@ -708,8 +710,26 @@ function promiseSheet(c){
   setTimeout(function(){ sh.querySelector("#p_amt").focus(); },50);
 }
 
+// ---------- auto-sync on connectivity ----------
+// The web app is online-first (each change posts immediately). So "auto-sync
+// when online" means: show an offline notice, and the moment the connection
+// returns, automatically pull the latest data — no manual refresh needed.
+var _autoBusy=false;
+function offlineBar(show){
+  var el0=document.getElementById("offbar");
+  if(show){ if(!el0){ var b=el('<div id="offbar" class="offbar">ইন্টারনেট নেই — অনলাইন হলে নিজে থেকে সিঙ্ক হবে</div>'); document.body.appendChild(b); applyLang(b); } }
+  else if(el0){ el0.remove(); }
+}
+window.addEventListener("offline",function(){ offlineBar(true); });
+window.addEventListener("online",function(){
+  offlineBar(false);
+  if(!S.token||_autoBusy) return; _autoBusy=true;
+  pullAll().then(function(){ render(); toast("আপডেট হয়েছে"); }).catch(function(){}).then(function(){ _autoBusy=false; });
+});
+
 // ---------- boot ----------
 initI18n();
+if(!navigator.onLine) offlineBar(true);
 if(S.token){ loadingScreen(); pullAll().then(render).catch(function(e){ if(e.status===401){logout();} else {toast(friendly(e));render();} }); setTimeout(function(){checkWebUpdate(false);},1500); }
 else render();
 })();

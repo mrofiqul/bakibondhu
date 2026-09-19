@@ -15,6 +15,7 @@ import 'package:bakibondhu/data/shared_prefs_settings_store.dart';
 import 'package:bakibondhu/data/sqflite_ledger_repository.dart';
 import 'package:bakibondhu/sync/http_sync_api.dart';
 import 'package:bakibondhu/sync/sqflite_sync_store.dart';
+import 'package:bakibondhu/sync/auto_sync.dart';
 import 'package:bakibondhu/sync/sync_engine.dart';
 
 /// Entry point. Opens the local SQLite store, settings and session
@@ -69,6 +70,10 @@ Future<void> main() async {
     // Keep the trial-ending reminder current if the admin changes the expiry.
     onExpiryPulled: (expiresAt) => session.updateExpiresAt(expiresAt),
   );
+
+  // Auto-sync: pushes/pulls whenever the device is online (startup, reconnect,
+  // app resume, and a light pending-changes poll) — no manual "Sync now" needed.
+  AutoSync(engine: syncEngine, session: session, store: syncStore).start();
 
   runApp(BakiBondhuApp(
     repo: repo,

@@ -120,6 +120,21 @@ BakiBondhu/
   `saveFile` writes to app-private storage, so it isn't used for the default). Web
   and admin already trigger real browser downloads; all three were relabelled
   Export → **Download**.
+- **v0.1.23 — fixed the in-app update check.** It used a plain `http.get`, which the
+  InfinityFree anti-bot "browser check" intercepts (challenge HTML, not JSON) →
+  `jsonDecode` threw → silently no update. `checkForAppUpdate` now goes through
+  `InfinityFreeClient` (the same client as auth/sync). **Rule: any Android call to the
+  InfinityFree host must use `InfinityFreeClient`, never plain `http`.**
+- **v0.1.24 — faster বাংলা/English switch.** The root built `AppTheme.light()` inside
+  the language `ValueListenableBuilder`, recomputing `ColorScheme.fromSeed` on every
+  toggle; theme + home are now built once and reused. Web: the DOM translator got a
+  whole-node O(1) fast path (only interpolated strings scan all keys).
+- **v0.1.25 — automatic sync.** New `lib/sync/auto_sync.dart` (`AutoSync`) syncs
+  whenever the device is online — on startup, on the offline→online edge
+  (`connectivity_plus`), on app resume (lifecycle), and a 20 s pending-changes poll —
+  guarded against overlap, logged-in + online only, errors swallowed. Wired in
+  `main.dart`; the manual "Sync now" button stays. Web (online-first): an offline
+  banner + auto-`pullAll()` on the `online` event.
 
 ---
 
