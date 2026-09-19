@@ -4,9 +4,9 @@ An easy credit ledger for shopkeepers. This guide shows, step by step, how to us
 the BakiBondhu app. (The app can run in **Bangla or English** — Bangla labels are
 shown in brackets.)
 
-> **Version v0.1.22** — new: **Bangla/English language** selection, **download** the
-> all-customers report to your **Downloads** folder, in-app **Update**, and an
-> **account is now required** to use the app.
+> **Version v0.1.25** — new: **automatic sync** when online, **Bangla/English
+> language** selection, **download** the all-customers report to your **Downloads**
+> folder, in-app **Update**, and an **account is now required** to use the app.
 
 ---
 
@@ -180,17 +180,23 @@ you to the first (Login / Register) screen.
 
 ## 11. Syncing your data across phones
 
-Once you're signed in, you can **sync your ledger to the cloud** — so if you lose
-your phone or move to a new one, your records come back.
+Once you're signed in, your ledger **syncs to the cloud** — so if you lose your
+phone or move to a new one, your records come back.
 
+> ⚡ **Automatic sync (v0.1.25):** while you're logged in, the app syncs **on its
+> own** — on launch, when the internet comes back, and shortly after you add or
+> change something. You don't have to tap anything. The **🔄 Sync Now** button is
+> still there if you want to sync immediately.
+
+To sync manually:
 1. Go to **⚙️ Settings → Sync & account**; tap **Log in** if needed.
 2. Tap **🔄 Sync Now**.
 3. When you see an "uploaded / downloaded" message, the sync is done.
 
 - After logging in once, you stay signed in for about **30 days** — no need to
   re-enter your password each time.
-- Syncing needs internet. Offline, your entries stay on the phone; sync again when
-  you're back online.
+- Syncing needs internet. Offline, your entries stay on the phone and **sync
+  automatically once you're back online**.
 - On a **new phone**, log in with the same account and tap **Sync Now** — your old
   records download.
 
