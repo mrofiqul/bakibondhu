@@ -7,13 +7,13 @@
 // Updating never touches the user's data; it only installs a newer build.
 return [
     'android' => [
-        'version' => '0.1.25',
-        'build'   => 26,
+        'version' => '0.1.26',
+        'build'   => 27,
         'url'     => 'https://github.com/mrofiqul/bakibondhu-app/releases/latest/download/BakiBondhu.apk',
-        'notes'   => 'নতুন: অনলাইন হলে নিজে থেকে সিঙ্ক (স্বয়ংক্রিয় সিঙ্ক)।',
+        'notes'   => 'নতুন: অফলাইন থাকলে উপরে বার্তা দেখায়; স্বয়ংক্রিয় সিঙ্ক।',
     ],
     'web' => [
-        'build'   => 6,
+        'build'   => 7,
         'notes'   => 'নতুন সংস্করণ পাওয়া গেছে।',
     ],
 ];

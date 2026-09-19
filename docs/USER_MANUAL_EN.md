@@ -186,7 +186,9 @@ phone or move to a new one, your records come back.
 > ⚡ **Automatic sync (v0.1.25):** while you're logged in, the app syncs **on its
 > own** — on launch, when the internet comes back, and shortly after you add or
 > change something. You don't have to tap anything. The **🔄 Sync Now** button is
-> still there if you want to sync immediately.
+> still there if you want to sync immediately. When you're offline, a **notice
+> appears at the top** of the screen; once you're back online your data syncs and
+> backs up on its own.
 
 To sync manually:
 1. Go to **⚙️ Settings → Sync & account**; tap **Log in** if needed.

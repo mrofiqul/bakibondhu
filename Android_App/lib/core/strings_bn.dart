@@ -154,6 +154,11 @@ class S {
   static String get shopNamePlaceholder => _bn ? 'আপনার দোকান' : 'Your shop';
   static String get couldNotOpen => _bn ? 'অ্যাপটি খোলা গেল না' : 'Could not open the app';
 
+  // Offline indicator (top bar)
+  static String get offlineBanner => _bn
+      ? 'আপনি এখন অফলাইন — ডেটা সিঙ্ক ও ব্যাকআপ করতে ইন্টারনেটে যুক্ত হোন'
+      : 'You are offline — connect to the internet to sync & back up your data';
+
   // Sync Center (Screen §5.14)
   static String get syncCenter => _bn ? 'সিঙ্ক' : 'Sync';
   static String get syncNow => _bn ? 'এখন সিঙ্ক করুন' : 'Sync now';

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/widgets.dart';
 
+import 'package:bakibondhu/core/connectivity_status.dart';
 import 'package:bakibondhu/data/session.dart';
 import 'package:bakibondhu/sync/sync_engine.dart';
 import 'package:bakibondhu/sync/sync_store.dart';
@@ -34,9 +35,16 @@ class AutoSync with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _sub = _conn.onConnectivityChanged.listen((results) {
       final online = _isOnline(results);
+      appOnline.value = online; // drive the UI's offline banner
       // Only act on the offline -> online edge, so we don't re-sync on every
       // Wi-Fi/mobile flip while already connected.
       if (online && !_wasOnline) _fullSync();
+      _wasOnline = online;
+    });
+    // Seed the initial state (the stream only fires on change).
+    _conn.checkConnectivity().then((r) {
+      final online = _isOnline(r);
+      appOnline.value = online;
       _wasOnline = online;
     });
     // Catches changes made while online (and retries) without hooking the repo.
