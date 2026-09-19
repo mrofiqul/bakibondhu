@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/dialogs.dart';
@@ -175,6 +176,18 @@ class _HomeScreenState extends State<HomeScreen> {
     await _refresh();
   }
 
+  /// Record a sale entered inline on the Home sales card (no separate screen).
+  /// Returns true on success so the card can reset itself.
+  Future<bool> _addSaleInline(Money amount) async {
+    await _repo.addSale(amount: amount);
+    await _refresh();
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(S.saleSaved)));
+    }
+    return true;
+  }
+
   Future<void> _downloadReport({bool chooseLocation = false}) async {
     final rows = _data?.customers ?? const <CustomerBalance>[];
     final messenger = ScaffoldMessenger.of(context);
@@ -282,6 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                   _refresh();
                 },
+                onAddSale: _addSaleInline,
               ),
               if (data.customers.isNotEmpty)
                 _SearchField(
@@ -473,10 +487,60 @@ class _TotalCard extends StatelessWidget {
   }
 }
 
-class _SalesCard extends StatelessWidget {
+/// Today's-sales card. Tapping the card opens the full sales report; the "+"
+/// button reveals an inline amount box so the owner can add a sale straight
+/// from Home (no separate screen). [onAddSale] records the amount and returns
+/// true on success, at which point the inline box collapses.
+class _SalesCard extends StatefulWidget {
   final Money todaySales;
   final VoidCallback onTap;
-  const _SalesCard({required this.todaySales, required this.onTap});
+  final Future<bool> Function(Money amount) onAddSale;
+  const _SalesCard(
+      {required this.todaySales,
+      required this.onTap,
+      required this.onAddSale});
+
+  @override
+  State<_SalesCard> createState() => _SalesCardState();
+}
+
+class _SalesCardState extends State<_SalesCard> {
+  bool _adding = false;
+  bool _saving = false;
+  final _amountCtrl = TextEditingController();
+  final _amountFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _amountCtrl.dispose();
+    _amountFocus.dispose();
+    super.dispose();
+  }
+
+  void _toggleAdd() {
+    setState(() => _adding = !_adding);
+    if (_adding) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _amountFocus.requestFocus());
+    } else {
+      _amountCtrl.clear();
+    }
+  }
+
+  Future<void> _save() async {
+    final n = num.tryParse(_amountCtrl.text.trim());
+    if (n == null || n <= 0 || _saving) return;
+    setState(() => _saving = true);
+    final ok = await widget.onAddSale(Money.taka(n));
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      if (ok) {
+        _adding = false;
+        _amountCtrl.clear();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -486,41 +550,97 @@ class _SalesCard extends StatelessWidget {
       child: Material(
         color: scheme.secondaryContainer,
         borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            child: Row(
-              children: [
-                Icon(Icons.trending_up, color: scheme.onSecondaryContainer),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(S.todaysSales,
-                          style: TextStyle(
-                              color: scheme.onSecondaryContainer,
-                              fontWeight: FontWeight.w600)),
-                      Text(S.viewDailySales,
-                          style: TextStyle(
-                              color: scheme.onSecondaryContainer
-                                  .withValues(alpha: 0.75),
-                              fontSize: 12)),
-                    ],
-                  ),
+        child: Column(
+          children: [
+            InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_up, color: scheme.onSecondaryContainer),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(S.todaysSales,
+                              style: TextStyle(
+                                  color: scheme.onSecondaryContainer,
+                                  fontWeight: FontWeight.w600)),
+                          Text(S.viewDailySales,
+                              style: TextStyle(
+                                  color: scheme.onSecondaryContainer
+                                      .withValues(alpha: 0.75),
+                                  fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    Text(widget.todaySales.format(),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: scheme.onSecondaryContainer,
+                        )),
+                    const SizedBox(width: 4),
+                    // "+" quick-add — records a sale without leaving Home.
+                    IconButton(
+                      onPressed: _toggleAdd,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: S.addSale,
+                      icon: Icon(_adding ? Icons.close : Icons.add_circle,
+                          color: scheme.onSecondaryContainer),
+                    ),
+                  ],
                 ),
-                Text(todaySales.format(),
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.onSecondaryContainer,
-                    )),
-                Icon(Icons.chevron_right, color: scheme.onSecondaryContainer),
-              ],
+              ),
             ),
-          ),
+            // Inline amount box, shown when "+" is tapped.
+            if (_adding)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 12, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _amountCtrl,
+                        focusNode: _amountFocus,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                        ],
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _save(),
+                        decoration: InputDecoration(
+                          labelText: S.saleAmountLabel,
+                          isDense: true,
+                          filled: true,
+                          fillColor: scheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: _saving ? null : _save,
+                      child: _saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2))
+                          : Text(S.save),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );

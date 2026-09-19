@@ -39,6 +39,10 @@
   .rowcard{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 16px;margin-bottom:12px;box-shadow:var(--shadow);width:100%;text-align:start}
   .rowcard .ico{width:34px;height:34px;border-radius:9px;background:var(--green-soft);color:var(--green-deep);display:grid;place-items:center;font-size:17px;flex:none}
   .rowcard .gr{flex:1}.rowcard .t{font-weight:600}.rowcard .s{color:var(--muted);font-size:13px}.rowcard .chev{color:var(--muted)}
+  .rowcard .salesadd{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:var(--green-soft);color:var(--green-deep);font-size:22px;font-weight:700;line-height:1;display:grid;place-items:center;cursor:pointer}
+  .rowcard{cursor:pointer}
+  .ckrow{display:flex;align-items:center;gap:9px;margin-top:12px;cursor:pointer;font-size:14px;color:var(--ink)}
+  .ckrow input{width:18px;height:18px;flex:none;accent-color:var(--green)}
   .toolrow{display:flex;gap:8px;margin:4px 0 12px;align-items:center}
   .search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 12px;flex:1}
   .search input{border:0;outline:0;padding:12px 4px;width:100%;background:transparent;font-size:15px}
@@ -118,10 +122,10 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.৭";
+var VERSION="ওয়েব সংস্করণ ১.৮";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=7;
+var WEB_BUILD=8;
 
 // ---------- language (bn / en) ----------
 // The UI is authored in Bangla; when English is selected we translate the
@@ -187,6 +191,7 @@ var I18N={
   // sales
   "বিক্রির হিসাব":"Sales report","＋ বিক্রি যোগ করুন":"＋ Add sale","বিক্রি যোগ করুন":"Add sale",
   "এখনো কোনো বিক্রি যোগ করা হয়নি":"No sales added yet","টি বিক্রি":"sales",
+  "এই টাকা আজকের মোট বিক্রিতে যোগ হবে":"This amount will be added to the total sale",
   "দৈনিক":"Daily","মাসিক":"Monthly","ত্রৈমাসিক":"Quarterly","বার্ষিক":"Yearly",
   "এই মাসের বিক্রি":"This month's sales","এই তিন মাসের বিক্রি":"This quarter's sales","এই বছরের বিক্রি":"This year's sales",
   // collections
@@ -203,7 +208,7 @@ var I18N={
   "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
   "📥 রিপোর্ট ডাউনলোড — সব কাস্টমার":"📥 Download report — all customers",
   "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help",
-  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৭":"Web version 1.7","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৮":"Web version 1.8","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
   // statement export + update sheet + trial
   "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
   "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
@@ -382,7 +387,7 @@ function renderHome(){
   if(dl!=null && dl<0) m.appendChild(el('<div class="banner exp"><span>⚠️</span><span>সাবস্ক্রিপশনের মেয়াদ শেষ হয়ে গেছে। অ্যাডমিনের সাথে যোগাযোগ করুন।</span></div>'));
   else if(dl!=null && dl<=7) m.appendChild(el('<div class="banner warn"><span>⏳</span><span>সাবস্ক্রিপশনের মেয়াদ '+(dl===0?"আজ":dl+" দিনে")+' শেষ হবে।</span></div>'));
   m.appendChild(el('<div class="hero"><div class="lbl">মোট বাকি — আপনার পাওনা</div><div class="amt">'+taka(totalReceivable())+'</div><div class="sub">'+S.customers.length+' জন কাস্টমার</div></div>'));
-  m.appendChild(el('<button class="rowcard" id="salescard"><div class="ico">📈</div><div class="gr"><div class="t">আজকের বিক্রি</div><div class="s">বিক্রির হিসাব দেখুন</div></div><div class="due" style="color:var(--green-deep)">'+taka(todaysSales())+'</div><div class="chev">›</div></button>'));
+  m.appendChild(el('<div class="rowcard" id="salescard"><div class="ico">📈</div><div class="gr"><div class="t">আজকের বিক্রি</div><div class="s">বিক্রির হিসাব দেখুন</div></div><div class="due" style="color:var(--green-deep)">'+taka(todaysSales())+'</div><button class="salesadd" id="salesadd" title="বিক্রি যোগ করুন">＋</button><div class="chev">›</div></div>'));
   m.appendChild(el('<div class="toolrow"><div class="search"><span class="si">🔍</span><input id="q" placeholder="নাম বা মোবাইল দিয়ে খুঁজুন" value="'+esc(query)+'"></div>'+
     '<select class="sort" id="sort"><option value="owed"'+(view.sort==="owed"?" selected":"")+'>সর্বোচ্চ বাকি</option><option value="name"'+(view.sort==="name"?" selected":"")+'>নাম (ক–হ)</option><option value="recent"'+(view.sort==="recent"?" selected":"")+'>নতুন আগে</option></select></div>'));
   var list=S.customers.map(function(c){return {c:c,bal:balanceOf(c.id)};});
@@ -401,6 +406,7 @@ function renderHome(){
   var fab=el('<button class="fab" id="fab">＋ নতুন কাস্টমার</button>'); app.appendChild(fab);
   document.getElementById("t_sales").onclick=function(){ go({name:"sales",salesPeriod:"day"}); };
   document.getElementById("salescard").onclick=function(){ go({name:"sales",salesPeriod:"day"}); };
+  document.getElementById("salesadd").onclick=function(ev){ ev.stopPropagation(); addSaleSheet(); };
   document.getElementById("t_set").onclick=function(){ go({name:"settings"}); };
   document.getElementById("t_sync").onclick=function(){ var b=document.getElementById("t_sync"); b.innerHTML='<span class="spin"></span>'; pullAll().then(function(){toast("আপডেট হয়েছে");render();}).catch(function(e){toast(friendly(e));render();}); };
   document.getElementById("sort").onchange=function(e){ view.sort=e.target.value; localStorage.setItem(LS.sort,view.sort); renderHome(); };
@@ -536,15 +542,22 @@ function deleteCustomer(c,bal){
 function txnSheet(c,type){
   var sh=el('<div class="sheet"><h3>'+esc(c.name)+'</h3><div class="seg2"><button data-t="credit">বাকি দিলাম</button><button data-t="payment">টাকা পেলাম</button></div>'+
     '<label class="fl">পরিমাণ (৳)</label><input class="in amtbig" id="t_amt" inputmode="decimal" placeholder="0"><label class="fl">নোট (ঐচ্ছিক)</label><input class="in" id="t_note">'+
+    '<label class="ckrow" id="t_ckrow"><input type="checkbox" id="t_tosales"><span>এই টাকা আজকের মোট বিক্রিতে যোগ হবে</span></label>'+
     '<div class="err" id="t_err"></div><button class="go" id="t_go"></button><button class="cancel" id="t_cancel">বাতিল</button></div>');
   var cur=type;
-  function paint(){ sh.querySelectorAll(".seg2 button").forEach(function(b){ var on=b.getAttribute("data-t")===cur; b.className=on?("on "+(cur==="credit"?"credit":"pay")):""; }); sh.querySelector("#t_go").textContent=cur==="credit"?"বাকি যোগ করুন":"পরিশোধ যোগ করুন"; }
+  function paint(){ sh.querySelectorAll(".seg2 button").forEach(function(b){ var on=b.getAttribute("data-t")===cur; b.className=on?("on "+(cur==="credit"?"credit":"pay")):""; }); sh.querySelector("#t_go").textContent=cur==="credit"?"বাকি যোগ করুন":"পরিশোধ যোগ করুন";
+    var ck=sh.querySelector("#t_ckrow"); ck.style.display=cur==="credit"?"flex":"none"; if(cur!=="credit") sh.querySelector("#t_tosales").checked=false; }
   sh.querySelectorAll(".seg2 button").forEach(function(b){ b.onclick=function(){ cur=b.getAttribute("data-t"); paint(); }; }); paint();
   var mask=openSheet(sh); sh.querySelector("#t_cancel").onclick=function(){mask.remove();};
   sh.querySelector("#t_go").onclick=function(){ var err=sh.querySelector("#t_err"),btn=sh.querySelector("#t_go");
     var amt=parseFloat(sh.querySelector("#t_amt").value||"0"), note=(sh.querySelector("#t_note").value||"").trim(); err.textContent="";
     if(!(amt>0)){err.textContent="সঠিক পরিমাণ দিন";return;} btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
-    push([{entity:"transaction",local_id:uuid(),op:"upsert",data:{customer_local_id:c.id,type:cur,amount_paisa:Math.round(amt*100),created_at:nowUtc(),note:note||null}}])
+    var paisa=Math.round(amt*100);
+    var changes=[{entity:"transaction",local_id:uuid(),op:"upsert",data:{customer_local_id:c.id,type:cur,amount_paisa:paisa,created_at:nowUtc(),note:note||null}}];
+    // "Gave credit" with the box ticked also counts toward today's total sales.
+    if(cur==="credit" && sh.querySelector("#t_tosales").checked)
+      changes.push({entity:"sale",local_id:uuid(),op:"upsert",data:{amount_paisa:paisa,sold_at:nowUtc(),note:note||null}});
+    push(changes)
       .then(pullAll).then(function(){ mask.remove(); render(); toast("যোগ হয়েছে"); })
       .catch(function(e){ btn.disabled=false; paint(); err.textContent=friendly(e); }); };
   setTimeout(function(){ sh.querySelector("#t_amt").focus(); },50);

@@ -4,9 +4,12 @@ An easy credit ledger for shopkeepers. This guide shows, step by step, how to us
 the BakiBondhu app. (The app can run in **Bangla or English** — Bangla labels are
 shown in brackets.)
 
-> **Version v0.1.25** — new: **automatic sync** when online, **Bangla/English
-> language** selection, **download** the all-customers report to your **Downloads**
-> folder, in-app **Update**, and an **account is now required** to use the app.
+> **Version v0.1.27** — new: **quick-add a sale right from the Home screen**, an
+> option to **count a credit toward today's sales**, **automatic sync** when
+> online, **Bangla/English language** selection, **download** the all-customers
+> report to your **Downloads** folder, in-app **Update**, and an **account is now
+> required** to use the app. You can also use BakiBondhu **in a web browser** —
+> tap **🌐 Go to web** on the website.
 
 ---
 
@@ -83,13 +86,19 @@ default whoever owes the most is on top.
 Record the amount of each sale, and you can see totals by **day, month, quarter,
 and year**.
 
-1. Tap the **📈 Today's sales** (আজকের বিক্রি) card → the **Sales** (বিক্রির হিসাব) screen opens.
-2. Tap **➕ Add sale** (বিক্রি যোগ করুন) → enter the **amount (৳)** and optionally a
-   **note** (e.g. the item) → **Add**.
-3. Use the **Daily / Monthly / Quarterly / Yearly** toggle at the top to see totals for that period.
+**Quickest way — from Home:** on the **📈 Today's sales** (আজকের বিক্রি) card, tap
+the **➕** button. A small amount box opens right there — type the **amount (৳)** and
+tap **Save**. The amount is added to today's total immediately, without leaving the
+Home screen.
+
+**To see the breakdown:** tap the **Today's sales** card itself → the **Sales**
+(বিক্রির হিসাব) screen opens, where you can also **➕ Add sale** (with an optional
+note) and use the **Daily / Monthly / Quarterly / Yearly** toggle to see totals for
+each period.
 
 > 💡 Sales are **separate** from customer *baki* — only the amounts you add here
-> count as sales. Giving a customer credit is **not** counted as a sale.
+> count as sales. Giving a customer credit is **not** counted as a sale — unless you
+> tick the option described in §6.
 
 ---
 
@@ -108,7 +117,10 @@ and year**.
 Tap a customer to open their account (current balance and full history).
 
 - **⬆️ Gave credit** (বাকি দিলাম) — when you give goods on credit. Enter the amount,
-  tap **Save**; the balance goes up.
+  tap **Save**; the balance goes up. On this screen there's a checkbox — **"This
+  amount will be added to the total sale"** (এই টাকা আজকের মোট বিক্রিতে যোগ হবে). Tick
+  it when the credit is also a sale you want counted in **today's total sales**;
+  leave it unticked to record the credit only.
 - **⬇️ Got payment** (টাকা পেলাম) — when the customer pays. Enter the amount, tap
   **Save**; the balance goes down.
 

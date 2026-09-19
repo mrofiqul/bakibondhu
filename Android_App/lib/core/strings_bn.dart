@@ -54,6 +54,8 @@ class S {
   static String get saleAmountLabel => _bn ? 'বিক্রির পরিমাণ (৳)' : 'Sale amount (৳)';
   static String get saleNoteLabel => _bn ? 'বিবরণ (ঐচ্ছিক)' : 'Note (optional)';
   static String get saleSaved => _bn ? 'বিক্রি যোগ হয়েছে' : 'Sale added';
+  static String get addToSalesLabel =>
+      _bn ? 'এই টাকা আজকের মোট বিক্রিতে যোগ হবে' : 'This amount will be added to the total sale';
   static String get periodDaily => _bn ? 'দৈনিক' : 'Daily';
   static String get periodMonthly => _bn ? 'মাসিক' : 'Monthly';
   static String get periodQuarterly => _bn ? 'ত্রৈমাসিক' : 'Quarterly';
