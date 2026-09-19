@@ -40,6 +40,11 @@ class BakiBondhuApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Build the theme ONCE and reuse the same instance across language-toggle
+    // rebuilds — a fresh ThemeData each rebuild makes MaterialApp's AnimatedTheme
+    // animate a non-change (~200ms), which makes switching language feel slow.
+    final theme = AppTheme.light();
+    final home = startLanding ? const LandingScreen() : const HomeScreen();
     return AppScope(
       repo: repo,
       settings: settings,
@@ -52,8 +57,8 @@ class BakiBondhuApp extends StatelessWidget {
         builder: (context, _, __) => MaterialApp(
           title: S.appName,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.light(),
-          home: startLanding ? const LandingScreen() : const HomeScreen(),
+          theme: theme,
+          home: home,
         ),
       ),
     );

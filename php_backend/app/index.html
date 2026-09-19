@@ -117,10 +117,10 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.৩";
+var VERSION="ওয়েব সংস্করণ ১.৪";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=4;
+var WEB_BUILD=5;
 
 // ---------- language (bn / en) ----------
 // The UI is authored in Bangla; when English is selected we translate the
@@ -201,7 +201,7 @@ var I18N={
   "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
   "📥 রিপোর্ট ডাউনলোড — সব কাস্টমার":"📥 Download report — all customers",
   "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help",
-  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৩":"Web version 1.3","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৪":"Web version 1.4","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
   // statement export + update sheet + trial
   "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
   "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
@@ -226,6 +226,10 @@ function translateDom(root){
   while((n=w.nextNode())) nodes.push(n);
   nodes.forEach(function(tn){
     var s=tn.nodeValue; if(!s||!/[ঀ-৿]/.test(s)) return;
+    var t=s.trim();
+    // Fast path: most nodes are a single whole label -> O(1) map lookup.
+    if(I18N[t]!==undefined){ tn.nodeValue=(t===s)?I18N[t]:s.replace(t,I18N[t]); return; }
+    // Fallback (interpolated strings): substring replace, longest key first.
     var out=s;
     for(var i=0;i<I18N_KEYS.length;i++){ var k=I18N_KEYS[i]; if(out.indexOf(k)>=0) out=out.split(k).join(I18N[k]); }
     if(out!==s) tn.nodeValue=out;
