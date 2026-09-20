@@ -5,6 +5,7 @@ import 'package:bakibondhu/core/config.dart';
 import 'package:bakibondhu/core/language_toggle.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/update_service.dart';
+import 'package:bakibondhu/features/subscription/subscription_screen.dart';
 import 'package:bakibondhu/features/sync/sync_center_screen.dart';
 
 /// Settings: shop name (feeds reminder signatures), account/sync, and about.
@@ -103,6 +104,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   MaterialPageRoute(builder: (_) => const SyncCenterScreen()));
               if (mounted) setState(() {});
             },
+          ),
+          const Divider(height: 32),
+          ListTile(
+            leading: const Icon(Icons.workspace_premium_outlined),
+            title: Text(S.subscription),
+            subtitle: Text(S.subscriptionSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen())),
           ),
           const Divider(height: 32),
           ListTile(
