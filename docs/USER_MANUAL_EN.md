@@ -4,7 +4,7 @@ An easy credit ledger for shopkeepers. This guide shows, step by step, how to us
 the BakiBondhu app. (The app can run in **Bangla or English** — Bangla labels are
 shown in brackets.)
 
-> **Version v0.1.27** — new: **quick-add a sale right from the Home screen**, an
+> **Version v0.1.28** — new: **quick-add a sale right from the Home screen**, an
 > option to **count a credit toward today's sales**, **automatic sync** when
 > online, **Bangla/English language** selection, **download** the all-customers
 > report to your **Downloads** folder, in-app **Update**, and an **account is now
