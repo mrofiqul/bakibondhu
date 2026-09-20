@@ -11,5 +11,5 @@ const String kSyncBaseUrl = String.fromEnvironment(
 /// This build's version, kept in sync with `pubspec.yaml`. The update check
 /// compares [kAppBuild] (the numeric build after the `+`) against the latest
 /// build the server advertises at `/api/v1/app/version`.
-const String kAppVersion = '0.1.27';
-const int kAppBuild = 28;
+const String kAppVersion = '0.1.28';
+const int kAppBuild = 29;
