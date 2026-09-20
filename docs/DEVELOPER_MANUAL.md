@@ -87,7 +87,7 @@ BakiBondhu/
 | Auth backend | PHP 8 (PDO/MySQL), HS256 JWT, bcrypt |
 | Sync backend (prepared) | ASP.NET Core 9, Npgsql/Dapper, PostgreSQL, RLS |
 
-### Recent features (v0.1.17 – v0.1.21)
+### Recent features (v0.1.17 – v0.1.28)
 - **v0.1.17 — unified collections/promises into sync.** `EntityKind` gained
   `collection`/`promise`; sync push/pull handles them so app and web share them on
   the one DB (`collection_activities`, `promise_to_pay`).
@@ -135,6 +135,29 @@ BakiBondhu/
   guarded against overlap, logged-in + online only, errors swallowed. Wired in
   `main.dart`; the manual "Sync now" button stays. Web (online-first): an offline
   banner + auto-`pullAll()` on the `online` event.
+- **v0.1.26 — offline top-bar notice.** A persistent banner at the top of every
+  screen while the device is offline. Android: new `lib/core/connectivity_status.dart`
+  (`appOnline` `ValueNotifier`, published by `auto_sync.dart` from the connectivity
+  stream); `app.dart` wraps every route via `MaterialApp.builder` with `_OfflineWrap`
+  (amber `Icons.cloud_off` bar; `mq.removePadding(removeTop)` so the app bar doesn't
+  double-count the status bar); `S.offlineBanner`. Web: matching banner text + i18n
+  entry, `WEB_BUILD=7`.
+- **v0.1.27 — quick-add sale from Home + credit-as-sale + landing "go to web".**
+  (1) The "Today's sales" card gained a `＋` that records a sale without opening the
+  Sales screen; Android calls `showAddSaleDialog` → `repo.addSale`, web adds a `＋`
+  that opens `addSaleSheet()`. (2) The gave-credit flow (বাকি দিলাম) gained a
+  checkbox — *"this amount will be added to the total sale"* (`S.addToSalesLabel`) —
+  that also records the credit amount as a sale for today's total (Android
+  `add_transaction_screen.dart`; web `txnSheet` pushes an extra `{entity:'sale'}`,
+  credit-only via `paint()`). (3) The landing page got a `🌐 ওয়েবে ব্যবহার করুন`
+  button → `/app/`. `WEB_BUILD=8`.
+- **v0.1.28 — fix: Android quick-add-sale popup.** The v0.1.27 Home `＋` used an
+  inline expanding `TextField` in `_SalesCard` that didn't reliably render/focus
+  on-device (no amount box shown). Replaced with the `showAddSaleDialog` popup
+  (amount + optional note), matching the web sheet; `_SalesCard` is stateless again
+  with an `onAdd` callback. Android-only (web unchanged, `WEB_BUILD` stays 8).
+  **Rule: prefer a dialog/bottom-sheet over an inline expanding `TextField` for quick
+  input on Android — inline focus/render proved unreliable on a real device.**
 
 ---
 
