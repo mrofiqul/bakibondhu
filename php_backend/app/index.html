@@ -43,6 +43,11 @@
   .rowcard{cursor:pointer}
   .ckrow{display:flex;align-items:center;gap:9px;margin-top:12px;cursor:pointer;font-size:14px;color:var(--ink)}
   .ckrow input{width:18px;height:18px;flex:none;accent-color:var(--green)}
+  .payrow{display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+  .payrow>div:first-child{flex:1}
+  .payrow .pl{font-size:12px;color:var(--muted)}
+  .payrow .pv{font-size:16px;font-weight:600;word-break:break-all}
+  .payrow .pbtn{flex:none;width:38px;height:38px;border-radius:10px;border:0;background:var(--green-soft);color:var(--green-deep);font-size:17px;display:grid;place-items:center;cursor:pointer;text-decoration:none}
   .toolrow{display:flex;gap:8px;margin:4px 0 12px;align-items:center}
   .search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0 12px;flex:1}
   .search input{border:0;outline:0;padding:12px 4px;width:100%;background:transparent;font-size:15px}
@@ -122,10 +127,15 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.৮";
+var VERSION="ওয়েব সংস্করণ ১.৯";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=8;
+var WEB_BUILD=9;
+
+// ---------- subscription plan + payment details ----------
+var TRIAL_DAYS=30, PRICE_BDT=100, PRICE_USD="1.20";
+var BKASH_NUMBER="01723-967187", WA_NUMBER="01730781320", WA_INTL="8801730781320";
+var SUPPORT_EMAIL="rofiqulislam90.cse@gmail.com";
 
 // ---------- language (bn / en) ----------
 // The UI is authored in Bangla; when English is selected we translate the
@@ -207,8 +217,8 @@ var I18N={
   // settings
   "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
   "📥 রিপোর্ট ডাউনলোড — সব কাস্টমার":"📥 Download report — all customers",
-  "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help",
-  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৮":"Web version 1.8","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help","💳 সাবস্ক্রিপশন":"💳 Subscription",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৯":"Web version 1.9","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
   // statement export + update sheet + trial
   "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
   "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
@@ -317,7 +327,7 @@ function initials(n){ n=(n||"").trim(); return n?n[0]:"?"; }
 function go(v){ v.sort=v.sort||view.sort; view=v; query=""; window.scrollTo(0,0); render(); }
 function loadingScreen(){ app.innerHTML=''; app.appendChild(el('<div class="loading"><div><span class="spin" style="border-color:#cbd5cd;border-top-color:var(--green)"></span> লোড হচ্ছে…</div></div>')); applyLang(app); }
 
-function _render(){ if(!S.token){renderAuth();return;} if(view.name==="customer"){renderCustomer();return;} if(view.name==="sales"){renderSales();return;} if(view.name==="collections"){renderCollections();return;} if(view.name==="settings"){renderSettings();return;} renderHome(); }
+function _render(){ if(!S.token){renderAuth();return;} if(view.name==="customer"){renderCustomer();return;} if(view.name==="sales"){renderSales();return;} if(view.name==="collections"){renderCollections();return;} if(view.name==="settings"){renderSettings();return;} if(view.name==="subscription"){renderSubscription();return;} renderHome(); }
 function render(){ _render(); applyLang(document.body); }
 
 function friendly(e){ if(!e) return "সমস্যা হয়েছে";
@@ -489,6 +499,8 @@ function renderSettings(){
   m.appendChild(el('<div class="s" style="color:var(--muted);font-size:13px;margin-top:6px">রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।</div>'));
   var xrow=el('<button class="setrow" id="set_xlsx" style="width:100%;margin-top:20px;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>📥 রিপোর্ট ডাউনলোড — সব কাস্টমার</span><span style="color:var(--muted)">⬇</span></button>');
   m.appendChild(xrow);
+  var subrow=el('<button class="setrow" id="set_sub" style="width:100%;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>💳 সাবস্ক্রিপশন</span><span style="color:var(--muted)">›</span></button>');
+  m.appendChild(subrow);
   var urow=el('<button class="setrow" id="set_update" style="width:100%;background:none;border:0;border-bottom:1px solid var(--border);font:inherit;color:inherit;cursor:pointer;text-align:left"><span>🔄 অ্যাপ আপডেট / Update App</span><span style="color:var(--muted)">›</span></button>');
   m.appendChild(urow);
   m.appendChild(el('<a class="setrow" href="/app/guide/" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><span>📘 সাহায্য / Help</span><span style="color:var(--muted)">↗</span></a>'));
@@ -496,9 +508,60 @@ function renderSettings(){
   var out=el('<button class="go danger" id="set_out" style="margin-top:24px">লগ আউট</button>'); m.appendChild(out);
   app.appendChild(m);
   document.getElementById("set_xlsx").onclick=exportCustomersXlsx;
+  document.getElementById("set_sub").onclick=function(){ go({name:"subscription"}); };
   document.getElementById("set_update").onclick=function(){ toast("চেক করা হচ্ছে…"); checkWebUpdate(true); };
   document.getElementById("set_save").onclick=function(){ S.shopName=(document.getElementById("set_shop").value||"").trim(); localStorage.setItem(LS.shop,S.shopName); toast("সেভ হয়েছে"); };
   out.onclick=function(){ if(confirm("লগ আউট করবেন?")) logout(); };
+}
+
+// ---------- SUBSCRIPTION ----------
+function guessInBd(){
+  try{ if((Intl.DateTimeFormat().resolvedOptions().timeZone||"")==="Asia/Dhaka") return true; }catch(e){}
+  try{ if(/-BD$/i.test(navigator.language||"")) return true; }catch(e){}
+  // Default to Bangladesh (nearly all owners register with a BD number).
+  return true;
+}
+function renderSubscription(){
+  if(view.subInBd===undefined) view.subInBd=guessInBd();
+  var inBd=view.subInBd, en=(LANG==="en");
+  function L(bn,eng){ return en?eng:bn; }
+  var price=inBd?("৳"+PRICE_BDT):("$"+PRICE_USD);
+  var perMonth=L("/ মাস","/ month");
+  app.innerHTML=""; app.appendChild(topBar(L("সাবস্ক্রিপশন","Subscription"),{back:function(){go({name:"settings"});}}));
+  var m=el('<main></main>');
+
+  // Free trial
+  m.appendChild(el('<div class="card" style="background:var(--green-soft);border:0;padding:16px"><div style="font-weight:700;font-size:17px;color:var(--green-deep)">🎁 '+L("ফ্রি ট্রায়াল · "+TRIAL_DAYS+" দিন ফ্রি","Free trial · "+TRIAL_DAYS+" days free")+'</div><div style="margin-top:6px;line-height:1.5">'+L("নতুন অ্যাকাউন্টে শুরুতেই "+TRIAL_DAYS+" দিনের ফ্রি ট্রায়াল — কোনো খরচ ছাড়াই সব সুবিধা।","Every new account starts with a "+TRIAL_DAYS+"-day free trial — all features, no cost.")+'</div></div>'));
+
+  // Current status
+  var dl=daysLeft();
+  if(dl!=null){
+    var exp=dl<0;
+    var statusTxt=exp?L("মেয়াদ শেষ","Expired"):(dl===0?L("আজ শেষ হচ্ছে","Ends today"):L("চালু আছে · "+dl+" দিন বাকি","Active · "+dl+" days left"));
+    var expDate=S.expiresAt?L("মেয়াদ শেষ: ","Expires: ")+S.expiresAt:"";
+    m.appendChild(el('<div class="card" style="padding:16px"><div class="s" style="color:var(--muted);font-size:13px">'+L("আপনার বর্তমান অবস্থা","Your current status")+'</div><div style="font-size:18px;font-weight:700;margin-top:2px;color:'+(exp?"var(--red,#b3261e)":"var(--ink)")+'">'+(exp?"⚠️ ":"✅ ")+statusTxt+'</div>'+(expDate?'<div class="s" style="color:var(--muted);font-size:13px;margin-top:2px">'+expDate+'</div>':'')+'</div>'));
+  }
+
+  // Pricing + BD/outside toggle
+  var pc=el('<div class="card" style="background:var(--green-soft);border:0;padding:16px"><div style="font-weight:600;color:var(--green-deep)">'+L("মাসিক মূল্য","Monthly price")+'</div><div style="font-size:40px;font-weight:800;color:var(--green-deep);line-height:1.1;margin-top:6px">'+price+' <span style="font-size:16px;font-weight:600">'+perMonth+'</span></div></div>');
+  var seg=el('<div class="seg" style="margin:12px 0 6px"><button data-b="1" class="'+(inBd?"on":"")+'">'+L("বাংলাদেশে","In Bangladesh")+'</button><button data-b="0" class="'+(inBd?"":"on")+'">'+L("বাংলাদেশের বাইরে","Outside Bangladesh")+'</button></div>');
+  seg.querySelectorAll("button").forEach(function(b){ b.onclick=function(){ view.subInBd=(b.getAttribute("data-b")==="1"); renderSubscription(); }; });
+  pc.appendChild(seg);
+  pc.appendChild(el('<div class="s" style="color:var(--green-deep);font-size:12.5px;opacity:.85">'+L("বাংলাদেশে","In Bangladesh")+': ৳'+PRICE_BDT+' '+perMonth+' · '+L("বাংলাদেশের বাইরে","Outside Bangladesh")+': $'+PRICE_USD+' '+perMonth+'</div>'));
+  m.appendChild(pc);
+
+  // How to renew
+  var rc=el('<div class="card" style="padding:16px"><div style="font-weight:700;font-size:16px">'+L("যেভাবে নবায়ন করবেন","How to renew")+'</div>'+
+    '<div style="margin-top:12px;line-height:1.5">'+L('১. বিকাশে <b>'+price+'</b> "সেন্ড মানি" করুন এই নম্বরে:','1. "Send Money" <b>'+price+'</b> via bKash to this number:')+'</div>'+
+    '<div class="payrow"><div><div class="pl">'+L("বিকাশ (পার্সোনাল)","bKash (personal)")+'</div><div class="pv">'+BKASH_NUMBER+'</div></div><button class="pbtn" id="cp_bkash" title="'+L("নম্বর কপি করুন","Copy number")+'">📋</button></div>'+
+    '<div style="margin-top:14px;line-height:1.5">'+L("২. তারপর WhatsApp বা ইমেইলে পেমেন্টের তথ্য জানান — আপনার দোকানের নাম ও মোবাইল নম্বরসহ।","2. Then confirm on WhatsApp or email with your shop name and mobile number.")+'</div>'+
+    '<a class="payrow" href="https://wa.me/'+WA_INTL+'?text='+encodeURIComponent(L("আসসালামু আলাইকুম, আমি বাকিবন্ধু সাবস্ক্রিপশন নবায়ন করতে চাই।","Assalamu alaikum, I want to renew my BakiBondhu subscription."))+'" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div><div class="pl">WhatsApp</div><div class="pv">'+WA_NUMBER+'</div></div><span class="pbtn">↗</span></a>'+
+    '<a class="payrow" href="mailto:'+SUPPORT_EMAIL+'?subject='+encodeURIComponent(L("বাকিবন্ধু সাবস্ক্রিপশন নবায়ন","BakiBondhu subscription renewal"))+'" style="text-decoration:none;color:inherit"><div><div class="pl">'+L("ইমেইল","Email")+'</div><div class="pv">'+SUPPORT_EMAIL+'</div></div><span class="pbtn">↗</span></a>'+
+    '<div class="s" style="color:var(--muted);font-size:13px;margin-top:14px;line-height:1.5">'+L("পেমেন্ট নিশ্চিত হলে অ্যাডমিন আপনার মেয়াদ বাড়িয়ে দেবেন।","Once your payment is confirmed, the admin extends your subscription.")+'</div></div>');
+  m.appendChild(rc);
+  app.appendChild(m);
+  var cpb=document.getElementById("cp_bkash");
+  cpb.onclick=function(){ try{ navigator.clipboard.writeText(BKASH_NUMBER); toast(L("কপি হয়েছে","Copied")); }catch(e){ toast(BKASH_NUMBER); } };
 }
 
 // ---------- sheets ----------

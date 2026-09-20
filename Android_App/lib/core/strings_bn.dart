@@ -45,6 +45,52 @@ class S {
       ? 'আপনার মেয়াদ শেষ হয়ে গেছে। সিঙ্ক চালু রাখতে অ্যাডমিনের সাথে যোগাযোগ করুন।'
       : 'Your subscription has expired. Contact the admin to keep sync active.';
 
+  // ---- subscription screen ----
+  static String get subscription => _bn ? 'সাবস্ক্রিপশন' : 'Subscription';
+  static String get subscriptionSubtitle =>
+      _bn ? 'প্ল্যান, মূল্য ও নবায়ন' : 'Plan, price & renewal';
+  static String get subFreeTrial => _bn ? 'ফ্রি ট্রায়াল' : 'Free trial';
+  static String subTrialDays(int days) =>
+      _bn ? '$days দিন ফ্রি' : '$days days free';
+  static String get subTrialBlurb => _bn
+      ? 'নতুন অ্যাকাউন্টে শুরুতেই ৩০ দিনের ফ্রি ট্রায়াল — কোনো খরচ ছাড়াই সব সুবিধা।'
+      : 'Every new account starts with a 30-day free trial — all features, no cost.';
+  static String get subYourPlan => _bn ? 'আপনার বর্তমান অবস্থা' : 'Your current status';
+  static String get subActive => _bn ? 'চালু আছে' : 'Active';
+  static String subDaysLeft(int days) => _bn
+      ? (days == 1 ? '১ দিন বাকি' : '$days দিন বাকি')
+      : (days == 1 ? '1 day left' : '$days days left');
+  static String get subExpired => _bn ? 'মেয়াদ শেষ' : 'Expired';
+  static String get subNoExpiry =>
+      _bn ? 'কোনো মেয়াদসীমা নেই' : 'No expiry set';
+  static String subExpiresOn(String date) =>
+      _bn ? 'মেয়াদ শেষ: $date' : 'Expires: $date';
+  static String get subPricing => _bn ? 'মাসিক মূল্য' : 'Monthly price';
+  static String get subInsideBd => _bn ? 'বাংলাদেশে' : 'In Bangladesh';
+  static String get subOutsideBd => _bn ? 'বাংলাদেশের বাইরে' : 'Outside Bangladesh';
+  static String get subPerMonth => _bn ? '/ মাস' : '/ month';
+  static String get subHowToRenew => _bn ? 'যেভাবে নবায়ন করবেন' : 'How to renew';
+  static String subRenewStep1(String amount) => _bn
+      ? '১. বিকাশে $amount "সেন্ড মানি" করুন এই নম্বরে:'
+      : '1. "Send Money" $amount via bKash to this number:';
+  static String get subRenewStep2 => _bn
+      ? '২. তারপর WhatsApp বা ইমেইলে পেমেন্টের তথ্য জানান — আপনার দোকানের নাম ও মোবাইল নম্বরসহ।'
+      : '2. Then confirm on WhatsApp or email with your shop name and mobile number.';
+  static String get subRenewNote => _bn
+      ? 'পেমেন্ট নিশ্চিত হলে অ্যাডমিন আপনার মেয়াদ বাড়িয়ে দেবেন।'
+      : 'Once your payment is confirmed, the admin extends your subscription.';
+  static String get subBkash => _bn ? 'বিকাশ (পার্সোনাল)' : 'bKash (personal)';
+  static String get subWhatsApp => _bn ? 'WhatsApp' : 'WhatsApp';
+  static String get subEmail => _bn ? 'ইমেইল' : 'Email';
+  static String get subCopyNumber => _bn ? 'নম্বর কপি করুন' : 'Copy number';
+  static String get subOpenWhatsApp => _bn ? 'WhatsApp খুলুন' : 'Open WhatsApp';
+  static String get subEmailUs => _bn ? 'ইমেইল করুন' : 'Email us';
+  static String get subWhatsAppMessage => _bn
+      ? 'আসসালামু আলাইকুম, আমি বাকিবন্ধু সাবস্ক্রিপশন নবায়ন করতে চাই।'
+      : 'Assalamu alaikum, I want to renew my BakiBondhu subscription.';
+  static String get subEmailSubject =>
+      _bn ? 'বাকিবন্ধু সাবস্ক্রিপশন নবায়ন' : 'BakiBondhu subscription renewal';
+
   // Sales report
   static String get salesReportTitle => _bn ? 'বিক্রির হিসাব' : 'Sales report';
   static String get noSales => _bn ? 'এখনো কোনো বিক্রি নেই' : 'No sales yet';

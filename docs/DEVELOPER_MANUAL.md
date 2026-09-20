@@ -87,7 +87,7 @@ BakiBondhu/
 | Auth backend | PHP 8 (PDO/MySQL), HS256 JWT, bcrypt |
 | Sync backend (prepared) | ASP.NET Core 9, Npgsql/Dapper, PostgreSQL, RLS |
 
-### Recent features (v0.1.17 – v0.1.28)
+### Recent features (v0.1.17 – v0.1.29)
 - **v0.1.17 — unified collections/promises into sync.** `EntityKind` gained
   `collection`/`promise`; sync push/pull handles them so app and web share them on
   the one DB (`collection_activities`, `promise_to_pay`).
@@ -158,6 +158,19 @@ BakiBondhu/
   with an `onAdd` callback. Android-only (web unchanged, `WEB_BUILD` stays 8).
   **Rule: prefer a dialog/bottom-sheet over an inline expanding `TextField` for quick
   input on Android — inline focus/render proved unreliable on a real device.**
+- **v0.1.29 — subscription page (app + web).** A read-only plan/pricing screen: the
+  30-day free trial, the monthly price (**৳100** in Bangladesh / **US$1.20** outside,
+  auto-picked from device region on Android / `Intl` timezone on web, with a manual
+  BD↔outside toggle), the shop's current status (from the session's `expiresAt`,
+  reusing the existing expiry data), and how to renew (bKash number + WhatsApp/email
+  confirmation — no in-app payment; the admin still extends expiry). Android: new
+  `lib/features/subscription/subscription_screen.dart` reached from Settings; plan +
+  contact constants in `config.dart` (`kTrialDays`, `kPriceBdtPerMonth`,
+  `kPriceUsdPerMonth`, `kBkashNumber`, `kSupportWhatsApp[Intl]`, `kSupportEmail`);
+  bilingual strings in `strings_bn.dart`; opens WhatsApp/email via `url_launcher`,
+  copies the bKash number via `Clipboard`. Web: `renderSubscription()` (built
+  bilingually by `LANG`, like `reminderMsg`), a Settings row, constants near
+  `WEB_BUILD`, `.payrow` CSS. No backend/schema change. `WEB_BUILD=9`.
 
 ---
 

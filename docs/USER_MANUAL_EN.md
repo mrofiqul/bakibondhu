@@ -4,7 +4,8 @@ An easy credit ledger for shopkeepers. This guide shows, step by step, how to us
 the BakiBondhu app. (The app can run in **Bangla or English** — Bangla labels are
 shown in brackets.)
 
-> **Version v0.1.28** — new: **quick-add a sale right from the Home screen**, an
+> **Version v0.1.29** — new: a **Subscription page** (30-day free trial, monthly
+> price, and how to renew), **quick-add a sale right from the Home screen**, an
 > option to **count a credit toward today's sales**, **automatic sync** when
 > online, **Bangla/English language** selection, **download** the all-customers
 > report to your **Downloads** folder, in-app **Update**, and an **account is now
@@ -174,10 +175,29 @@ Open **⚙️ Settings** for:
   is downloaded straight to your phone's **Downloads** folder. Tap **Save to…** in
   the confirmation to pick another folder instead. *(You can also download from the
   ⬇️ icon at the top-right of the Home screen.)*
+- **💳 Subscription** — opens the **Subscription** page (see §9a): your free-trial /
+  subscription status, the monthly price, and how to renew.
 - **📲 Update app** — checks for a newer version. If one exists it opens the APK
   download; installing it over the existing app **keeps all your data**. When a new
   version is available, the app also shows a pop-up on launch.
 - **Sync & account** — Log in / Log out and sync (see §10, §11).
+
+### 9a. Subscription & pricing
+
+Open **⚙️ Settings → 💳 Subscription** (the same page is in the web app's Settings).
+
+- **Free trial** — every new account starts with a **30-day free trial**: all
+  features, no cost.
+- **Monthly price** — **৳100 / month** inside Bangladesh, or **US$1.20 / month**
+  outside Bangladesh. The page auto-picks your price; a **In Bangladesh / Outside
+  Bangladesh** toggle lets you switch if needed.
+- **Your status** — shows whether your subscription is active and how many days are
+  left (or if it has expired).
+- **How to renew** — send the monthly amount by **bKash** to the number shown
+  (tap **📋** to copy it), then confirm on **WhatsApp** or **email** with your shop
+  name and mobile number. Once your payment is confirmed, the admin extends your
+  subscription. *(While your trial or subscription is valid, everything keeps working
+  normally; syncing pauses only after it expires.)*
 
 ---
 
