@@ -4,7 +4,9 @@ An easy credit ledger for shopkeepers. This guide shows, step by step, how to us
 the BakiBondhu app. (The app can run in **Bangla or English** — Bangla labels are
 shown in brackets.)
 
-> **Version v0.1.29** — new: a **Subscription page** (30-day free trial, monthly
+> **Version v0.1.30** — new: **select your country when registering** (the location
+> fields and phone rule adapt to it), **English by default outside Bangladesh**, a
+> **Subscription page** (30-day free trial, monthly
 > price, and how to renew), **quick-add a sale right from the Home screen**, an
 > option to **count a credit toward today's sales**, **automatic sync** when
 > online, **Bangla/English language** selection, **download** the all-customers
@@ -50,15 +52,23 @@ there is no offline/guest option):
 | **Create account** (নতুন অ্যাকাউন্ট খুলুন) | First time — see the required fields below. |
 
 Use the **বাংলা | English** toggle at the **top-right** of this screen to pick the
-app's language (see §9).
+app's language (see §9). **Outside Bangladesh the app opens in English by default**
+(based on your phone's region); you can always switch with the toggle.
 
 **Creating an account:** enter your **name, shop name, mobile number, and a
-password (at least 6 characters)** — all four are required. You can also record your
-location: pick your **Division** (বিভাগ), then your **District** (জেলা), then your
-**Thana/Upazila** (থানা/উপজেলা) from the drop-down lists — each list fills in from the
-one above it (choose a division to unlock its districts, a district to unlock its
-thanas). Location is optional. The mobile must be a **Bangladesh 11-digit number**
-(e.g. `01712345678`).
+password (at least 6 characters)** — all four are required.
+
+- **Country** — pick your country first (it's at the top of the form). This decides
+  the location fields and the phone-number rule.
+- **If your country is Bangladesh:** record your location with the **Division**
+  (বিভাগ) → **District** (জেলা) → **Thana/Upazila** (থানা/উপজেলা) drop-downs — each
+  fills in from the one above it. The mobile must be a **Bangladesh 11-digit number**
+  (e.g. `01712345678`).
+- **If your country is anything else:** the form shows simple **State / Province** and
+  **City / Town** text boxes instead, and accepts a **general international mobile
+  number**. Picking a non-Bangladesh country also switches the app to **English**.
+
+Location is optional either way.
 
 > 💡 Signing in lets you **sync to the cloud** and share your ledger across phones
 > (see §11). After you log in once, the app works **offline** too (see §13).

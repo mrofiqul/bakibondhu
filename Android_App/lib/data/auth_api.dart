@@ -45,6 +45,7 @@ class AuthApi {
     required String phone,
     required String password,
     required String businessName,
+    String? country,
     String? thana,
     String? zila,
   }) =>
@@ -53,6 +54,7 @@ class AuthApi {
         'phone': phone,
         'password': password,
         'business_name': businessName,
+        'country': country,
         'thana': thana,
         'zila': zila,
       });

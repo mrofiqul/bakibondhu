@@ -8,8 +8,9 @@ CREATE TABLE IF NOT EXISTS businesses (
     timezone   VARCHAR(64)  NOT NULL DEFAULT 'Asia/Dhaka',
     currency   VARCHAR(8)   NOT NULL DEFAULT 'BDT',
     status     VARCHAR(16)  NOT NULL DEFAULT 'active',  -- active|suspended (admin panel)
-    thana      VARCHAR(100) NULL,   -- shop location (optional, from registration)
-    zila       VARCHAR(100) NULL,
+    country    VARCHAR(64)  NULL DEFAULT 'Bangladesh',  -- shop country (from registration)
+    thana      VARCHAR(100) NULL,   -- shop location (optional, from registration; BD: thana, else: city)
+    zila       VARCHAR(100) NULL,   -- BD: district; other countries: state/province
     expires_at DATE         NULL,   -- subscription expiry; NULL = unlimited. New signups get a 30-day trial (BB_TRIAL_DAYS); admin can extend/clear.
     created_at DATETIME     NOT NULL,
     PRIMARY KEY (id)
@@ -17,6 +18,7 @@ CREATE TABLE IF NOT EXISTS businesses (
 -- Existing installs: ALTER TABLE businesses ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'active';
 -- Existing installs: ALTER TABLE businesses ADD COLUMN thana VARCHAR(100) NULL, ADD COLUMN zila VARCHAR(100) NULL;
 -- Existing installs: ALTER TABLE businesses ADD COLUMN expires_at DATE NULL;
+-- Existing installs: ALTER TABLE businesses ADD COLUMN country VARCHAR(64) NULL DEFAULT 'Bangladesh';
 
 CREATE TABLE IF NOT EXISTS users (
     id            CHAR(36)     NOT NULL,

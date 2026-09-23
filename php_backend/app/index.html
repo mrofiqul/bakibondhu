@@ -127,10 +127,10 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ১.৯";
+var VERSION="ওয়েব সংস্করণ ২.০";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=9;
+var WEB_BUILD=10;
 
 // ---------- subscription plan + payment details ----------
 var TRIAL_DAYS=30, PRICE_BDT=100, PRICE_USD="1.20";
@@ -142,7 +142,15 @@ var SUPPORT_EMAIL="rofiqulislam90.cse@gmail.com";
 // rendered text nodes via the map below (post-render, longest-match first), so
 // the Bangla source stays the single source of truth. User data (names, notes,
 // place names) isn't in the map, so it is left as typed.
-var LANG=(function(){ try{ return localStorage.getItem("bb_web_lang")||"bn"; }catch(e){ return "bn"; } })();
+// Language: honour a saved choice; otherwise default by region — English
+// outside Bangladesh (timezone ≠ Asia/Dhaka), Bangla for Bangladesh/unknown.
+var LANG=(function(){
+  try{ var s=localStorage.getItem("bb_web_lang"); if(s==="en"||s==="bn") return s; }catch(e){}
+  try{ if((Intl.DateTimeFormat().resolvedOptions().timeZone||"")!=="Asia/Dhaka") return "en"; }catch(e){}
+  return "bn";
+})();
+// Country list for registration (Bangladesh first, then common ones, then Other).
+var COUNTRIES=["Bangladesh","India","Pakistan","Nepal","Sri Lanka","Bhutan","Maldives","Myanmar","Saudi Arabia","United Arab Emirates","Qatar","Kuwait","Oman","Bahrain","Jordan","Lebanon","Malaysia","Singapore","Indonesia","Brunei","United Kingdom","United States","Canada","Australia","Italy","France","Germany","Spain","Portugal","Greece","South Africa","Japan","South Korea","Other"];
 var I18N={
   // errors / toasts
   "সমস্যা হয়েছে":"Something went wrong","একটি সমস্যা হয়েছে":"Something went wrong",
@@ -167,6 +175,8 @@ var I18N={
   "নতুন? অ্যাকাউন্ট খুলুন":"New? Create an account","অ্যাকাউন্ট আছে? লগ ইন করুন":"Have an account? Log in",
   "আপনার নাম দিন":"Enter your name","আপনার নাম":"Your name","দোকানের নাম দিন":"Enter the shop name","দোকানের নাম":"Shop name",
   "মোবাইল নম্বর":"Mobile number","পাসওয়ার্ড":"Password",
+  "দেশ":"Country","রাজ্য / প্রদেশ (ঐচ্ছিক)":"State / Province (optional)","শহর / এলাকা (ঐচ্ছিক)":"City / Town (optional)",
+  "সঠিক মোবাইল নম্বর দিন":"Enter a valid mobile number",
   "বিভাগ (ঐচ্ছিক)":"Division (optional)","জেলা (ঐচ্ছিক)":"District (optional)","থানা/উপজেলা (ঐচ্ছিক)":"Thana/Upazila (optional)",
   "বিভাগ নির্বাচন করুন":"Select division","জেলা নির্বাচন করুন":"Select district","থানা/উপজেলা নির্বাচন করুন":"Select thana/upazila",
   "আগে বিভাগ নির্বাচন করুন":"Select a division first","আগে জেলা নির্বাচন করুন":"Select a district first",
@@ -218,7 +228,7 @@ var I18N={
   "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
   "📥 রিপোর্ট ডাউনলোড — সব কাস্টমার":"📥 Download report — all customers",
   "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help","💳 সাবস্ক্রিপশন":"💳 Subscription",
-  "সংস্করণ":"Version","ওয়েব সংস্করণ ১.৯":"Web version 1.9","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ২.০":"Web version 2.0","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
   // statement export + update sheet + trial
   "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
   "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
@@ -341,24 +351,42 @@ function friendly(e){ if(!e) return "সমস্যা হয়েছে";
 
 // ---------- AUTH ----------
 var authMode="login";
+// Registration country — drives the phone rule + location fields. Default by
+// region: Bangladesh when the timezone is Asia/Dhaka, otherwise "Other".
+var authCountry=(function(){ try{ return (Intl.DateTimeFormat().resolvedOptions().timeZone||"")==="Asia/Dhaka"?"Bangladesh":"Other"; }catch(e){ return "Bangladesh"; } })();
 function renderAuth(){
-  app.innerHTML=""; var isLogin=authMode==="login";
+  app.innerHTML=""; var isLogin=authMode==="login"; var isBd=(authCountry==="Bangladesh");
   app.appendChild(el('<div class="authtop">'+langToggleHtml()+'</div>'));
-  var geo = isLogin?"":('<label class="fl">বিভাগ (ঐচ্ছিক)</label><select class="in" id="f_bivag"><option value="">বিভাগ নির্বাচন করুন</option>'+GEO.bivags.map(function(b){return '<option>'+esc(b)+'</option>';}).join("")+'</select>'+
-    '<label class="fl">জেলা (ঐচ্ছিক)</label><select class="in" id="f_zila" disabled><option value="">আগে বিভাগ নির্বাচন করুন</option></select>'+
-    '<label class="fl">থানা/উপজেলা (ঐচ্ছিক)</label><select class="in" id="f_thana" disabled><option value="">আগে জেলা নির্বাচন করুন</option></select>');
+  var countrySel = isLogin?"":('<label class="fl">দেশ</label><select class="in" id="f_country">'+COUNTRIES.map(function(c){return '<option'+(c===authCountry?" selected":"")+'>'+esc(c)+'</option>';}).join("")+'</select>');
+  var geo="";
+  if(!isLogin){
+    if(isBd) geo=('<label class="fl">বিভাগ (ঐচ্ছিক)</label><select class="in" id="f_bivag"><option value="">বিভাগ নির্বাচন করুন</option>'+GEO.bivags.map(function(b){return '<option>'+esc(b)+'</option>';}).join("")+'</select>'+
+      '<label class="fl">জেলা (ঐচ্ছিক)</label><select class="in" id="f_zila" disabled><option value="">আগে বিভাগ নির্বাচন করুন</option></select>'+
+      '<label class="fl">থানা/উপজেলা (ঐচ্ছিক)</label><select class="in" id="f_thana" disabled><option value="">আগে জেলা নির্বাচন করুন</option></select>');
+    else geo=('<label class="fl">রাজ্য / প্রদেশ (ঐচ্ছিক)</label><input class="in" id="f_state">'+
+      '<label class="fl">শহর / এলাকা (ঐচ্ছিক)</label><input class="in" id="f_city">');
+  }
   var box=el('<div class="auth"><div class="logo"><div class="bn">বাকিবন্ধু</div><div class="tag">বাকির হিসাব — সহজে, অনলাইনে</div></div>'+
     '<div class="box"><h2>'+(isLogin?"লগ ইন করুন":"নতুন অ্যাকাউন্ট")+'</h2>'+
     (isLogin?"":'<label class="fl">আপনার নাম</label><input class="in" id="f_name" autocomplete="name"><label class="fl">দোকানের নাম</label><input class="in" id="f_shop">')+
-    '<label class="fl">মোবাইল নম্বর</label><input class="in" id="f_phone" inputmode="numeric" autocomplete="username" placeholder="01XXXXXXXXX">'+
+    countrySel+
+    '<label class="fl">মোবাইল নম্বর</label><input class="in" id="f_phone" inputmode="'+(isBd?"numeric":"tel")+'" autocomplete="username" placeholder="'+(isBd?"01XXXXXXXXX":"+…")+'">'+
     '<label class="fl">পাসওয়ার্ড</label><input class="in" id="f_pass" type="password" autocomplete="'+(isLogin?"current":"new")+'-password">'+
     geo+'<div class="err" id="f_err"></div><button class="go" id="f_go">'+(isLogin?"লগ ইন":"নিবন্ধন করুন")+'</button>'+
     '<button class="toggle" id="f_tog">'+(isLogin?"নতুন? অ্যাকাউন্ট খুলুন":"অ্যাকাউন্ট আছে? লগ ইন করুন")+'</button></div></div>');
   app.appendChild(box);
   if(!isLogin){
-    var bv=box.querySelector("#f_bivag"), zl=box.querySelector("#f_zila"), th=box.querySelector("#f_thana");
-    bv.onchange=function(){ var zs=GEO.zilasByBivag[bv.value]||[]; zl.innerHTML='<option value="">জেলা নির্বাচন করুন</option>'+zs.map(function(z){return '<option>'+esc(z)+'</option>';}).join(""); zl.disabled=!bv.value; th.innerHTML='<option value="">আগে জেলা নির্বাচন করুন</option>'; th.disabled=true; };
-    zl.onchange=function(){ var ts=GEO.thanasByZila[zl.value]||[]; th.innerHTML='<option value="">থানা/উপজেলা নির্বাচন করুন</option>'+ts.map(function(t){return '<option>'+esc(t)+'</option>';}).join(""); th.disabled=!zl.value; };
+    box.querySelector("#f_country").onchange=function(){
+      authCountry=this.value||"Bangladesh";
+      // Non-Bangladesh → default the UI to English (a deliberate choice).
+      if(authCountry!=="Bangladesh" && LANG!=="en"){ setLang("en"); return; } // setLang re-renders
+      renderAuth();
+    };
+    if(isBd){
+      var bv=box.querySelector("#f_bivag"), zl=box.querySelector("#f_zila"), th=box.querySelector("#f_thana");
+      bv.onchange=function(){ var zs=GEO.zilasByBivag[bv.value]||[]; zl.innerHTML='<option value="">জেলা নির্বাচন করুন</option>'+zs.map(function(z){return '<option>'+esc(z)+'</option>';}).join(""); zl.disabled=!bv.value; th.innerHTML='<option value="">আগে জেলা নির্বাচন করুন</option>'; th.disabled=true; };
+      zl.onchange=function(){ var ts=GEO.thanasByZila[zl.value]||[]; th.innerHTML='<option value="">থানা/উপজেলা নির্বাচন করুন</option>'+ts.map(function(t){return '<option>'+esc(t)+'</option>';}).join(""); th.disabled=!zl.value; };
+    }
   }
   box.querySelector("#f_tog").onclick=function(){ authMode=isLogin?"register":"login"; renderAuth(); };
   box.querySelector("#f_go").onclick=submitAuth;
@@ -366,16 +394,24 @@ function renderAuth(){
 }
 function submitAuth(){
   var isLogin=authMode==="login"; var err=document.getElementById("f_err"), btn=document.getElementById("f_go");
-  var phone=(document.getElementById("f_phone").value||"").replace(/\D/g,""); if(phone.indexOf("880")===0) phone="0"+phone.slice(3);
+  // Registration is country-driven; login always uses the Bangladesh rule.
+  var isBd=isLogin?true:(authCountry==="Bangladesh");
+  var raw=(document.getElementById("f_phone").value||"").trim();
+  var phone, hasPlus=raw.charAt(0)==="+";
+  if(isBd){ phone=raw.replace(/\D/g,""); if(phone.indexOf("880")===0) phone="0"+phone.slice(3); }
+  else { phone=raw.replace(/[^0-9]/g,""); if(hasPlus) phone="+"+phone; }
   var pass=document.getElementById("f_pass").value||""; err.textContent="";
-  if(!/^01[3-9]\d{8}$/.test(phone)){ err.textContent="সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা, 01…)"; return; }
+  if(isBd){ if(!/^01[3-9]\d{8}$/.test(phone)){ err.textContent="সঠিক মোবাইল নম্বর দিন (১১ সংখ্যা, 01…)"; return; } }
+  else { if(!/^\+?\d{6,20}$/.test(phone)){ err.textContent="সঠিক মোবাইল নম্বর দিন"; return; } }
   if(pass.length<6){ err.textContent="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড দিন"; return; }
   var body,path;
   if(isLogin){ path="/auth/login"; body={identifier:phone,password:pass}; }
   else{ var name=(document.getElementById("f_name").value||"").trim(), shop=(document.getElementById("f_shop").value||"").trim();
     if(!name){err.textContent="আপনার নাম দিন";return;} if(!shop){err.textContent="দোকানের নাম দিন";return;}
-    path="/auth/register"; body={name:name,phone:phone,password:pass,business_name:shop,
-      thana:(document.getElementById("f_thana")||{}).value||"", zila:(document.getElementById("f_zila")||{}).value||""}; }
+    // BD stores thana/zila; other countries store city/state in the same slots.
+    var thana=isBd?((document.getElementById("f_thana")||{}).value||""):((document.getElementById("f_city")||{}).value||"").trim();
+    var zila=isBd?((document.getElementById("f_zila")||{}).value||""):((document.getElementById("f_state")||{}).value||"").trim();
+    path="/auth/register"; body={name:name,phone:phone,password:pass,business_name:shop,country:authCountry,thana:thana,zila:zila}; }
   btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
   api(path,{method:"POST",body:body,auth:false}).then(function(res){ saveSession(res); if(!isLogin){ S.shopName=body.business_name; localStorage.setItem(LS.shop,S.shopName);} return afterLogin(); })
     .catch(function(e){ btn.disabled=false; btn.textContent=isLogin?"লগ ইন":"নিবন্ধন করুন"; err.textContent=friendly(e); });

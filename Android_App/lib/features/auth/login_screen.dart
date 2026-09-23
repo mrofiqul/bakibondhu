@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:bakibondhu/core/app_scope.dart';
 import 'package:bakibondhu/core/bd_geo.dart';
+import 'package:bakibondhu/core/countries.dart';
+import 'package:bakibondhu/core/language.dart';
 import 'package:bakibondhu/core/strings_bn.dart';
 import 'package:bakibondhu/core/validators.dart';
 import 'package:bakibondhu/data/auth_api.dart';
@@ -24,16 +26,32 @@ class _LoginScreenState extends State<LoginScreen> {
   final _phone = TextEditingController();
   final _business = TextEditingController();
   final _password = TextEditingController();
-  // Location is chosen from cascading dropdowns: pick a bivag (division) first,
-  // then a zila (district) within it, then a thana/upazila within that. All
-  // optional.
+
+  /// Registration location is country-driven. For Bangladesh we show the
+  /// cascading division→district→thana dropdowns; for any other country we show
+  /// free-text State/Province + City fields instead.
+  String _country = kDefaultCountry;
   String? _bivag;
   String? _zila;
   String? _thana;
+  final _state = TextEditingController();
+  final _city = TextEditingController();
 
   late bool _registering = widget.startInRegister;
   bool _busy = false;
   String? _error;
+
+  bool get _isBd => _country == kDefaultCountry;
+
+  @override
+  void initState() {
+    super.initState();
+    // Seed the country from the device region so an owner abroad starts on the
+    // right form; the app's startup language default is handled in main.dart.
+    final code =
+        WidgetsBinding.instance.platformDispatcher.locale.countryCode;
+    _country = countryNameForCode(code) ?? kDefaultCountry;
+  }
 
   @override
   void dispose() {
@@ -41,7 +59,26 @@ class _LoginScreenState extends State<LoginScreen> {
     _phone.dispose();
     _business.dispose();
     _password.dispose();
+    _state.dispose();
+    _city.dispose();
     super.dispose();
+  }
+
+  /// When the owner picks a country other than Bangladesh, default the app
+  /// language to English (a deliberate choice; they can still switch it in
+  /// Settings). Picking Bangladesh leaves the current language untouched.
+  void _onCountryChanged(String? value) {
+    setState(() {
+      _country = value ?? kDefaultCountry;
+      // Reset whichever set of location fields no longer applies.
+      _bivag = null;
+      _zila = null;
+      _thana = null;
+    });
+    if (!_isBd && S.lang != AppLang.en) {
+      applyLanguage(AppLang.en);
+      AppScope.settingsOf(context).setLanguage(codeOfLang(AppLang.en));
+    }
   }
 
   Future<void> _submit() async {
@@ -57,15 +94,22 @@ class _LoginScreenState extends State<LoginScreen> {
     final syncStore = AppScope.syncStoreOf(context);
     final syncEngine = AppScope.syncEngineOf(context);
     try {
-      final phone = normalizeBdMobile(_phone.text.trim());
+      final phone = _isBd
+          ? normalizeBdMobile(_phone.text.trim())
+          : normalizeIntlMobile(_phone.text.trim());
+      // Reuse the two location columns: BD stores thana/zila; other countries
+      // store city/state in the same slots, with the country recorded too.
+      final locThana = _isBd ? _thana : _nullIfEmpty(_city.text);
+      final locZila = _isBd ? _zila : _nullIfEmpty(_state.text);
       final result = _registering
           ? await api.register(
               name: _name.text.trim(),
               phone: phone,
               password: _password.text,
               businessName: _business.text.trim(),
-              thana: _thana,
-              zila: _zila,
+              country: _country,
+              thana: locThana,
+              zila: locZila,
             )
           : await api.login(
               identifier: phone,
@@ -111,6 +155,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  static String? _nullIfEmpty(String s) {
+    final t = s.trim();
+    return t.isEmpty ? null : t;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,13 +184,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(labelText: S.businessNameLabel),
                   validator: (v) => (v == null || v.trim().isEmpty) ? S.businessRequired : null,
                 ),
+                // Country first — it drives the phone rule and location fields.
+                DropdownButtonFormField<String>(
+                  initialValue: _country,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: S.countryLabel),
+                  items: [
+                    for (final c in kCountries)
+                      DropdownMenuItem(value: c.name, child: Text(c.name)),
+                  ],
+                  onChanged: _onCountryChanged,
+                ),
               ],
               TextFormField(
                 controller: _phone,
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(labelText: S.identifierLabel),
-                validator: bdMobileValidator,
+                validator: (_registering && !_isBd)
+                    ? intlMobileValidator
+                    : bdMobileValidator,
               ),
               TextFormField(
                 controller: _password,
@@ -150,58 +212,69 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: (v) => (v == null || v.length < 6) ? S.passwordShort : null,
               ),
               if (_registering) ...[
-                // Bivag (division) first; zila is derived from it, thana from zila.
-                DropdownButtonFormField<String>(
-                  initialValue: _bivag,
-                  isExpanded: true,
-                  decoration: InputDecoration(labelText: S.bivagLabel),
-                  hint: Text(S.selectBivagHint),
-                  items: [
-                    for (final b in kBdBivags)
-                      DropdownMenuItem(value: b, child: Text(b)),
-                  ],
-                  onChanged: (v) => setState(() {
-                    _bivag = v;
-                    _zila = null; // reset district + thana when the division changes
-                    _thana = null;
-                  }),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: _zila,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: S.zilaLabel,
-                    helperText: _bivag == null ? S.selectBivagFirst : null,
+                if (_isBd) ...[
+                  // Bivag (division) first; zila derives from it, thana from zila.
+                  DropdownButtonFormField<String>(
+                    initialValue: _bivag,
+                    isExpanded: true,
+                    decoration: InputDecoration(labelText: S.bivagLabel),
+                    hint: Text(S.selectBivagHint),
+                    items: [
+                      for (final b in kBdBivags)
+                        DropdownMenuItem(value: b, child: Text(b)),
+                    ],
+                    onChanged: (v) => setState(() {
+                      _bivag = v;
+                      _zila = null; // reset district + thana when division changes
+                      _thana = null;
+                    }),
                   ),
-                  hint: Text(S.selectZilaHint),
-                  items: [
-                    for (final z in (kBdZilasByBivag[_bivag] ?? const <String>[]))
-                      DropdownMenuItem(value: z, child: Text(z)),
-                  ],
-                  // Disabled until a bivag is chosen.
-                  onChanged: _bivag == null
-                      ? null
-                      : (v) => setState(() {
-                            _zila = v;
-                            _thana = null; // reset thana when the district changes
-                          }),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: _thana,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: S.thanaLabel,
-                    // Nudge the user to pick a district first.
-                    helperText: _zila == null ? S.selectZilaFirst : null,
+                  DropdownButtonFormField<String>(
+                    initialValue: _zila,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: S.zilaLabel,
+                      helperText: _bivag == null ? S.selectBivagFirst : null,
+                    ),
+                    hint: Text(S.selectZilaHint),
+                    items: [
+                      for (final z in (kBdZilasByBivag[_bivag] ?? const <String>[]))
+                        DropdownMenuItem(value: z, child: Text(z)),
+                    ],
+                    onChanged: _bivag == null
+                        ? null
+                        : (v) => setState(() {
+                              _zila = v;
+                              _thana = null; // reset thana when district changes
+                            }),
                   ),
-                  hint: Text(S.selectThanaHint),
-                  items: [
-                    for (final t in (kBdThanasByZila[_zila] ?? const <String>[]))
-                      DropdownMenuItem(value: t, child: Text(t)),
-                  ],
-                  // Disabled until a zila is chosen.
-                  onChanged: _zila == null ? null : (v) => setState(() => _thana = v),
-                ),
+                  DropdownButtonFormField<String>(
+                    initialValue: _thana,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: S.thanaLabel,
+                      helperText: _zila == null ? S.selectZilaFirst : null,
+                    ),
+                    hint: Text(S.selectThanaHint),
+                    items: [
+                      for (final t in (kBdThanasByZila[_zila] ?? const <String>[]))
+                        DropdownMenuItem(value: t, child: Text(t)),
+                    ],
+                    onChanged: _zila == null ? null : (v) => setState(() => _thana = v),
+                  ),
+                ] else ...[
+                  // Non-Bangladesh: free-text location (no per-country geo data).
+                  TextFormField(
+                    controller: _state,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(labelText: S.stateLabel),
+                  ),
+                  TextFormField(
+                    controller: _city,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(labelText: S.cityLabel),
+                  ),
+                ],
               ],
               const SizedBox(height: 16),
               if (_error != null)

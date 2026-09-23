@@ -23,3 +23,22 @@ String? bdMobileValidator(String? v, {bool required = true}) {
   if (s.isEmpty) return required ? S.mobileRequired : null;
   return isBdMobile(s) ? null : S.invalidMobile;
 }
+
+final RegExp _intlMobile = RegExp(r'^\+?\d{6,20}$');
+
+/// Normalises an international mobile number: keeps a leading `+` and digits,
+/// drops spaces/dashes/parentheses.
+String normalizeIntlMobile(String input) {
+  final t = input.trim();
+  final plus = t.startsWith('+');
+  final digits = t.replaceAll(RegExp(r'[^0-9]'), '');
+  return plus ? '+$digits' : digits;
+}
+
+/// Validator for a required international mobile number (used when the chosen
+/// country is not Bangladesh). Accepts 6–20 digits with an optional `+`.
+String? intlMobileValidator(String? v, {bool required = true}) {
+  final s = normalizeIntlMobile((v ?? '').trim());
+  if (s.isEmpty) return required ? S.mobileRequired : null;
+  return _intlMobile.hasMatch(s) ? null : S.invalidMobile;
+}
