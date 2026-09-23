@@ -252,6 +252,9 @@ class S {
   static String get businessRequired => _bn ? 'দোকান/ব্যবসার নাম দিন' : 'Enter the shop / business name';
   static String get yourNameLabel => _bn ? 'আপনার নাম' : 'Your name';
   static String get identifierLabel => _bn ? 'মোবাইল নম্বর' : 'Mobile number';
+  static String get countryLabel => _bn ? 'দেশ' : 'Country';
+  static String get stateLabel => _bn ? 'রাজ্য / প্রদেশ (ঐচ্ছিক)' : 'State / Province (optional)';
+  static String get cityLabel => _bn ? 'শহর / এলাকা (ঐচ্ছিক)' : 'City / Town (optional)';
   static String get bivagLabel => _bn ? 'বিভাগ (ঐচ্ছিক)' : 'Division (optional)';
   static String get thanaLabel => _bn ? 'থানা/উপজেলা (ঐচ্ছিক)' : 'Thana/Upazila (optional)';
   static String get zilaLabel => _bn ? 'জেলা (ঐচ্ছিক)' : 'District (optional)';

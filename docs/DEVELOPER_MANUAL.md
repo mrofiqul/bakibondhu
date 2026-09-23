@@ -87,7 +87,7 @@ BakiBondhu/
 | Auth backend | PHP 8 (PDO/MySQL), HS256 JWT, bcrypt |
 | Sync backend (prepared) | ASP.NET Core 9, Npgsql/Dapper, PostgreSQL, RLS |
 
-### Recent features (v0.1.17 – v0.1.29)
+### Recent features (v0.1.17 – v0.1.30)
 - **v0.1.17 — unified collections/promises into sync.** `EntityKind` gained
   `collection`/`promise`; sync push/pull handles them so app and web share them on
   the one DB (`collection_activities`, `promise_to_pay`).
@@ -171,6 +171,24 @@ BakiBondhu/
   copies the bKash number via `Clipboard`. Web: `renderSubscription()` (built
   bilingually by `LANG`, like `reminderMsg`), a Settings row, constants near
   `WEB_BUILD`, `.payrow` CSS. No backend/schema change. `WEB_BUILD=9`.
+- **v0.1.30 — country-based registration + English default outside Bangladesh.** A
+  **Country** dropdown at the top of the register form drives everything: Bangladesh
+  keeps the Division→District→Thana cascade and the strict `01XXXXXXXXX` phone rule;
+  any other country shows free-text **State/Province + City** and accepts a general
+  international number (`^\+?\d{6,20}$`). The two existing location columns are reused
+  (BD: thana/zila; else: city→thana, state→zila) and a new **`country`** column is
+  stored. **Language now defaults by region** — English when the device/browser is
+  outside Bangladesh and the owner hasn't chosen a language; picking a non-Bangladesh
+  country in the form also switches the UI to English. Android: new
+  `lib/core/countries.dart` (curated list + `countryNameForCode`), `validators.dart`
+  gains `intlMobileValidator`/`normalizeIntlMobile`, `login_screen.dart` rewritten
+  with the country dropdown + conditional fields, `main.dart` seeds the start language
+  from `PlatformDispatcher.locale.countryCode`, `auth_api.register` takes `country`.
+  Web: `renderAuth` gains a country `<select>` + conditional geo/text fields +
+  `authCountry` state, `submitAuth` maps fields + sends `country`, `LANG` boot checks
+  `Intl` timezone `Asia/Dhaka`. Backend: `handle_register` reads `country`, branches
+  the phone rule, and inserts `country`; **`businesses.country VARCHAR(64)`** added
+  (live migration run via a one-time guarded script, then deleted). `WEB_BUILD=10`.
 
 ---
 

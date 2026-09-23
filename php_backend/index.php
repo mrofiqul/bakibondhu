@@ -100,14 +100,25 @@ function handle_register(array $cfg): void
     $phone    = trim((string) ($in['phone'] ?? ''));
     $password = (string) ($in['password'] ?? '');
     $business = trim((string) ($in['business_name'] ?? ''));
+    $country  = trim((string) ($in['country'] ?? ''));
+    if ($country === '') $country = 'Bangladesh';
     $thana    = trim((string) ($in['thana'] ?? ''));
     $zila     = trim((string) ($in['zila'] ?? ''));
+    $isBd     = ($country === 'Bangladesh');
 
     if ($name === '' || $phone === '' || $password === '' || $business === '') {
         bb_error(400, 'validation_failed', 'name, phone, password and business_name are required');
     }
-    if (!preg_match('/^01[3-9]\d{8}$/', $phone)) {
-        bb_error(400, 'validation_failed', 'a valid Bangladesh mobile number is required (01XXXXXXXXX)');
+    // Bangladesh keeps the strict 01XXXXXXXXX rule; other countries accept a
+    // generic international number (6–20 digits, optional leading +).
+    if ($isBd) {
+        if (!preg_match('/^01[3-9]\d{8}$/', $phone)) {
+            bb_error(400, 'validation_failed', 'a valid Bangladesh mobile number is required (01XXXXXXXXX)');
+        }
+    } else {
+        if (!preg_match('/^\+?\d{6,20}$/', $phone)) {
+            bb_error(400, 'validation_failed', 'a valid mobile number is required');
+        }
     }
     if (strlen($password) < 6) {
         bb_error(400, 'validation_failed', 'password must be at least 6 characters');
@@ -130,8 +141,8 @@ function handle_register(array $cfg): void
     $trialEnds  = bb_date_in_days_bd(BB_TRIAL_DAYS);
 
     $db->beginTransaction();
-    $db->prepare('INSERT INTO businesses (id, name, timezone, currency, thana, zila, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-       ->execute([$businessId, $business, 'Asia/Dhaka', 'BDT',
+    $db->prepare('INSERT INTO businesses (id, name, timezone, currency, country, thana, zila, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+       ->execute([$businessId, $business, 'Asia/Dhaka', 'BDT', $country,
                   $thana !== '' ? $thana : null, $zila !== '' ? $zila : null, $trialEnds, $now]);
     $db->prepare('INSERT INTO users (id, business_id, name, phone, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
        ->execute([$userId, $businessId, $name, $phone, $hash, 'owner', $now]);

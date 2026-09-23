@@ -31,10 +31,23 @@ Future<void> main() async {
   final settings = SharedPrefsSettingsStore(prefs);
   final onboarded = await settings.onboardingComplete();
 
-  // Apply the saved UI language (default Bangla) before the first frame.
-  final savedLang = langFromCode(await settings.language());
-  S.lang = savedLang;
-  appLanguage.value = savedLang;
+  // Apply the UI language before the first frame. If the owner has chosen one,
+  // honour it; otherwise default by device region — English outside Bangladesh,
+  // Bangla for Bangladesh (or unknown).
+  final savedCode = await settings.language();
+  final AppLang startLang;
+  if (savedCode != null) {
+    startLang = langFromCode(savedCode);
+  } else {
+    final country =
+        WidgetsBinding.instance.platformDispatcher.locale.countryCode
+            ?.toUpperCase();
+    startLang = (country != null && country.isNotEmpty && country != 'BD')
+        ? AppLang.en
+        : AppLang.bn;
+  }
+  S.lang = startLang;
+  appLanguage.value = startLang;
 
   final session = Session(const FlutterSecureStorage());
   await session.load();
