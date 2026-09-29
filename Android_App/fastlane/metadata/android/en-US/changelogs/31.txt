@@ -1,0 +1,1 @@
+Country-based registration (pick your country; location fields and phone rule adapt), English by default outside Bangladesh, a Subscription page, quick-add sale from Home, and an offline notice.
