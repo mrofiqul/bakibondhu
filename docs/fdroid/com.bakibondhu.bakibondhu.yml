@@ -1,0 +1,38 @@
+# F-Droid metadata for BakiBondhu.
+# Copy this file to your fdroiddata fork as:
+#   metadata/com.bakibondhu.bakibondhu.yml
+# then open a merge request to https://gitlab.com/fdroid/fdroiddata
+#
+# Notes:
+# - The app builds from source with a plain Flutter build; kSyncBaseUrl already
+#   defaults to the production backend, so no --dart-define is needed.
+# - Update `versionName`/`versionCode`/`commit`/`CurrentVersion*` for each new
+#   tagged release (tag the SOURCE repo, e.g. `git tag v0.1.31 && git push --tags`).
+
+Categories:
+  - Money
+License: MIT
+AuthorName: Rafiq
+WebSite: https://bakibondhu.infinityfreeapp.com
+SourceCode: https://github.com/mrofiqul/bakibondhu
+IssueTracker: https://github.com/mrofiqul/bakibondhu/issues
+
+RepoType: git
+Repo: https://github.com/mrofiqul/bakibondhu
+
+Builds:
+  - versionName: 0.1.30
+    versionCode: 31
+    commit: v0.1.30
+    subdir: Android_App/android/app
+    sudo: []
+    output: build/app/outputs/bundle/release/app-release.aab
+    flutter: true
+    srclibs: []
+    gradle:
+      - yes
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags
+CurrentVersion: 0.1.30
+CurrentVersionCode: 31
