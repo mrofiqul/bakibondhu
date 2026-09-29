@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BakiBondhu Status Guide</title>
+<style>
+  :root{
+    --bg:#eef2ec; --panel:#ffffff; --panel-2:#f4f7f2; --line:#dde5da;
+    --ink:#1a2419; --muted:#5c6b58; --faint:#8a978553;
+    --green:#167c48; --green-d:#0f5f37; --green-soft:#e3efe7;
+    --amber:#8a5a00; --amber-bg:#fbf1dc; --amber-line:#ecd7a6;
+    --shadow:0 1px 2px rgba(20,45,25,.05),0 10px 30px rgba(20,45,25,.07);
+    --radius:16px;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#0f130e; --panel:#171d16; --panel-2:#1d251b; --line:#2a3327;
+    --ink:#e7efe4; --muted:#a4b09f; --faint:#8a97854a;
+    --green:#5fd39a; --green-d:#8be7b6; --green-soft:#15301e;
+    --amber:#e6b567; --amber-bg:#2f2610; --amber-line:#49391a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0f130e; --panel:#171d16; --panel-2:#1d251b; --line:#2a3327;
+    --ink:#e7efe4; --muted:#a4b09f; --faint:#8a97854a;
+    --green:#5fd39a; --green-d:#8be7b6; --green-soft:#15301e;
+    --amber:#e6b567; --amber-bg:#2f2610; --amber-line:#49391a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 34px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:840px;margin:0 auto;padding:0 20px}
+  code,.mono{font-family:ui-monospace,"SFMono-Regular","Cascadia Code",Consolas,monospace}
+
+  header{padding:44px 0 24px;text-align:center}
+  .eyebrow{font:600 12px/1 ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--green-d);
+    background:var(--green-soft);display:inline-block;padding:7px 13px;border-radius:999px}
+  h1{font-size:clamp(27px,5vw,40px);margin:16px 0 6px;letter-spacing:-.02em;text-wrap:balance}
+  .sub{color:var(--muted);max-width:60ch;margin:0 auto;font-size:16px}
+
+  .links{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin:22px 0 8px}
+  .links a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-weight:600;font-size:14px;
+    color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:9px 14px;
+    box-shadow:var(--shadow);transition:transform .08s ease,border-color .15s ease}
+  .links a:hover{transform:translateY(-1px);border-color:var(--green)}
+  .links a.pri{background:var(--green);color:#fff;border-color:var(--green)}
+  :root[data-theme="dark"] .links a.pri,:root:not([data-theme="light"]) .links a.pri{color:#08110b}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .links a.pri{color:#08110b}}
+
+  main{padding:14px 0 60px;display:grid;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow)}
+  .card h2{font-size:18px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  .card h2 .n{font:600 12px/1 ui-monospace,monospace;color:var(--green-d);background:var(--green-soft);
+    width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
+  .lead{color:var(--muted);margin:2px 0 12px;font-size:14.5px}
+  .card p{margin:9px 0}
+  ul{margin:8px 0;padding-left:20px}
+  li{margin:6px 0}
+  a.inl{color:var(--green-d);font-weight:600;text-decoration:none;border-bottom:1px solid var(--faint)}
+  a.inl:hover{border-bottom-color:var(--green)}
+  .path{font-family:ui-monospace,monospace;font-size:.86em;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:6px;padding:2px 7px;word-break:break-all}
+  b{color:var(--ink)}
+  .tag{font:600 11px/1 ui-monospace,monospace;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .tag.live{color:var(--green-d);background:var(--green-soft);border-color:transparent}
+  .tag.soon{color:var(--amber);background:var(--amber-bg);border-color:var(--amber-line)}
+  .h2row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+  pre{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;overflow-x:auto;margin:12px 0}
+  pre code{font-size:13px;line-height:1.5;color:var(--ink)}
+
+  ol.routine{counter-reset:r;list-style:none;padding:0;margin:6px 0 0}
+  ol.routine>li{counter-increment:r;position:relative;padding:8px 0 8px 42px;border-top:1px solid var(--line)}
+  ol.routine>li:first-child{border-top:0}
+  ol.routine>li::before{content:counter(r);position:absolute;left:0;top:8px;width:28px;height:28px;border-radius:50%;
+    background:var(--green-soft);color:var(--green-d);font:700 13px/1 ui-monospace,monospace;display:grid;place-items:center}
+
+  .note{background:var(--amber-bg);border:1px solid var(--amber-line);border-left-width:4px;border-radius:12px;padding:13px 16px;color:var(--ink)}
+  .note b{color:var(--amber)}
+  footer{color:var(--muted);font-size:13px;text-align:center;padding:6px 0 40px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">বাকিবন্ধু · Ops</span>
+    <h1>BakiBondhu — Status &amp; Tracking</h1>
+    <p class="sub">How to check if the app is live, which version is out, how many people use it, and whether the server is healthy — all in one place.</p>
+    <nav class="links">
+      <a class="pri" href="https://bakibondhu.infinityfreeapp.com/admin" target="_blank" rel="noopener">🔐 Admin panel</a>
+      <a href="https://bakibondhu.infinityfreeapp.com/health" target="_blank" rel="noopener">🩺 Health</a>
+      <a href="https://bakibondhu.infinityfreeapp.com/api/v1/app/version" target="_blank" rel="noopener">🏷️ Version API</a>
+      <a href="https://github.com/mrofiqul/bakibondhu-app/releases" target="_blank" rel="noopener">📦 Releases</a>
+      <a href="https://bakibondhu.infinityfreeapp.com" target="_blank" rel="noopener">🌐 Site</a>
+      <a href="https://bakibondhu.infinityfreeapp.com/app" target="_blank" rel="noopener">💻 Web app</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="h2row"><h2><span class="n">1</span> How many people use my app?</h2><span class="tag live">source of truth</span></div>
+      <p class="lead">Every account syncs to your server, so the Admin panel is the real number.</p>
+      <p>Open <a class="inl" href="https://bakibondhu.infinityfreeapp.com/admin" target="_blank" rel="noopener">the Admin panel</a> and log in. The dashboard shows <b>total shops, new signups, outstanding credit across all shops, and recent activity</b>. The <b>Shops</b> list shows each owner, mobile and subscription expiry, with suspend / delete / reset-password.</p>
+      <p>Since v0.1.20 an account is required to use the app, so this counts your <b>true active user base</b>.</p>
+      <p><b>Deeper look:</b> phpMyAdmin (InfinityFree control panel) → database <span class="path">if0_42877652_bakibondhu</span> → Browse <span class="path">businesses</span> / <span class="path">users</span>. Sort by <span class="path">created_at</span> for signups over time, or <span class="path">country</span> to see where owners are.</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">2</span> Is it live &amp; what's the latest version?</h2>
+      <ul>
+        <li><b>One-glance check</b> — the version endpoint returns the current numbers as JSON: <a class="inl" href="https://bakibondhu.infinityfreeapp.com/api/v1/app/version" target="_blank" rel="noopener">/api/v1/app/version</a> → <span class="path">android.version</span> / <span class="path">android.build</span> and <span class="path">web.build</span>. This is what installed apps compare against for the in-app "Update available" prompt.</li>
+        <li><b>Landing page</b> shows the current version in the download caption.</li>
+        <li><b>Latest APK</b> always resolves here (never goes stale): <span class="path">…/releases/latest/download/BakiBondhu.apk</span></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">3</span> How many downloads / installs?</h2>
+      <p><a class="inl" href="https://github.com/mrofiqul/bakibondhu-app/releases" target="_blank" rel="noopener">GitHub Releases</a> shows a download count per release asset. Total per release from the command line:</p>
+      <pre><code>gh api repos/mrofiqul/bakibondhu-app/releases \
+  --jq '.[] | {tag:.tag_name, downloads:([.assets[].download_count]|add)}'</code></pre>
+      <p class="lead">Downloads ≈ installs from the website/GitHub (a proxy, not exact). The Admin signup count in §1 is the better "who's actually using it" number.</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">4</span> Is the server healthy?</h2>
+      <ul>
+        <li><b>Health check:</b> <a class="inl" href="https://bakibondhu.infinityfreeapp.com/health" target="_blank" rel="noopener">/health</a> → returns a small OK/JSON. If it returns the landing page HTML instead, the API router was overwritten (see the deploy-paths note in the dev docs).</li>
+        <li><b>Hosting / uptime:</b> the InfinityFree client area (<span class="path">infinityfree.com</span>) shows account status, disk/bandwidth, and any suspension. Free hosting can pause under very high traffic or daily-hit limits.</li>
+        <li><b>Database:</b> phpMyAdmin — browse tables, run queries, check size.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <div class="h2row"><h2><span class="n">5</span> F-Droid listing status</h2><span class="tag live">free store</span></div>
+      <p class="lead">After you open the merge request (see the free-distribution guide).</p>
+      <ul>
+        <li><b>Your merge request</b> on <span class="path">gitlab.com/fdroid/fdroiddata</span> — shows review comments and a CI pipeline (lint + test build). Green pipeline + maintainer approval → merged.</li>
+        <li><b>Build status after merge:</b> <span class="path">monitor.f-droid.org</span> (search the package) shows whether each version built.</li>
+        <li><b>Public app page (once live):</b> <span class="path">f-droid.org/packages/com.bakibondhu.bakibondhu/</span></li>
+        <li><b>New releases:</b> tag the source repo (<span class="path">git tag v0.1.x &amp;&amp; git push --tags</span>) and F-Droid auto-detects it — no new MR.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <div class="h2row"><h2><span class="n">6</span> Google Play status</h2><span class="tag soon">when you pay $25</span></div>
+      <p>In the <b>Play Console</b> (<span class="path">play.google.com/console</span>):</p>
+      <ul>
+        <li><b>Dashboard</b> — installs, uninstalls, ratings, crashes over time.</li>
+        <li><b>Publishing overview / Releases</b> — review status of each submission ("In review", "Live", "Rejected" + reason).</li>
+        <li><b>Statistics</b> — active devices, countries, Android versions.</li>
+        <li><b>Ratings &amp; reviews</b> — reply to users. <b>Policy status</b> — any compliance flags.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">7</span> Amazon / Samsung</h2>
+      <p>If you upload there, each has its own console dashboard (installs, reviews, review status): Amazon <span class="path">developer.amazon.com</span>, Samsung <span class="path">seller.samsung.com</span>.</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="n">✓</span> Quick weekly routine</h2>
+      <ol class="routine">
+        <li><b>Admin panel</b> → new signups + total shops (are people joining?).</li>
+        <li><b>/health</b> up? · InfinityFree client area → account not suspended?</li>
+        <li><b>GitHub releases</b> → download counts trending?</li>
+        <li>On F-Droid/Play → check the store dashboard for reviews / crashes / review status.</li>
+        <li>Confirm the <b>latest release</b> matches what <span class="path">/api/v1/app/version</span> advertises.</li>
+      </ol>
+    </section>
+
+    <div class="note">
+      <p><b>⚠️ Watch the free host's limits.</b> As usage grows, InfinityFree's <b>daily hits / bandwidth</b> caps are the most likely thing to interrupt the backend. If you hit them often, that's the signal to move to paid hosting.</p>
+    </div>
+  </main>
+
+  <footer>বাকিবন্ধু · BakiBondhu — internal status &amp; tracking reference</footer>
+</div>
+
+</body>
+</html>

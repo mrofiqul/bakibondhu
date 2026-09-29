@@ -93,6 +93,18 @@ the APK — Amazon: developer.amazon.com, Samsung: seller.samsung.com.
 
 ---
 
+## One-command check
+
+Run the status script for latest version, download totals, server version, and
+`/health` in one go (needs `gh` logged in, plus `curl`/`openssl`/`xxd`):
+
+```bash
+bash scripts/status.sh
+```
+
+*(The active-user / signup count still comes from the Admin panel — it needs a login.)*
+There's also an HTML version of this guide at `docs/tracking.html` (open it in a browser).
+
 ## Quick weekly routine
 
 1. **Admin panel** → new signups + total shops (are people joining?).
