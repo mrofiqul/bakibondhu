@@ -13,6 +13,15 @@ Claude artifacts.
 | [`DEVELOPER_MANUAL.md`](DEVELOPER_MANUAL.md) | Architecture, backend, build & release | Developers |
 | [`owner-manual/`](owner-manual/) | **Source** for the platform Owner's Manual (HTML) | Platform owner |
 | [`web-guide/`](web-guide/) | **Source** for the web-app user guide (HTML) | Web-app users |
+| [`FREE_DISTRIBUTION.md`](FREE_DISTRIBUTION.md) | Free channels (website, GitHub, F-Droid) | Maintainer |
+| [`PLAY_STORE.md`](PLAY_STORE.md) | Google Play prep + checklist | Maintainer |
+| [`fdroid/`](fdroid/) | Paste-ready F-Droid metadata YAML | Maintainer |
+| [`TRACKING.md`](TRACKING.md) · [`tracking.html`](tracking.html) | How to monitor status/usage | Owner |
+| [`store-assets/`](store-assets/) | App icon, feature graphic, screenshots | Store listings |
+
+Store listing text + graphics also live under
+[`../Android_App/fastlane/metadata/`](../Android_App/fastlane/metadata/) (the
+standard layout F-Droid and store publishers read automatically).
 
 The `.md` files are read directly. The two folders are **build sources** — you
 edit the source and run a script to regenerate the published pages.

@@ -327,9 +327,11 @@ Design (matches the app's `lib/sync/` contract, pinned by
 3. Create/upgrade tables once — InfinityFree blocks **remote** MySQL, so run schema
    on the host: import `schema.sql` in phpMyAdmin (all `CREATE TABLE IF NOT EXISTS`,
    safe to re-run), or hit a one-time guarded migration script and delete it. On a
-   pre-existing DB the `businesses.status` column needs
-   `ALTER TABLE businesses ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'active'`
-   (MySQL has no `ADD COLUMN IF NOT EXISTS` — guard with an `information_schema` check).
+   pre-existing DB, added columns need an `ALTER TABLE` — e.g.
+   `businesses.status VARCHAR(16) NOT NULL DEFAULT 'active'` and (as of v0.1.30)
+   `businesses.country VARCHAR(64) NULL DEFAULT 'Bangladesh'` (MySQL has no
+   `ADD COLUMN IF NOT EXISTS` — guard with an `information_schema` check; the
+   schema.sql header lists each migration).
 4. `.htaccess` sets `DirectoryIndex index.html index.php` (so `/` serves the landing
    page while `/health`, `/api/*` and `/admin/*` route to PHP) and forwards the
    `Authorization` header for the token-authed endpoints.
@@ -421,6 +423,22 @@ sync wire contract, so switching is just a `SYNC_BASE_URL` change.
    > `/htdocs/index.php`. Uploading the landing over `index.php` makes the whole
    > API 200-serve the landing HTML (`.htaccess` `DirectoryIndex index.html index.php`
    > + rewrite-to-`index.php`). Verify `/health` returns JSON after any deploy.
+
+### App stores & signing
+
+- **Release signing:** `Android_App/android/app/build.gradle.kts` reads a
+  git-ignored `android/key.properties` (upload keystore) and falls back to the debug
+  key when absent, so local APK builds still work. See `android/key.properties.example`.
+- **App Bundle** for Play: `flutter build appbundle --release …` →
+  `build/app/outputs/bundle/release/app-release.aab`. `kSyncBaseUrl` now **defaults to
+  production**, so a plain `flutter build` (e.g. F-Droid's build-from-source) is
+  correct without the `--dart-define`.
+- **Distribution guides:** free channels + F-Droid in
+  [`FREE_DISTRIBUTION.md`](FREE_DISTRIBUTION.md); Google Play in
+  [`PLAY_STORE.md`](PLAY_STORE.md); store text + graphics under
+  `Android_App/fastlane/metadata/`. **Tag the source repo** per release
+  (`git tag v0.1.x && git push --tags`) so F-Droid auto-detects it.
+- **Monitoring:** see [`TRACKING.md`](TRACKING.md) / `scripts/status.sh`.
 
 ---
 
