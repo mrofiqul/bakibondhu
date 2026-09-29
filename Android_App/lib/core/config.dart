@@ -1,11 +1,15 @@
 /// App-wide build configuration.
 ///
-/// [kSyncBaseUrl] is the backend base URL. It defaults to the Android-emulator
-/// host loopback for local dev and is overridden for release builds with:
-///   --dart-define=SYNC_BASE_URL=https://bakibondhu.infinityfreeapp.com
+/// [kSyncBaseUrl] is the backend base URL. It **defaults to production** so a
+/// plain `flutter build` (e.g. F-Droid's build-from-source, which passes no
+/// `--dart-define`) ships a working app. For local dev against a local backend,
+/// override it:
+///   --dart-define=SYNC_BASE_URL=http://10.0.2.2:5080
+/// Our own release builds still pass the production URL explicitly, so their
+/// compiled output is unchanged.
 const String kSyncBaseUrl = String.fromEnvironment(
   'SYNC_BASE_URL',
-  defaultValue: 'http://10.0.2.2:5080',
+  defaultValue: 'https://bakibondhu.infinityfreeapp.com',
 );
 
 /// This build's version, kept in sync with `pubspec.yaml`. The update check

@@ -1,0 +1,15 @@
+BakiBondhu is a simple, Bangla-first credit ledger (baki khata) for small
+shopkeepers — an easy replacement for the paper notebook.
+
+* Works offline — your records stay on your phone, no internet needed for daily use.
+* Bangla & English — switch anytime; opens in English outside Bangladesh.
+* Track customer credit (baki) & payments — see who owes how much at a glance.
+* Record daily sales — with day / month / quarter / year totals.
+* Send polite reminders over SMS or WhatsApp.
+* Cloud sync & backup — log in and your ledger is safe and available on any phone or in the web app.
+* Download an Excel report of all your customers.
+* Collections & payment promises to follow up dues.
+
+Free 30-day trial for every new account. A simple monthly subscription after that.
+
+Made for the corner shop, the grocery, the pharmacy — anyone who keeps "baki".
