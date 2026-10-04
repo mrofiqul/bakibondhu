@@ -4,7 +4,8 @@ An easy credit ledger for shopkeepers. This guide shows, step by step, how to us
 the BakiBondhu app. (The app can run in **Bangla or English** — Bangla labels are
 shown in brackets.)
 
-> **Version v0.1.30** — new: **select your country when registering** (the location
+> **Version v0.1.31** — new: a **yearly subscription at 20% off** (all countries),
+> plus **select your country when registering** (the location
 > fields and phone rule adapt to it), **English by default outside Bangladesh**, a
 > **Subscription page** (30-day free trial, monthly
 > price, and how to renew), **quick-add a sale right from the Home screen**, an
@@ -198,12 +199,15 @@ Open **⚙️ Settings → 💳 Subscription** (the same page is in the web app'
 
 - **Free trial** — every new account starts with a **30-day free trial**: all
   features, no cost.
-- **Monthly price** — **৳100 / month** inside Bangladesh, or **US$1.20 / month**
-  outside Bangladesh. The page auto-picks your price; a **In Bangladesh / Outside
-  Bangladesh** toggle lets you switch if needed.
+- **Price** — pick **Monthly** or **Yearly** at the top of the pricing card:
+  - **Monthly:** **৳100 / month** in Bangladesh, **US$1.20 / month** outside.
+  - **Yearly (20% off, all countries):** **৳960 / year** in Bangladesh (save ৳240),
+    **US$11.52 / year** outside (save $2.88).
+  The page auto-picks your country; an **In Bangladesh / Outside Bangladesh** toggle
+  lets you switch if needed.
 - **Your status** — shows whether your subscription is active and how many days are
   left (or if it has expired).
-- **How to renew** — send the monthly amount by **bKash** to the number shown
+- **How to renew** — send the shown amount (monthly or yearly) by **bKash** to the number shown
   (tap **📋** to copy it), then confirm on **WhatsApp** or **email** with your shop
   name and mobile number. Once your payment is confirmed, the admin extends your
   subscription. *(While your trial or subscription is valid, everything keeps working

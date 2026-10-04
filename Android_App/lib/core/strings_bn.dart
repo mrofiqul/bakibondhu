@@ -65,10 +65,16 @@ class S {
       _bn ? 'কোনো মেয়াদসীমা নেই' : 'No expiry set';
   static String subExpiresOn(String date) =>
       _bn ? 'মেয়াদ শেষ: $date' : 'Expires: $date';
-  static String get subPricing => _bn ? 'মাসিক মূল্য' : 'Monthly price';
+  static String get subPricing => _bn ? 'মূল্য' : 'Price';
   static String get subInsideBd => _bn ? 'বাংলাদেশে' : 'In Bangladesh';
   static String get subOutsideBd => _bn ? 'বাংলাদেশের বাইরে' : 'Outside Bangladesh';
   static String get subPerMonth => _bn ? '/ মাস' : '/ month';
+  static String get subPerYear => _bn ? '/ বছর' : '/ year';
+  static String get subMonthly => _bn ? 'মাসিক' : 'Monthly';
+  static String get subYearly => _bn ? 'বার্ষিক' : 'Yearly';
+  static String subYearlyOff(int pct) => _bn ? '$pct% ছাড়' : '$pct% off';
+  static String subSaveYear(String amount) =>
+      _bn ? 'বছরে $amount সাশ্রয়' : 'Save $amount a year';
   static String get subHowToRenew => _bn ? 'যেভাবে নবায়ন করবেন' : 'How to renew';
   static String subRenewStep1(String amount) => _bn
       ? '১. বিকাশে $amount "সেন্ড মানি" করুন এই নম্বরে:'
