@@ -127,13 +127,15 @@
 <script>
 (function(){
 "use strict";
-var VERSION="ওয়েব সংস্করণ ২.০";
+var VERSION="ওয়েব সংস্করণ ২.১";
 // Bump WEB_BUILD (and web.build in app_version.php) when a new web version is
 // deployed, so open sessions get prompted to reload to the latest.
-var WEB_BUILD=10;
+var WEB_BUILD=11;
 
 // ---------- subscription plan + payment details ----------
 var TRIAL_DAYS=30, PRICE_BDT=100, PRICE_USD="1.20";
+// Yearly = 12 months with YEARLY_OFF% off, for every country.
+var YEARLY_OFF=20, PRICE_BDT_YEAR=960, PRICE_USD_YEAR="11.52", SAVE_BDT_YEAR=240, SAVE_USD_YEAR="2.88";
 var BKASH_NUMBER="01723-967187", WA_NUMBER="01730781320", WA_INTL="8801730781320";
 var SUPPORT_EMAIL="rofiqulislam90.cse@gmail.com";
 
@@ -228,7 +230,7 @@ var I18N={
   "সেটিংস":"Settings","রিমাইন্ডার ও এক্সপোর্টে এই নাম ব্যবহার হয়।":"This name is used in reminders and exports.",
   "📥 রিপোর্ট ডাউনলোড — সব কাস্টমার":"📥 Download report — all customers",
   "🔄 অ্যাপ আপডেট / Update App":"🔄 Update App","📘 সাহায্য / Help":"📘 Help","💳 সাবস্ক্রিপশন":"💳 Subscription",
-  "সংস্করণ":"Version","ওয়েব সংস্করণ ২.০":"Web version 2.0","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
+  "সংস্করণ":"Version","ওয়েব সংস্করণ ২.১":"Web version 2.1","লগ আউট":"Log out","লগ আউট করবেন?":"Log out?","সেভ":"Save",
   // statement export + update sheet + trial
   "চলতি বাকি:":"Running due:","মোট লেনদেন:":"Total transactions:","বর্তমান হিসাব:":"Current balance:",
   "বাকিবন্ধু দিয়ে তৈরি":"Made with BakiBondhu","বাকিবন্ধু · লেনদেনের হিসাব":"BakiBondhu · Transaction statement",
@@ -559,10 +561,11 @@ function guessInBd(){
 }
 function renderSubscription(){
   if(view.subInBd===undefined) view.subInBd=guessInBd();
-  var inBd=view.subInBd, en=(LANG==="en");
+  var inBd=view.subInBd, yearly=!!view.subYearly, en=(LANG==="en");
   function L(bn,eng){ return en?eng:bn; }
-  var price=inBd?("৳"+PRICE_BDT):("$"+PRICE_USD);
-  var perMonth=L("/ মাস","/ month");
+  var price=inBd?("৳"+(yearly?PRICE_BDT_YEAR:PRICE_BDT)):("$"+(yearly?PRICE_USD_YEAR:PRICE_USD));
+  var perUnit=yearly?L("/ বছর","/ year"):L("/ মাস","/ month");
+  var offTxt=YEARLY_OFF+L("% ছাড়","% off");
   app.innerHTML=""; app.appendChild(topBar(L("সাবস্ক্রিপশন","Subscription"),{back:function(){go({name:"settings"});}}));
   var m=el('<main></main>');
 
@@ -578,12 +581,18 @@ function renderSubscription(){
     m.appendChild(el('<div class="card" style="padding:16px"><div class="s" style="color:var(--muted);font-size:13px">'+L("আপনার বর্তমান অবস্থা","Your current status")+'</div><div style="font-size:18px;font-weight:700;margin-top:2px;color:'+(exp?"var(--red,#b3261e)":"var(--ink)")+'">'+(exp?"⚠️ ":"✅ ")+statusTxt+'</div>'+(expDate?'<div class="s" style="color:var(--muted);font-size:13px;margin-top:2px">'+expDate+'</div>':'')+'</div>'));
   }
 
-  // Pricing + BD/outside toggle
-  var pc=el('<div class="card" style="background:var(--green-soft);border:0;padding:16px"><div style="font-weight:600;color:var(--green-deep)">'+L("মাসিক মূল্য","Monthly price")+'</div><div style="font-size:40px;font-weight:800;color:var(--green-deep);line-height:1.1;margin-top:6px">'+price+' <span style="font-size:16px;font-weight:600">'+perMonth+'</span></div></div>');
+  // Pricing — billing-period toggle + country toggle
+  var pc=el('<div class="card" style="background:var(--green-soft);border:0;padding:16px"><div style="font-weight:600;color:var(--green-deep)">'+L("মূল্য","Price")+'</div></div>');
+  var bseg=el('<div class="seg" style="margin:10px 0 2px"><button data-y="0" class="'+(yearly?"":"on")+'">'+L("মাসিক","Monthly")+'</button><button data-y="1" class="'+(yearly?"on":"")+'">'+L("বার্ষিক","Yearly")+' · '+offTxt+'</button></div>');
+  bseg.querySelectorAll("button").forEach(function(b){ b.onclick=function(){ view.subYearly=(b.getAttribute("data-y")==="1"); renderSubscription(); }; });
+  pc.appendChild(bseg);
+  pc.appendChild(el('<div style="font-size:40px;font-weight:800;color:var(--green-deep);line-height:1.1;margin-top:8px">'+price+' <span style="font-size:16px;font-weight:600">'+perUnit+'</span></div>'));
+  if(yearly){ var save=inBd?("৳"+SAVE_BDT_YEAR):("$"+SAVE_USD_YEAR); pc.appendChild(el('<div style="color:var(--green-deep);font-weight:600;font-size:13.5px;margin-top:2px">'+L("বছরে "+save+" সাশ্রয়","Save "+save+" a year")+'</div>')); }
   var seg=el('<div class="seg" style="margin:12px 0 6px"><button data-b="1" class="'+(inBd?"on":"")+'">'+L("বাংলাদেশে","In Bangladesh")+'</button><button data-b="0" class="'+(inBd?"":"on")+'">'+L("বাংলাদেশের বাইরে","Outside Bangladesh")+'</button></div>');
   seg.querySelectorAll("button").forEach(function(b){ b.onclick=function(){ view.subInBd=(b.getAttribute("data-b")==="1"); renderSubscription(); }; });
   pc.appendChild(seg);
-  pc.appendChild(el('<div class="s" style="color:var(--green-deep);font-size:12.5px;opacity:.85">'+L("বাংলাদেশে","In Bangladesh")+': ৳'+PRICE_BDT+' '+perMonth+' · '+L("বাংলাদেশের বাইরে","Outside Bangladesh")+': $'+PRICE_USD+' '+perMonth+'</div>'));
+  var mLbl=inBd?("৳"+PRICE_BDT):("$"+PRICE_USD), yLbl=inBd?("৳"+PRICE_BDT_YEAR):("$"+PRICE_USD_YEAR);
+  pc.appendChild(el('<div class="s" style="color:var(--green-deep);font-size:12.5px;opacity:.85">'+L("মাসিক","Monthly")+' '+mLbl+'  ·  '+L("বার্ষিক","Yearly")+' '+yLbl+' ('+offTxt+')</div>'));
   m.appendChild(pc);
 
   // How to renew

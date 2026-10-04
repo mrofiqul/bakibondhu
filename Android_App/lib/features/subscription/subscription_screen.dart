@@ -22,6 +22,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   /// the device region, then the owner can flip it.
   late bool _inBd;
 
+  /// False = monthly plan, true = yearly (12 months, 20% off).
+  bool _yearly = false;
+
   @override
   void initState() {
     super.initState();
@@ -32,9 +35,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     _inBd = country.isEmpty || country == 'BD';
   }
 
-  String get _priceLabel => _inBd
-      ? '৳$kPriceBdtPerMonth'
-      : '\$$kPriceUsdPerMonth';
+  /// The amount to pay for the selected country + billing period.
+  String get _priceLabel {
+    if (_inBd) return '৳${_yearly ? kPriceBdtPerYear : kPriceBdtPerMonth}';
+    return '\$${_yearly ? kPriceUsdPerYear : kPriceUsdPerMonth}';
+  }
 
   void _snack(String msg) => ScaffoldMessenger.of(context)
       .showSnackBar(SnackBar(content: Text(msg)));
@@ -172,6 +177,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         color: scheme.onPrimaryContainer,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
+                // Billing period: Monthly | Yearly (20% off, all countries).
+                SegmentedButton<bool>(
+                  segments: [
+                    ButtonSegment(value: false, label: Text(S.subMonthly)),
+                    ButtonSegment(
+                        value: true,
+                        label: Text(
+                            '${S.subYearly} · ${S.subYearlyOff(kYearlyDiscountPct)}')),
+                  ],
+                  selected: {_yearly},
+                  showSelectedIcon: false,
+                  onSelectionChanged: (s) => setState(() => _yearly = s.first),
+                ),
+                const SizedBox(height: 12),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -184,12 +203,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     const SizedBox(width: 6),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(S.subPerMonth,
+                      child: Text(_yearly ? S.subPerYear : S.subPerMonth,
                           style: TextStyle(
                               color: scheme.onPrimaryContainer, fontSize: 16)),
                     ),
                   ],
                 ),
+                if (_yearly)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      S.subSaveYear(
+                          _inBd ? '৳$kSaveBdtPerYear' : '\$$kSaveUsdPerYear'),
+                      style: TextStyle(
+                          color: scheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13.5),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 SegmentedButton<bool>(
                   segments: [
@@ -202,7 +233,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${S.subInsideBd}: ৳$kPriceBdtPerMonth${S.subPerMonth}  ·  ${S.subOutsideBd}: \$$kPriceUsdPerMonth${S.subPerMonth}',
+                  _inBd
+                      ? '${S.subMonthly} ৳$kPriceBdtPerMonth  ·  ${S.subYearly} ৳$kPriceBdtPerYear (${S.subYearlyOff(kYearlyDiscountPct)})'
+                      : '${S.subMonthly} \$$kPriceUsdPerMonth  ·  ${S.subYearly} \$$kPriceUsdPerYear (${S.subYearlyOff(kYearlyDiscountPct)})',
                   style: TextStyle(
                       color: scheme.onPrimaryContainer.withValues(alpha: 0.85),
                       fontSize: 12.5),

@@ -15,15 +15,21 @@ const String kSyncBaseUrl = String.fromEnvironment(
 /// This build's version, kept in sync with `pubspec.yaml`. The update check
 /// compares [kAppBuild] (the numeric build after the `+`) against the latest
 /// build the server advertises at `/api/v1/app/version`.
-const String kAppVersion = '0.1.30';
-const int kAppBuild = 31;
+const String kAppVersion = '0.1.31';
+const int kAppBuild = 32;
 
 /// Subscription plan + payment details shown on the Subscription screen.
 /// Every shop starts with a [kTrialDays]-day free trial; after that the owner
-/// renews by paying the monthly price and confirming with the numbers below.
+/// renews by paying the monthly or yearly price and confirming with the numbers
+/// below. Yearly = 12 months with [kYearlyDiscountPct]% off, for every country.
 const int kTrialDays = 30;
+const int kYearlyDiscountPct = 20;
 const int kPriceBdtPerMonth = 100; // ৳ per month, inside Bangladesh
 const String kPriceUsdPerMonth = '1.20'; // US$ per month, outside Bangladesh
+const int kPriceBdtPerYear = 960; // ৳960 = 100×12×0.8 (save ৳240)
+const String kPriceUsdPerYear = '11.52'; // $11.52 = 1.20×12×0.8 (save $2.88)
+const int kSaveBdtPerYear = 240; // ৳ saved vs 12× monthly
+const String kSaveUsdPerYear = '2.88'; // US$ saved vs 12× monthly
 const String kBkashNumber = '01723-967187'; // bKash (personal)
 const String kSupportWhatsApp = '01730781320'; // WhatsApp (local format)
 const String kSupportWhatsAppIntl = '8801730781320'; // for wa.me links

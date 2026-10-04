@@ -87,7 +87,7 @@ BakiBondhu/
 | Auth backend | PHP 8 (PDO/MySQL), HS256 JWT, bcrypt |
 | Sync backend (prepared) | ASP.NET Core 9, Npgsql/Dapper, PostgreSQL, RLS |
 
-### Recent features (v0.1.17 – v0.1.30)
+### Recent features (v0.1.17 – v0.1.31)
 - **v0.1.17 — unified collections/promises into sync.** `EntityKind` gained
   `collection`/`promise`; sync push/pull handles them so app and web share them on
   the one DB (`collection_activities`, `promise_to_pay`).
@@ -189,6 +189,15 @@ BakiBondhu/
   `Intl` timezone `Asia/Dhaka`. Backend: `handle_register` reads `country`, branches
   the phone rule, and inserts `country`; **`businesses.country VARCHAR(64)`** added
   (live migration run via a one-time guarded script, then deleted). `WEB_BUILD=10`.
+- **v0.1.31 — yearly subscription (20% off, all countries).** The subscription page
+  (both apps) gains a **Monthly / Yearly** toggle beside the country toggle; yearly =
+  12 × monthly × 0.8 → **৳960/yr** (save ৳240) / **$11.52/yr** (save $2.88), with a
+  "20% off" badge and a savings line; the selected amount flows into the bKash renew
+  step. Display-only (no backend/schema change — admin still extends expiry). Android:
+  `_yearly` state in `subscription_screen.dart`, new `config.dart` constants
+  (`kYearlyDiscountPct`, `kPrice{Bdt,Usd}PerYear`, `kSave{Bdt,Usd}PerYear`), `S.sub*`
+  strings (`subPerYear`/`subMonthly`/`subYearly`/`subYearlyOff`/`subSaveYear`). Web:
+  `view.subYearly` + yearly constants in `renderSubscription`. `WEB_BUILD=11`.
 
 ---
 
